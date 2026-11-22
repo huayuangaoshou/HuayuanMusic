@@ -20,10 +20,13 @@ public partial class R2ShellView : UserControl
     public R2ShellView()
     {
         InitializeComponent();
+        InitializeOnlineSearch();
+        InitializeLyricOverlay();
+        QualityChoice.SelectedIndex=DesktopPreferences.Quality switch { "320"=>1,"flac"=>2,_=>0 };
         filterDelay.Tick += (_, _) =>
         {
             filterDelay.Stop();
-            model?.Workspace.ApplyFilter(CurrentFilter.Text ?? "");
+            if(model?.Workspace.Local==true) model.Workspace.ApplyFilter(CurrentFilter.Text ?? "");
         };
         DesktopProgress.PointerEntered += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 6d;
         DesktopProgress.PointerExited += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 3d;
@@ -46,14 +49,14 @@ public partial class R2ShellView : UserControl
         model.PropertyChanged += WorkspaceChanged;
         model.Player.Updated += UpdateVolume;
         VolumeSlider.Submit = model.Player.SetVolume;
+        UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
     }
 
     private void WorkspaceChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
-        if (args.PropertyName == nameof(ShellModel.Workspace))
-            SyncFilter();
+        if (args.PropertyName == nameof(ShellModel.Workspace)){UpdateSearchContext();SyncFilter();}
     }
 
     private void SyncFilter()
@@ -64,13 +67,25 @@ public partial class R2ShellView : UserControl
         updatingFilter = false;
     }
 
-    private void UpdateVolume() => VolumeSlider.Sync(model?.Player.State.Volume ?? 0);
+    private async void ChangeQuality(object? sender,SelectionChangedEventArgs args)
+    {
+        var index=QualityChoice?.SelectedIndex ?? -1;
+        if(index is <0 or >2) return;
+        var selected=index switch { 1=>"320",2=>"flac",_=>"standard" };
+        if(selected==DesktopPreferences.Quality) return;
+        try { await DesktopPreferences.ChooseQualityAsync(selected); Program.Log("R2_QUALITY_PREFERENCE",new{quality=selected}); }
+        catch(Exception error) when(error is IOException or UnauthorizedAccessException)
+        { Program.Log("R2_QUALITY_WRITE_FAILED",new{type=error.GetType().Name}); }
+    }
+
+    private void UpdateVolume(){VolumeSlider.Sync(model?.Player.State.Volume ?? 0);UpdateLyricOverlay();}
     private Window? Window => TopLevel.GetTopLevel(this) as Window;
 
     private void FilterChanged(object? sender, TextChangedEventArgs args)
     {
         if (updatingFilter)
             return;
+        if(model?.Workspace.IsKugou==true){_ = RequestSuggestionsAsync(CurrentFilter.Text?.Trim()??"");return;}
         filterDelay.Stop();
         filterDelay.Start();
     }
@@ -78,7 +93,7 @@ public partial class R2ShellView : UserControl
     private void GoBack(object? sender, RoutedEventArgs args) { model?.Workspace.Back(); SyncFilter(); }
     private void GoForward(object? sender, RoutedEventArgs args) { model?.Workspace.Forward(); SyncFilter(); }
     private void OpenPluginCenter(object? sender, RoutedEventArgs args) => model?.Workspace.ShowPlugins();
-    private void ShowLyrics(object? sender, RoutedEventArgs args) => model?.Workspace.ShowLyrics();
+    private void ShowLyrics(object? sender, RoutedEventArgs args) => ToggleLyricOverlay();
     private void ShowAccount(object? sender, RoutedEventArgs args) => model?.ShowAccount();
     private void ToggleTheme(object? sender, RoutedEventArgs args)
     {
@@ -121,6 +136,7 @@ public partial class R2ShellView : UserControl
     {
         if (model == null)
             return;
+        if(args.Key==Key.Escape && lyricOpen){CloseLyricOverlay(); args.Handled=true; return;}
         if (args.Key == Key.Escape && queueOpen)
         {
             SetQueueOpen(false);

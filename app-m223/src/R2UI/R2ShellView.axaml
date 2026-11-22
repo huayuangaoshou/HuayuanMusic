@@ -1,8 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="using:HuayuanPreview" xmlns:r2="using:HuayuanPreview.R2"
+             xmlns:lyrics="using:AvaloniaLyrics" xmlns:local="using:HuayuanPreview" xmlns:r2="using:HuayuanPreview.R2"
              x:Class="HuayuanPreview.R2.R2ShellView" x:CompileBindings="False">
   <UserControl.Styles>
     <StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml"/>
+    <StyleInclude Source="avares://AvaloniaLyrics/Themes/AvaloniaLyrics.axaml"/>
   </UserControl.Styles>
   <Grid RowDefinitions="*,84" ColumnDefinitions="216,*" Background="{DynamicResource R2Main}">
     <Border Background="{DynamicResource R2Side}" BorderBrush="{DynamicResource R2Edge}" BorderThickness="0,0,1,0">
@@ -29,11 +30,23 @@
         <Grid Name="Toolbar" ColumnDefinitions="Auto,Auto,240,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6" Margin="14,0,7,0">
           <Button Content="‹" FontSize="22" ToolTip.Tip="后退" AutomationProperties.Name="后退" Click="GoBack" VerticalAlignment="Center"/>
           <Button Grid.Column="1" Content="›" FontSize="22" ToolTip.Tip="前进" AutomationProperties.Name="前进" Click="GoForward" VerticalAlignment="Center"/>
-          <TextBox Grid.Column="2" Name="CurrentFilter" PlaceholderText="筛选当前列表" VerticalAlignment="Center" TextChanged="FilterChanged"/>
+          <TextBox Grid.Column="2" Name="CurrentFilter" MaxLength="120" PlaceholderText="筛选本地音乐" VerticalAlignment="Center" TextChanged="FilterChanged"/>
+          <Popup Grid.Column="2" Name="SuggestionsPopup" PlacementTarget="{Binding #CurrentFilter}" Placement="Bottom" VerticalOffset="8" IsLightDismissEnabled="True">
+            <Border Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Edge}" BorderThickness="1" CornerRadius="13" Padding="10" Width="310" BoxShadow="0 8 24 0 #25395978">
+              <StackPanel Spacing="5">
+                <Grid ColumnDefinitions="*,Auto">
+                  <TextBlock Name="SuggestionTitle" Classes="muted" Margin="7,5" VerticalAlignment="Center"/>
+                  <Button Grid.Column="1" Name="ClearHistory" Content="清除" Click="ClearRecentSearches" IsVisible="False"/>
+                </Grid>
+                <WrapPanel Name="HistoryChips" IsVisible="False"/>
+                <ListBox Name="SuggestionList" MaxHeight="300" AutomationProperties.Name="酷狗搜索联想"/>
+              </StackPanel>
+            </Border>
+          </Popup>
           <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
           <Button Grid.Column="4" Name="AccountButton" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="酷狗账号状态">
             <StackPanel Orientation="Horizontal" Spacing="7">
-              <Border Width="23" Height="23" CornerRadius="12" Background="{DynamicResource R2Tint}"><TextBlock Text="酷" Foreground="{DynamicResource R2RedInk}" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
+              <ContentControl Content="{Binding AccountAvatar}" Width="24" Height="24" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding AccountLabel}" VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
@@ -77,6 +90,24 @@
             IsVisible="{Binding Player.HasPlaybackError}" Background="{DynamicResource R2Tint}" IsHitTestVisible="False">
       <TextBlock Text="{Binding Player.PlaybackFeedback}" Foreground="{DynamicResource R2RedInk}" TextWrapping="Wrap" MaxWidth="500"/>
     </Border>
+    <Border Grid.ColumnSpan="2" Name="LyricsOverlay" IsVisible="False" Opacity="0" Background="{DynamicResource R2Main}">
+      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2"/></Transitions></Border.Transitions>
+      <Grid RowDefinitions="55,*" Margin="25,5,25,14">
+        <Button Content="⌄  收起正在播放" HorizontalAlignment="Left" Click="HideLyricOverlay" VerticalAlignment="Center"/>
+        <Grid Grid.Row="1" ColumnDefinitions="2*,3*" ColumnSpacing="35">
+          <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">
+            <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}" HorizontalAlignment="Center"/>
+            <TextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="25" FontWeight="SemiBold" MaxWidth="360" TextWrapping="Wrap" TextAlignment="Center"/>
+            <TextBlock Text="{Binding Player.DisplayedPlayingSong.Singer}" Classes="muted" TextAlignment="Center"/>
+            <TextBlock Text="{Binding Player.DisplayedPlayingSong.AlbumName}" Classes="muted" TextAlignment="Center"/>
+          </StackPanel>
+          <Grid Grid.Column="1">
+            <lyrics:LyricView Name="FullLyricView" Foreground="{DynamicResource R2Ink}" AutomationProperties.Name="同步歌词"/>
+            <TextBlock Name="LyricEmpty" Classes="muted" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          </Grid>
+        </Grid>
+      </Grid>
+    </Border>
     <Border Grid.Row="1" Grid.ColumnSpan="2" Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Edge}" BorderThickness="0,1,0,0">
       <Grid RowDefinitions="16,*">
         <local:CommitSlider Name="DesktopProgress" Classes="progress" Margin="0,-8,0,0" AutomationProperties.Name="播放进度"/>
@@ -104,6 +135,12 @@
             <Button Content="词" Click="ShowLyrics" ToolTip.Tip="歌词页" AutomationProperties.Name="歌词页"/>
           </StackPanel>
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Button Content="{Binding Player.DisplayedPlayingSong.FavoriteGlyph}" Foreground="{DynamicResource R2Pink}"
+                    IsVisible="{Binding Player.HasCurrentSong}"
+                    Command="{Binding Player.FavoriteCurrentCommand}" AutomationProperties.Name="收藏当前歌曲" ToolTip.Tip="收藏当前歌曲"/>
+            <ComboBox Name="QualityChoice" Width="80" Background="{DynamicResource R2Side}" Foreground="{DynamicResource R2Ink}" BorderBrush="{DynamicResource R2Edge}" AutomationProperties.Name="播放音质" ToolTip.Tip="用于下一次打开音源" SelectionChanged="ChangeQuality">
+              <ComboBoxItem Content="标准"/><ComboBoxItem Content="高音质"/><ComboBoxItem Content="无损"/>
+            </ComboBox>
             <ProgressBar IsVisible="{Binding Player.IsBuffering}" IsIndeterminate="True" Width="35" Height="3" AutomationProperties.Name="正在缓冲"/>
             <Button Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量" AutomationProperties.Name="静音或恢复音量">
               <Grid Width="16" Height="16">

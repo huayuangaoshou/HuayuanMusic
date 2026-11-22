@@ -1,31 +1,35 @@
 <Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
   <Styles.Resources>
     <ResourceDictionary>
-      <SolidColorBrush x:Key="Primary" Color="#EC4141"/>
-      <SolidColorBrush x:Key="R2Accent" Color="#EC4141"/>
-      <SolidColorBrush x:Key="R2AccentHover" Color="#D8313B"/>
+      <SolidColorBrush x:Key="Primary" Color="#4A9BFF"/>
+      <SolidColorBrush x:Key="R2Accent" Color="#4A9BFF"/>
+      <SolidColorBrush x:Key="R2Pink" Color="#FF6FA5"/>
+      <LinearGradientBrush x:Key="R2BrandGradient" StartPoint="0%,0%" EndPoint="100%,0%">
+        <GradientStop Color="#FF6FA5" Offset="0"/><GradientStop Color="#4A9BFF" Offset="1"/>
+      </LinearGradientBrush>
+      <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="R2Main" Color="#FFFFFF"/>
-          <SolidColorBrush x:Key="R2Side" Color="#F5F6F8"/>
-          <SolidColorBrush x:Key="R2Edge" Color="#ECEEF2"/>
-          <SolidColorBrush x:Key="R2Ink" Color="#1F2329"/>
-          <SolidColorBrush x:Key="R2Muted" Color="#707988"/>
-          <SolidColorBrush x:Key="R2Hover" Color="#EFF1F5"/>
-          <SolidColorBrush x:Key="R2Stripe" Color="#F8F9FB"/>
-          <SolidColorBrush x:Key="R2Tint" Color="#FDEBEC"/>
-          <SolidColorBrush x:Key="R2RedInk" Color="#C42532"/>
+          <SolidColorBrush x:Key="R2Side" Color="#F2F7FF"/>
+          <SolidColorBrush x:Key="R2Edge" Color="#DCE8FA"/>
+          <SolidColorBrush x:Key="R2Ink" Color="#1E293B"/>
+          <SolidColorBrush x:Key="R2Muted" Color="#64748B"/>
+          <SolidColorBrush x:Key="R2Hover" Color="#EDF4FF"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="#F6FAFF"/>
+          <SolidColorBrush x:Key="R2Tint" Color="#FCECF5"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="#AD3373"/>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="R2Main" Color="#16171A"/>
-          <SolidColorBrush x:Key="R2Side" Color="#1E1F24"/>
-          <SolidColorBrush x:Key="R2Edge" Color="#30323A"/>
+          <SolidColorBrush x:Key="R2Main" Color="#111622"/>
+          <SolidColorBrush x:Key="R2Side" Color="#161D2C"/>
+          <SolidColorBrush x:Key="R2Edge" Color="#29354B"/>
           <SolidColorBrush x:Key="R2Ink" Color="#F2F3F5"/>
           <SolidColorBrush x:Key="R2Muted" Color="#A0A5B1"/>
-          <SolidColorBrush x:Key="R2Hover" Color="#2B2D34"/>
-          <SolidColorBrush x:Key="R2Stripe" Color="#1B1C20"/>
-          <SolidColorBrush x:Key="R2Tint" Color="#3B252A"/>
-          <SolidColorBrush x:Key="R2RedInk" Color="#FF8288"/>
+          <SolidColorBrush x:Key="R2Hover" Color="#202E46"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="#151D2D"/>
+          <SolidColorBrush x:Key="R2Tint" Color="#382942"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="#FFA0C2"/>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
@@ -55,7 +59,7 @@
     <Setter Property="BorderThickness" Value="2,0,0,0"/>
   </Style>
   <Style Selector="Button.primary">
-    <Setter Property="Background" Value="{DynamicResource R2Accent}"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
     <Setter Property="CornerRadius" Value="100"/><Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16"/></Transitions></Setter>
   </Style>
@@ -76,7 +80,7 @@
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Slider"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/><Setter Property="Background" Value="{DynamicResource R2Edge}"/></Style>
-  <Style Selector="Slider /template/ RepeatButton#PART_DecreaseButton"><Setter Property="Background" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Slider /template/ RepeatButton#PART_DecreaseButton"><Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/></Style>
   <Style Selector="Slider /template/ Thumb"><Setter Property="Background" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Slider.progress"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Slider.progress /template/ Thumb"><Setter Property="Opacity" Value="0"/><Setter Property="RenderTransform" Value="scale(0.7)"/></Style>

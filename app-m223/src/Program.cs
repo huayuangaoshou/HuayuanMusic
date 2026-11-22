@@ -93,6 +93,7 @@ public sealed class App : Application
                 await initialization;
                 await window.R2Model.Concept.Pending;
                 await window.R2Model.Player.Pending;
+                await window.R2Model.LocalWorkspace.PendingFolderWork;
                 await window.R2Model.Concept.CloseDesktopConnectionAsync();
             }
             catch (Exception error)

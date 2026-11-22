@@ -16,7 +16,7 @@ using CommunityToolkit.Mvvm.Input;
 using System.Windows.Input;
 namespace HuayuanPreview.R2;
 public sealed record R2Page(string DisplayName,Control View);
-public sealed class WorkspaceState:ObservableObject {
+public sealed partial class WorkspaceState:ObservableObject {
  public ShellModel Host {get;}public bool Local {get;}public bool Allowed=>Local;public bool IsKugou=>!Local;public string Name=>Local?"本地音乐":"酷狗概念版";
  public List<R2Page> Pages {get;}=[];public Dictionary<R2Page,ListBox> Lists {get;}=[];private readonly Stack<BrowsePoint> back = new();
  public Dictionary<R2Page,(Vector Offset,string[] Selected)> Positions {get;}=[];
@@ -53,6 +53,7 @@ public sealed class WorkspaceState:ObservableObject {
   var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(25,15,25,12)};
   area.Children.Add(heading);Grid.SetRow(status,1);area.Children.Add(status);Grid.SetRow(content,2);area.Children.Add(content);
   Root=area;
+  if(Program.Desktop) AddDesktopNavigation(nav);
   if (Local && Program.Desktop)
   {
    var import = new Button { Content = "添加本地音乐", Classes = { "nav" } };
@@ -286,6 +287,11 @@ public sealed class WorkspaceState:ObservableObject {
    Fill(CurrentPage,CatalogRows.Where(MatchesFilter));
   }
  }
+ public void RefreshFavoriteRows()
+ {
+  foreach(var list in Lists.Values)
+   foreach(var row in list.Items.OfType<TrackRow>())row.RefreshFavorite();
+ }
  public void RefreshPlayingRows()
  {
   foreach(var list in Lists.Values)
@@ -342,7 +348,7 @@ public sealed class WorkspaceState:ObservableObject {
  }
 
 }
-public sealed class ShellModel:ObservableObject,IDisposable {
+public sealed partial class ShellModel:ObservableObject,IDisposable {
  internal P2AWorkspace Concept {get;}
  public CorePresentation Player {get;}public WorkspaceState LocalWorkspace {get;}public WorkspaceState KugouConceptWorkspace {get;}
  WorkspaceState workspace=null!;public WorkspaceState Workspace=>workspace;public Control WorkspaceRoot=>workspace.Root;
@@ -355,7 +361,8 @@ public sealed class ShellModel:ObservableObject,IDisposable {
    return "歌曲来源：本地音乐";
   }
  }
- public string AccountLabel => Concept.Connected ? "酷狗已登录" : "登录酷狗";
+ public string AccountLabel => Concept.Connected ? Concept.Profile?.Name ?? "酷狗已登录" : "登录酷狗";
+ public Control AccountAvatar => Concept.Cover(Concept.AccountKey,Concept.Profile?.Avatar,24);
  private Guid lastEntry;
  private bool lastPlaying;
  public void ShowAccount()
@@ -364,8 +371,8 @@ public sealed class ShellModel:ObservableObject,IDisposable {
   KugouConceptWorkspace.Navigate(KugouConceptWorkspace.Pages.Single(page=>page.DisplayName=="账号状态"));
  }
  public ICommand SwitchLocalCommand {get;}public ICommand SwitchKugouCommand {get;}
- internal ShellModel(CorePlaybackAdapter core){Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Switch(LocalWorkspace);Player.Attach(this);}
- void AccountChanged()=>OnPropertyChanged(nameof(AccountLabel));
+ internal ShellModel(CorePlaybackAdapter core){Adapter=core;Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Switch(LocalWorkspace);Player.Attach(this);}
+ void AccountChanged(){OnPropertyChanged(nameof(AccountLabel));OnPropertyChanged(nameof(AccountAvatar));}
  void OnSnapshot()
  {
   LocalWorkspace.Refresh();KugouConceptWorkspace.Refresh();
@@ -374,6 +381,6 @@ public sealed class ShellModel:ObservableObject,IDisposable {
   LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();
   OnPropertyChanged(nameof(SourceLabel));
  }
- public void Switch(WorkspaceState next){workspace?.Save();workspace=next;OnPropertyChanged(nameof(Workspace));OnPropertyChanged(nameof(WorkspaceRoot));next.Restore();}
+ public void Switch(WorkspaceState next){workspace?.Save();workspace?.PauseOnlineWork();workspace=next;OnPropertyChanged(nameof(Workspace));OnPropertyChanged(nameof(WorkspaceRoot));next.Restore();}
  public void Dispose(){Concept.Changed-=AccountChanged;Player.Updated-=OnSnapshot;Player.Dispose();Concept.Dispose();PreviewAssets.Dispose();}
 }

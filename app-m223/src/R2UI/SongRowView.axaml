@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
-  <Grid ColumnDefinitions="34,46,2*,*,*,57,37,37" ColumnSpacing="6" Margin="7,0">
+  <Grid ColumnDefinitions="34,46,2*,*,*,57,37,37,37" ColumnSpacing="6" Margin="7,0">
     <TextBlock Text="{Binding Number}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsPlaying}"/>
     <TextBlock Text="▂▅▃" Classes="wave current" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsPlaying}"/>
     <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
@@ -10,6 +10,7 @@
     <TextBlock Grid.Column="5" Text="{Binding Duration}" Classes="muted" FontFamily="Consolas" VerticalAlignment="Center"/>
     <Button Grid.Column="6" Content="▶" Command="{Binding PlayCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放"/>
     <Button Grid.Column="7" Content="↪" Command="{Binding NextCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首"/>
+    <Button Grid.Column="8" Content="{Binding FavoriteGlyph}" Foreground="{DynamicResource R2Pink}" Command="{Binding FavoriteCommand}" ToolTip.Tip="切换收藏" AutomationProperties.Name="切换收藏" IsVisible="{Binding CanUsePlatform}"/>
     <Button Grid.Column="7" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
   </Grid>
 </UserControl>

@@ -373,6 +373,9 @@ public class LyricsService(LyricClient lyricClient, ILogger<LyricsService> logge
         return normalized.StartsWith(".", StringComparison.Ordinal) ? normalized : "." + normalized;
     }
 
+    internal static LyricLine[] ParseDesktopRenderLines(string content, string format) =>
+        ParseLyricContent(content, NormalizeLyricExtension(format)).Select(ConvertToRenderLine).ToArray();
+
     private static List<LyricLineViewModel> ParseLyricContent(string content, string ext)
     {
         return LyricParserRegistry.Parse(content, ext);

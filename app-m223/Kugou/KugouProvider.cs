@@ -91,6 +91,9 @@ public sealed class KugouProvider : IProviderModule, IProviderPlaylistReader {
      Enabled&&gateway is DirectSdkGateway direct&&direct.MatchesTarget(proof,Generation);
  public Task<bool> ConsumeTargetAsync(DirectSdkGateway.TargetOccurrenceProof proof,CancellationToken ct)=>
      Run(g=>Task.FromResult(g is DirectSdkGateway direct&&direct.ConsumeTarget(proof,Generation)),ct);
+ public Task<T> UseDesktopCatalogAsync<T>(Func<DirectSdkGateway,Task<T>> operation,CancellationToken ct=default)=>
+     Run(g=>g is DirectSdkGateway direct && direct.LoggedIn ? operation(direct) :
+         throw new UnauthorizedAccessException("请先登录酷狗"),ct);
  public Task<Entitlement> RefreshEntitlementAsync(CancellationToken ct=default)=>Run(g=>g.EntitlementAsync(ct),ct);
  public Task<KuGou.Net.Abstractions.Models.VipReceiveHistoryResponse> ReadClaimHistoryAsync(CancellationToken ct=default)=>Run(g=>g is IRealSdkGateway sdk?sdk.ReadClaimHistoryAsync(ct):throw new UnauthorizedAccessException("SDK connection absent"),ct);
  public Task<ClaimReceipt> ClaimTodayAsync(bool explicitUserIntent,CancellationToken ct=default)=>Run(async g=>{

@@ -58,15 +58,42 @@ internal sealed partial class CorePlaybackAdapter {
      try
      {
       // Fresh, account-scoped source authorization for EVERY playback and replay.
-      fresh=await Kugou.ResolveAsync(track.Id,quality,cancellation);
-      stage="CDN_AUDIO_OPEN";
-      cancellation.ThrowIfCancellationRequested();
-      if(!SessionCurrent())throw new UnauthorizedAccessException("酷狗账号在音源解析期间发生变化");
-      var opened=await Kugou.OpenSdkAudioAsync(fresh,cancellation);
+      var requested=Program.Desktop?R2.DesktopPreferences.Quality:quality;
+      var effective=requested;
+      if(Program.Desktop && requested!="standard")
+      {
+       try { effective=await Kugou.UseDesktopCatalogAsync(gateway=>gateway.ReadDesktopQualityAsync(track,requested,cancellation),cancellation); }
+       catch(Exception error) when(SessionCurrent() && !cancellation.IsCancellationRequested &&
+        error is HttpRequestException or InvalidDataException or System.Text.Json.JsonException or TaskCanceledException)
+       { effective="standard"; }
+      }
+      async Task<HuayuanMusic.Kugou.Gateway.OpenedAudio> OpenAuthorizedQualityAsync()
+      {
+       stage="SDK_PERMISSION_RESOLVE";
+       cancellation.ThrowIfCancellationRequested();
+       if(!SessionCurrent())throw new UnauthorizedAccessException("酷狗账号在音源解析期间发生变化");
+       fresh=await Kugou.ResolveAsync(track.Id,effective,cancellation);
+       cancellation.ThrowIfCancellationRequested();
+       if(!SessionCurrent())throw new UnauthorizedAccessException("酷狗账号在音源解析期间发生变化");
+       stage="CDN_AUDIO_OPEN";
+       return await Kugou.OpenSdkAudioAsync(fresh,cancellation);
+      }
+      HuayuanMusic.Kugou.Gateway.OpenedAudio opened;
+      try { opened=await OpenAuthorizedQualityAsync(); }
+      catch(Exception error) when(Program.Desktop && effective!="standard" && SessionCurrent() &&
+       !cancellation.IsCancellationRequested && error is UnauthorizedAccessException or HttpRequestException or InvalidDataException)
+      {
+       if(fresh!=null) Kugou.ReleaseGrant(fresh);
+       Program.Log("DESKTOP_QUALITY_FALLBACK",new { from=effective, stage, type=error.GetType().Name });
+       fresh=null;
+       effective="standard";
+       opened=await OpenAuthorizedQualityAsync();
+      }
+      if(Program.Desktop)Program.Log("DESKTOP_QUALITY",new{requested,effective});
       stage="AUDIO_STREAM_BUFFERED";
       if(Program.Desktop||P2AWorkspace.RealSingleAudio)Program.Log("PROVIDER_SOURCE_STAGE",new{stage,bufferBytes=opened.Length});
       return new ProviderStreamRegistry.Input(opened.Stream,opened.Length,
-          new PlaybackGrantAudioOwner(opened,Kugou,fresh));
+          new PlaybackGrantAudioOwner(opened,Kugou,fresh!));
      }
      catch(Exception ex)
      {

@@ -16,7 +16,7 @@ internal static class ArtworkPlaceholder
     {
         StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
         EndPoint = new RelativePoint(1, 1, RelativeUnit.Relative),
-        GradientStops = new() { new(Color.Parse("#FBE2E5"), 0), new(Color.Parse("#E4E6F7"), 1) }
+        GradientStops = new() { new(Color.Parse("#FDE6F1"), 0), new(Color.Parse("#DEEBFF"), 1) }
     };
 
     internal static Control Create(double size) => new Border

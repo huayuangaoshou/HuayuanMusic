@@ -125,7 +125,11 @@ internal sealed partial class P2AWorkspace
             UpdateDesktopAccountControls();
         }
         if (Connected && !login.IsCancellationRequested)
+        {
             await RefreshAsync();
+            await LoadDesktopProfileAsync(login.Token);
+            await LoadDesktopFavoritesAsync(login.Token);
+        }
     }
 
     internal void CancelDesktopOperations()
@@ -145,6 +149,8 @@ internal sealed partial class P2AWorkspace
             if (core.Kugou.Enabled)
                 await core.DisableKugouAsync();
             Snapshot = null;
+            Profile = null;
+            DesktopFavorites.Clear();
         }
         finally
         {
