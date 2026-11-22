@@ -9,13 +9,13 @@
                     <TextBlock Text="{Binding AppDisplayName}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
                     <WrapPanel>
                         <Border Classes="Pill" Margin="0,0,8,0"><TextBlock Text="{Binding AppVersion}" /></Border>
-                        <TextBlock Text="反馈群：1081635731" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource SukiLowText}" />
+                        <TextBlock Text="基于 KA Music v4.2.2 · © 2026 Linsxyx · MIT" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource SukiLowText}" />
                     </WrapPanel>
                 </StackPanel>
-                <Button Grid.Column="2" Classes="Basic" VerticalAlignment="Center" Command="{Binding OpenRepositoryCommand}" Cursor="Hand" ToolTip.Tip="项目主页">
+                <Button Grid.Column="2" Classes="Basic" VerticalAlignment="Center" Command="{Binding OpenRepositoryCommand}" Cursor="Hand" ToolTip.Tip="KA Music 上游项目（非本分支更新渠道）">
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Svg Classes="ThemeSvgIcon" Path="/Assets/github.svg" Width="18" Height="18" />
-                        <TextBlock Text="GitHub" />
+                        <TextBlock Text="KA Music 上游" />
                     </StackPanel>
                 </Button>
             </Grid>

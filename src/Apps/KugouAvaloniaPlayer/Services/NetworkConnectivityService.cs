@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,6 +17,8 @@ internal sealed class NetworkConnectivityService(
 {
     public async Task<bool> IsInternetAvailableAsync(CancellationToken cancellationToken = default)
     {
+        if (Startup.OfflineStartupProfile.Active) return false;
+
         // Use anonymous HTTPS requests: a connected network adapter alone does not prove internet access.
         using var client = httpClientFactory.CreateClient(nameof(NetworkConnectivityService));
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);

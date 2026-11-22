@@ -21,15 +21,15 @@
         <Style Selector="SelectableTextBlock">
             <Setter Property="FontFamily" Value="{DynamicResource AppDefaultFontFamily}" />
         </Style>
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/SukiMainHostCustomBackground.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/KugouSideMenu.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/SliderPlayer.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/SegmentedStyles.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/GorgeousThemeSwitch.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/ThemeSvgIconStyles.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/SukiMainHostCustomBackground.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/KugouSideMenu.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/SliderPlayer.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/SegmentedStyles.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/GorgeousThemeSwitch.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/ThemeSvgIconStyles.axaml" />
         <StyleInclude Source="avares://AvaloniaLyrics/Themes/AvaloniaLyrics.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/SongListStyles.axaml" />
-        <StyleInclude Source="avares://KugouAvaloniaPlayer/Styles/MediaCardStyles.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/SongListStyles.axaml" />
+        <StyleInclude Source="avares://HuayuanMusic.P1/Styles/MediaCardStyles.axaml" />
     </Application.Styles>
 
     <Application.Resources>

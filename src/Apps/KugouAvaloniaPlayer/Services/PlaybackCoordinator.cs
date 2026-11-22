@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using System.Threading;
@@ -22,10 +22,7 @@ public interface IPlaybackCoordinator : IDisposable
 public sealed class PlaybackCoordinator(ILogger<PlaybackCoordinator> logger) : IPlaybackCoordinator
 {
     private readonly SemaphoreSlim _streamLoadGate = new(1, 1);
-    private readonly HttpClient _remoteAudioClient = new(KgPrimaryHandler.Create())
-    {
-        Timeout = Timeout.InfiniteTimeSpan
-    };
+    private readonly HttpClient _remoteAudioClient = Startup.OfflineStartupNetwork.AudioClient();
     private int _streamLoadOperationVersion;
 
     public DualTrackAudioPlayer Player { get; } = new();
@@ -70,6 +67,8 @@ public sealed class PlaybackCoordinator(ILogger<PlaybackCoordinator> logger) : I
         bool prepareOnly,
         CancellationToken cancellationToken)
     {
+        if (Startup.OfflineStartupProfile.Active && !Startup.OfflineStartupProfile.Current.AllowsMedia(source)) return false;
+
         var operationVersion = Interlocked.Increment(ref _streamLoadOperationVersion);
         using var operationCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         operationCts.CancelAfter(timeout);

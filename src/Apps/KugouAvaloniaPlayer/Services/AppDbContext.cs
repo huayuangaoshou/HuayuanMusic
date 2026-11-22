@@ -23,9 +23,8 @@ public static class AppDatabase
 #endif
 
     public static readonly string DatabasePath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "kugou",
-        "kugou-player.db");
+        AppDataPaths.RoamingRoot,
+        "huayuan-music-p1.db");
 
     public static SqliteConnection CreateConnection()
     {

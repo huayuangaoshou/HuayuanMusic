@@ -268,7 +268,7 @@ public partial class PlayerViewModel
 
         CurrentPlayingSong = _preparedNextSong;
         CurrentPlayingSong.IsPlaying = true;
-        IsLiked = _favoriteService.IsLiked(CurrentPlayingSong.Hash);
+        IsLiked = _favoriteService.IsLiked(CurrentPlayingSong);
         ClearLyricsForPendingSongSwitch();
         CurrentPositionSeconds = 0;
         TotalDurationSeconds = CurrentPlayingSong.DurationSeconds > 0

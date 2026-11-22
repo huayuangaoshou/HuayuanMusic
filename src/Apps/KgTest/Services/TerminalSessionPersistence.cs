@@ -10,7 +10,7 @@ internal sealed class TerminalSessionPersistence : ISessionPersistence
 
     private static readonly string SessionPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "kugou",
+        "HuayuanMusic-P1-Terminal",
         "session.json");
 
     private static readonly JsonSerializerOptions JsonOptions = new()

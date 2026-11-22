@@ -48,6 +48,7 @@ internal sealed class WaylandDesktopLyricSession : IDisposable
     private static string ExecutablePath => Path.Combine(AppContext.BaseDirectory, "kugou-wayland-lyrics");
 
     public static bool CanTryStart => OperatingSystem.IsLinux()
+        && ForkPreviewPolicy.NativeLyricHelpersEnabled
         && SettingsManager.Settings.EnableNativeDesktopLyrics
         && !string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("WAYLAND_DISPLAY"))
         && File.Exists(ExecutablePath)
@@ -59,6 +60,9 @@ internal sealed class WaylandDesktopLyricSession : IDisposable
     public static async Task<WaylandDesktopLyricSession?> TryStartAsync(DesktopLyricViewModel viewModel,
         IUiDispatcherService dispatcher, CancellationToken cancellationToken)
     {
+        if (!CanTryStart)
+            return null;
+
         var process = new Process
         {
             StartInfo = new ProcessStartInfo

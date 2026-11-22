@@ -73,7 +73,7 @@
                                         VerticalAlignment="Center"
                                         Margin="12,0,0,0"
                                         Spacing="4">
-                                <local:ScrollingTextBlock Text="{Binding Player.DisplayedPlayingSong.DisplayTitle, TargetNullValue='KA Music'}"
+                                <local:ScrollingTextBlock Text="{Binding Player.DisplayedPlayingSong.DisplayTitle, TargetNullValue='Huayuan Music (P1)'}"
                                                           Width="200"
                                                           Height="18"
                                                           FontWeight="Bold"

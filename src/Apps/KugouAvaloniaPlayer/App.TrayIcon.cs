@@ -21,7 +21,7 @@ partial class App
         _playerViewModel = player;
         var playbackCommands = (IPlaybackCommands)player;
 
-        var iconUri = new Uri("avares://KugouAvaloniaPlayer/Assets/ka-music.ico");
+        var iconUri = new Uri("avares://HuayuanMusic.P1/Assets/ka-music.ico");
         using var iconStream = AssetLoader.Open(iconUri);
         var icon = new WindowIcon(iconStream);
 
@@ -71,7 +71,7 @@ partial class App
         _trayIcon = new TrayIcon
         {
             Icon = icon,
-            ToolTipText = "KA Music",
+            ToolTipText = "Huayuan Music (P1)",
             Menu = menu,
             IsVisible = true
         };

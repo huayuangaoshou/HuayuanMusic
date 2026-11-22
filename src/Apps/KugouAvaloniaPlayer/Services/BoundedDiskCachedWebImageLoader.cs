@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Enumeration;
@@ -22,7 +22,7 @@ public sealed class BoundedDiskCachedWebImageLoader(
     int maxMemoryEntries = BoundedDiskCachedWebImageLoader.DefaultMaxMemoryEntries,
     long maxMemoryBytes = BoundedDiskCachedWebImageLoader.DefaultMaxMemoryBytes,
     long maxDiskBytes = BoundedDiskCachedWebImageLoader.DefaultMaxDiskBytes)
-    : BaseWebImageLoader(httpClient ?? new HttpClient(), disposeHttpClient: httpClient == null)
+    : BaseWebImageLoader(httpClient ?? Startup.OfflineStartupNetwork.FallbackClient(), disposeHttpClient: httpClient == null)
 {
     private const int DefaultMaxMemoryEntries = 200;
     private const long DefaultMaxMemoryBytes = 32L * 1024 * 1024;

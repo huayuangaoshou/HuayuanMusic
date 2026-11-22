@@ -8,7 +8,7 @@ internal sealed class TerminalSettingsStore
 {
     private static readonly string SettingsPath = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "kugou",
+        "HuayuanMusic-P1-Terminal",
         "KgTestTerminalSettings.json");
 
     private static readonly JsonSerializerOptions JsonOptions = new()

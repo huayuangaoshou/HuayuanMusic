@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using ZLinq;
@@ -33,6 +33,8 @@ public sealed class PlaybackSourceResolver(
         string quality,
         CancellationToken cancellationToken)
     {
+        if (Startup.OfflineStartupProfile.Active) return Startup.OfflineStartupProfile.Current.AllowsMedia(song.LocalFilePath) ? PlaybackSourceResult.Local(song.LocalFilePath!) : PlaybackSourceResult.Failed(PlaybackSourceFailureReason.Unavailable, PlaybackSourceOrigin.LocalFile);
+
         var localFilePath = song.LocalFilePath;
         if (string.Equals(song.LocalSourceType, LocalMusicLibraryService.SourceTypeJellyfin, StringComparison.Ordinal) ||
             (!string.IsNullOrWhiteSpace(localFilePath) &&

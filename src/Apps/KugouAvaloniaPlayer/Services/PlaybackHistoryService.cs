@@ -25,9 +25,11 @@ public sealed class PlaybackHistoryService(
     private PlaybackHistoryFileModel? _latestCache;
 
     public event EventHandler? HistoryChanged;
+    public bool IsLocalHistoryMode => string.IsNullOrWhiteSpace(sessionManager.Session.Token);
 
     public async Task<IReadOnlyList<SongItem>> LoadSongsAsync()
     {
+        if (IsLocalHistoryMode) return LocalMusicRecordStore.LoadHistory();
         await _historyLock.WaitAsync();
         try
         {
@@ -42,6 +44,12 @@ public sealed class PlaybackHistoryService(
 
     public async Task RecordPlayedAsync(SongItem song)
     {
+        if (LocalMusicRecordStore.IsLocal(song))
+        {
+            LocalMusicRecordStore.RecordPlayed(song);
+            HistoryChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         if (string.IsNullOrWhiteSpace(song.Hash) &&
             string.IsNullOrWhiteSpace(song.LocalFilePath) &&
             string.IsNullOrWhiteSpace(song.Name))
@@ -73,6 +81,12 @@ public sealed class PlaybackHistoryService(
 
     public async Task ClearAsync()
     {
+        if (IsLocalHistoryMode)
+        {
+            LocalMusicRecordStore.ClearHistory();
+            HistoryChanged?.Invoke(this, EventArgs.Empty);
+            return;
+        }
         await _historyLock.WaitAsync();
         try
         {
@@ -167,8 +181,7 @@ public sealed class PlaybackHistoryService(
     private string GetHistoryFilePath()
     {
         return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "kugou",
+            AppDataPaths.RoamingRoot,
             $"playback_history_{GetCurrentUserId()}.json");
     }
 
@@ -178,7 +191,7 @@ public sealed class PlaybackHistoryService(
         return string.IsNullOrWhiteSpace(uid) ? "0" : uid;
     }
 
-    private static PlaybackHistoryItem ToHistoryItem(SongItem song)
+    internal static PlaybackHistoryItem ToHistoryItem(SongItem song)
     {
         return new PlaybackHistoryItem
         {
@@ -201,7 +214,7 @@ public sealed class PlaybackHistoryService(
         };
     }
 
-    private static SongItem ToSongItem(PlaybackHistoryItem item)
+    internal static SongItem ToSongItem(PlaybackHistoryItem item)
     {
         return new SongItem
         {
@@ -215,7 +228,7 @@ public sealed class PlaybackHistoryService(
             FileId = item.FileId,
             Singers = item.Singers ?? new List<SingerLite>(),
             Cover = string.IsNullOrWhiteSpace(item.Cover)
-                ? "avares://KugouAvaloniaPlayer/Assets/default_song.webp"
+                ? "avares://HuayuanMusic.P1/Assets/default_song.webp"
                 : item.Cover,
             DurationSeconds = item.DurationSeconds,
             LocalFilePath = item.LocalFilePath,

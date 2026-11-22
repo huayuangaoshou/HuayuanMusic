@@ -6,6 +6,8 @@ using Avalonia.Threading;
 using Serilog;
 using Serilog.Events;
 
+using KugouAvaloniaPlayer.Services;
+
 namespace KugouAvaloniaPlayer.Services.Startup;
 
 internal static class CrashReporting
@@ -17,8 +19,7 @@ internal static class CrashReporting
 
     private static string LogDirectory =>
         Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "kugou",
+            AppDataPaths.RoamingRoot,
             "logs");
 
     public static void ConfigureLogging()

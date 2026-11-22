@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
@@ -32,6 +32,12 @@ public sealed partial class AvaloniaAppServiceProvider
             nameof(CreateRoot),
             kind: RootKinds.Internal | RootKinds.Partial | RootKinds.Method)
         .Bind<DesktopAppRoot>().To<DesktopAppRoot>()
+        .Root<Owned<OfflineInfrastructureRoot>>(nameof(CreateOfflineInfrastructureRoot), kind: RootKinds.Internal | RootKinds.Partial | RootKinds.Method)
+        .Bind<OfflineInfrastructureRoot>().To<OfflineInfrastructureRoot>()
+        .Root<Owned<OfflineWindowRoot>>(nameof(CreateOfflineWindowRoot),kind: RootKinds.Internal | RootKinds.Partial | RootKinds.Method)
+        .Bind<OfflineWindowRoot>().To<OfflineWindowRoot>()
+        .Bind<OfflinePlayerViewModel>().To<OfflinePlayerViewModel>()
+        .Bind<LocalFavoritesViewModel>().To<LocalFavoritesViewModel>()
 
         .RootArg<ILoggerFactory>("loggerFactory")
         .RootArg<Dispatcher>("uiDispatcher")
@@ -118,8 +124,14 @@ public sealed partial class AvaloniaAppServiceProvider
         ILoggerFactory loggerFactory,
         Dispatcher uiDispatcher);
 
+    internal partial Owned<OfflineInfrastructureRoot> CreateOfflineInfrastructureRoot(ILoggerFactory loggerFactory, Dispatcher uiDispatcher);
+
+    internal partial Owned<OfflineWindowRoot> CreateOfflineWindowRoot(ILoggerFactory loggerFactory, Dispatcher uiDispatcher);
+
     private static HttpClient CreateHttpClient(CookieContainer cookieContainer, KgSignatureHandler signatureHandler)
     {
+        if (Startup.OfflineStartupProfile.Active) return Startup.OfflineStartupNetwork.MockClient();
+
         var primaryHandler = KgPrimaryHandler.Create(cookieContainer);
 
         signatureHandler.InnerHandler = primaryHandler;
@@ -127,6 +139,17 @@ public sealed partial class AvaloniaAppServiceProvider
         return new HttpClient(signatureHandler, disposeHandler: true);
     }
 }
+
+internal readonly record struct OfflineInfrastructureRoot(
+    HttpClient HttpClient, IHttpClientFactory Clients, CookieContainer Cookies,
+    KgSessionManager Session, ISessionPersistence Persistence,
+    ILocalMusicLibraryService Library, FavoritePlaylistService Favorites, PlaybackHistoryService History,
+    IPlaybackCoordinator Coordinator, IPlaybackSourceResolver Sources, IFolderPickerService Picker,
+    ILoginInitializationService Login, IVipEntitlementService Vip, INetworkConnectivityService Network,
+    LyricsService Lyrics, PlaybackQueueCacheService QueueCache, KuGou.Net.Clients.UserClient UserClient, IKgTransport Transport);
+
+internal readonly record struct OfflineWindowRoot(OfflinePlayerViewModel ViewModel, PlayerViewModel Player,
+    IPlaybackCoordinator Coordinator, PlaybackQueueManager Queue, ILocalMusicLibraryService Library);
 
 internal readonly record struct DesktopAppRoot(
     MainWindowViewModel MainWindowViewModel,

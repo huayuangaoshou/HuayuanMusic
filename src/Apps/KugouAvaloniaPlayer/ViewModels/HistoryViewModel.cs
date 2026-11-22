@@ -20,7 +20,7 @@ public partial class HistoryViewModel : PageViewModelBase
         _ = LoadAsync();
     }
 
-    public override string DisplayName => "播放历史";
+    public override string DisplayName => _historyService.IsLocalHistoryMode ? "本地播放历史" : "播放历史";
     public override string Icon => "/Assets/history-svgrepo-com.svg";
 
     public AvaloniaList<SongItem> Songs { get; } = new();

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using ZLinq;
 using System.Threading;
@@ -27,9 +27,9 @@ public partial class MyPlaylistsViewModel : PageViewModelBase, IDisposable
     private const int UserPlaylistPageSize = 100;
     private const int PlaylistSongPageSize = 200;
     private const int MaxUserPlaylistPages = 200;
-    private const string DefaultCover = "avares://KugouAvaloniaPlayer/Assets/default_listcard.webp";
-    private const string DefaultSongCover = "avares://KugouAvaloniaPlayer/Assets/default_song.webp";
-    private const string LikeCover = "avares://KugouAvaloniaPlayer/Assets/LikeList.jpg";
+    private const string DefaultCover = "avares://HuayuanMusic.P1/Assets/default_listcard.webp";
+    private const string DefaultSongCover = "avares://HuayuanMusic.P1/Assets/default_song.webp";
+    private const string LikeCover = "avares://HuayuanMusic.P1/Assets/LikeList.jpg";
 
     private readonly ICreatePlaylistDialogService _createPlaylistDialogService;
     private readonly IExternalPlaylistImportService _externalPlaylistImportService;
@@ -147,6 +147,8 @@ public partial class MyPlaylistsViewModel : PageViewModelBase, IDisposable
     [RelayCommand]
     private async Task LoadAllPlaylists()
     {
+        if (KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active) return;
+
         if (_isDisposed)
             return;
 

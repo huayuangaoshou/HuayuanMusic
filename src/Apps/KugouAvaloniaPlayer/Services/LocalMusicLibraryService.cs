@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using ZLinq;
@@ -94,8 +94,7 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
     public const string SourceTypeJellyfin = "Jellyfin";
 
     private static readonly string _localSongCoverCacheDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "kugou",
+        AppDataPaths.LocalRoot,
         "local-song-covers");
 
     private static readonly HashSet<string> _supportedLocalAudioExtensions =
@@ -308,6 +307,8 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
         JellyfinLibrary library,
         IProgress<JellyfinImportProgress>? progress = null,
         CancellationToken cancellationToken = default) {
+        if (Startup.OfflineStartupProfile.Active) throw new InvalidOperationException("Online library import disabled");
+
         await EnsureInitializedAsync(cancellationToken);
 
         var serverFingerprint = jellyfinClient.GetServerFingerprint(options.ServerUrl);
@@ -462,7 +463,10 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
     public async Task<LocalPlaylistSummary> ImportFolderAsync(
         string folderPath,
         CancellationToken cancellationToken = default) {
+        if (Startup.OfflineStartupProfile.Active) { Startup.OfflineStartupProfile.RejectLinks(folderPath); if (!Startup.OfflineStartupProfile.Under(Path.GetFullPath(folderPath), Startup.OfflineStartupProfile.Current.Media) && Path.GetFullPath(folderPath)!=Startup.OfflineStartupProfile.Current.Media) throw new IOException("Outside admitted media directory"); Startup.OfflineStartupProfile.Current.ValidateMediaTree(folderPath); }
+
         await EnsureInitializedAsync(cancellationToken);
+        folderPath = Path.TrimEndingDirectorySeparator(Path.GetFullPath(folderPath));
         if (!Directory.Exists(folderPath))
             throw new DirectoryNotFoundException(folderPath);
 
@@ -506,11 +510,20 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
         long playlistId,
         IEnumerable<string> filePaths,
         CancellationToken cancellationToken = default) {
+        if (Startup.OfflineStartupProfile.Active) foreach (var path in filePaths) Startup.OfflineStartupProfile.Current.DemandMedia(path);
+
         await EnsureInitializedAsync(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         var files = filePaths.AsValueEnumerable()
-                             .Where(IsSupportedAudioFile)
+                             .Select(Path.GetFullPath)
                              .Distinct(StringComparer.OrdinalIgnoreCase)
                              .ToList();
+        foreach (var file in files) {
+            if (!File.Exists(file))
+                throw new FileNotFoundException("本地音频文件不存在。", file);
+            if (!_supportedLocalAudioExtensions.Contains(Path.GetExtension(file)))
+                throw new NotSupportedException($"不支持的本地音频扩展名：{Path.GetExtension(file)}");
+        }
         if (files.Count == 0)
             return;
 
@@ -596,6 +609,8 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
         long trackId,
         string coverPath,
         CancellationToken cancellationToken = default) {
+        if (Startup.OfflineStartupProfile.Active) Startup.OfflineStartupProfile.Current.DemandMedia(coverPath);
+
         await EnsureInitializedAsync(cancellationToken);
         await using var connection = await AppDatabase.CreateConnectionAsync(cancellationToken);
         var track = await GetTrackAsync(connection, null, trackId, cancellationToken);
@@ -617,6 +632,8 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
     }
 
     private async Task ImportLegacyJsonAsync(CancellationToken cancellationToken) {
+        if (Startup.OfflineStartupProfile.Active) return;
+
         var folders = SettingsManager.Settings.LocalMusicFolders.AsValueEnumerable().ToList();
         if (folders.Count == 0)
             return;
@@ -1406,6 +1423,7 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
         var coverPath = IsUsableFile(explicitCoverPath) ? explicitCoverPath : null;
 
         try {
+            if (Startup.OfflineStartupProfile.Active) Startup.OfflineMediaImport.ValidateMetadataBudget(filePath);
             var track = new Track(filePath);
             title = string.IsNullOrWhiteSpace(track.Title) ? title : track.Title;
             artist = NormalizeAtlArtists(track.Artist, artist);
@@ -1414,6 +1432,16 @@ public sealed class LocalMusicLibraryService(IJellyfinClient jellyfinClient, ILo
             coverPath ??= GetEmbeddedSongCoverSource(filePath, track);
         } catch (Exception ex) {
             logger.LogWarning(ex, "读取标签失败，已降级为文件名加载。 file={File}", filePath);
+        }
+
+        if ((Startup.OfflineStartupProfile.Active || string.Equals(Path.GetExtension(filePath), ".wav", StringComparison.OrdinalIgnoreCase)) && duration <= 0)
+            throw new InvalidDataException($"无法读取本地音频时长，文件可能损坏或不受支持：{filePath}");
+
+        if (Startup.OfflineStartupProfile.Active) {
+            // Bound untrusted labels before binding to the temporary UI or storing in SQLite.
+            static string Label(string value) => value.Length <= 512 ? value :
+                value[..(char.IsHighSurrogate(value[510]) ? 510 : 511)] + "…";
+            title = Label(title); artist = Label(artist); album = Label(album);
         }
 
         return new LocalTrackMetadata(title, artist, album, duration, coverPath);

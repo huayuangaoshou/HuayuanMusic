@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using Avalonia.Controls.Notifications;
 using Avalonia.Threading;
@@ -24,6 +24,8 @@ internal sealed class LoginInitializationService(
 {
     public async Task<LoginInitializationResult> InitializeLocalSessionAsync()
     {
+        if (Startup.OfflineStartupProfile.Active) return LoginInitializationResult.GuestResult;
+
         try
         {
             var session = sessionManager.Session;
@@ -58,6 +60,8 @@ internal sealed class LoginInitializationService(
 
     public async Task<UserProfileLoadResult> LoadCurrentUserProfileAsync()
     {
+        if (Startup.OfflineStartupProfile.Active) return UserProfileLoadResult.EmptyResult;
+
         try
         {
             var userInfo = await userClient.GetUserInfoAsync();

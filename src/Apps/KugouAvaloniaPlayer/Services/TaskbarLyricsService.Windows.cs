@@ -36,7 +36,7 @@ public sealed class TaskbarLyricsService : ITaskbarLyricsService
         _player.PropertyChanged += OnPlayerPropertyChanged;
     }
 
-    public bool IsSupported => true;
+    public bool IsSupported => ForkPreviewPolicy.NativeLyricHelpersEnabled;
     public bool IsEnabled
     {
         get
@@ -74,6 +74,9 @@ public sealed class TaskbarLyricsService : ITaskbarLyricsService
 
     private DetachedSession? StartCoreLocked()
     {
+        if (!IsSupported)
+            return null;
+
         var executablePath = Path.Combine(AppContext.BaseDirectory, "KugouTaskbarLyrics.exe");
         if (!File.Exists(executablePath))
         {

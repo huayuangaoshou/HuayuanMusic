@@ -24,6 +24,7 @@ public class ViewLocator : IDataTemplate
             [typeof(RankViewModel)] = static () => new RankView(),
             [typeof(DailyRecommendViewModel)] = static () => new DailyRecommendView(),
             [typeof(HistoryViewModel)] = static () => new HistoryView(),
+            [typeof(LocalFavoritesViewModel)] = static () => new LocalFavoritesView(),
             [typeof(LocalMusicLibraryViewModel)] = static () => new LocalMusicLibraryView(),
             [typeof(MyPlaylistsViewModel)] = static () => new MyPlaylistsView(),
             [typeof(DiscoverViewModel)] = static () => new DiscoverView(),

@@ -128,8 +128,8 @@ public partial class AddToPlaylistDialogViewModel : ObservableObject
 
     public static PlaylistDialogPlaylistItemViewModel ToPlaylistDialogItem(UserPlaylistItem item)
     {
-        const string defaultPlaylistCover = "avares://KugouAvaloniaPlayer/Assets/default_listcard.webp";
-        const string likePlaylistCover = "avares://KugouAvaloniaPlayer/Assets/LikeList.jpg";
+        const string defaultPlaylistCover = "avares://HuayuanMusic.P1/Assets/default_listcard.webp";
+        const string likePlaylistCover = "avares://HuayuanMusic.P1/Assets/LikeList.jpg";
 
         return new PlaylistDialogPlaylistItemViewModel
         {

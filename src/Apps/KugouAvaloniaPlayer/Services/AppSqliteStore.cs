@@ -62,6 +62,11 @@ public static class AppSqliteStore
     {
         try
         {
+            // Migration cleanup must never delete sibling applications' data.
+            var relative = Path.GetRelativePath(AppDataPaths.RoamingRoot, Path.GetFullPath(path));
+            if (Path.IsPathRooted(relative) || relative == ".." ||
+                relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+                return;
             if (File.Exists(path))
                 File.Delete(path);
         }

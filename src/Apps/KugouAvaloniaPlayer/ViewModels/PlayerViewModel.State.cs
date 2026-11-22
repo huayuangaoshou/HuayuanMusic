@@ -13,6 +13,12 @@ namespace KugouAvaloniaPlayer.ViewModels;
 
 public partial class PlayerViewModel
 {
+    private void OnLocalFavoritesChanged()
+    {
+        void Update() { if (CurrentPlayingSong is { } song && LocalMusicRecordStore.IsLocal(song)) IsLiked = LocalMusicRecordStore.IsFavorite(song); }
+        if (Avalonia.Threading.Dispatcher.UIThread.CheckAccess()) Update();
+        else Avalonia.Threading.Dispatcher.UIThread.Post(Update);
+    }
     private void OnPlaybackTimerTick(object? sender, EventArgs e)
     {
         if (_player.IsStopped || IsDraggingProgress)

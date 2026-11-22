@@ -14,7 +14,7 @@
                  x:DataType="vm:MainWindowViewModel"
                  Name="RootWindow"
                  Icon="/Assets/ka-music.ico"
-                 Title="KA Music"
+                 Title="Huayuan Music (P1)"
                  Background="Transparent"
                  CanMaximize="True"
                  TransparencyLevelHint="Transparent">

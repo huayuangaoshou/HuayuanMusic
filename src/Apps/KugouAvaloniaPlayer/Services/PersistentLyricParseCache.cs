@@ -15,8 +15,7 @@ internal static class PersistentLyricParseCache
     private const int MaxCacheFiles = 8192;
 
     private static readonly string CacheRoot = Path.Combine(
-        ResolveLocalCacheRoot(),
-        "kugou",
+        AppDataPaths.LocalRoot,
         "lyric-parse-cache");
 
     public static bool TryLoadOnline(string id, string accessKey, string fmt, out List<ParsedLyricLine> lines)

@@ -7,16 +7,16 @@ namespace KugouAvaloniaPlayer.Services.SystemMediaSession;
 
 internal static class WindowsAppIdentity
 {
-    private const string AppUserModelId = "KugouAvaloniaPlayer";
-    private const string ShortcutFileName = "KugouAvaloniaPlayer.lnk";
-    private const string DisplayName = "KA Music";
+    private const string AppUserModelId = "HuayuanMusic.P1";
+    private const string ShortcutFileName = "HuayuanMusic-P1.lnk";
+    private const string DisplayName = "Huayuan Music (P1)";
 
     public static void Register()
     {
         try
         {
             _ = SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
-            EnsureStartMenuShortcut();
+            // P1 developer preview: do not create Start Menu shortcuts automatically.
         }
         catch
         {

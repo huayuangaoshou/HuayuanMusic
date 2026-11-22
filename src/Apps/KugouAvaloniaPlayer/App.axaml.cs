@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net.Http;
 using AsyncImageLoader;
@@ -29,6 +29,15 @@ public partial class App : Application
 
     public override void Initialize()
     {
+        // Also refuse alternate AppBuilder/designer entry until App/DI is isolated.
+        NormalStartupGate.DemandGuiAuthorization();
+        if(OfflineGuiApplication.Running)
+        {
+            Styles.Add(new Avalonia.Themes.Fluent.FluentTheme());
+            RequestedThemeVariant=ThemeVariant.Light;
+            OfflineGuiApplication.Audit("APP_INITIALIZE","real App offline resources");
+            return;
+        }
         AvaloniaXamlLoader.Load(this);
 #if DEBUG
         this.AttachDeveloperTools();
@@ -37,6 +46,13 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        NormalStartupGate.DemandGuiAuthorization();
+        if(OfflineGuiApplication.Running)
+        {
+            OfflineGuiApplication.InitializeDesktop(this);
+            base.OnFrameworkInitializationCompleted();
+            return;
+        }
         CrashReporting.ConfigureLogging();
         CrashReporting.RegisterUiThreadHandler();
         try
@@ -145,15 +161,14 @@ public partial class App : Application
     private void ConfigureImageLoader()
     {
         var cacheFolder = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "kugou",
+            AppDataPaths.LocalRoot,
             "image-cache");
 
         var previousLoader = ImageLoader.AsyncImageLoader;
         _imageLoader = new BoundedDiskCachedWebImageLoader(
             cacheFolder,
             TimeSpan.FromDays(7),
-            httpClient: new HttpClient(KuGou.Net.Infrastructure.Http.KgPrimaryHandler.Create()),
+            httpClient: OfflineStartupNetwork.ImageClient(),
             maxMemoryEntries: 200,
             maxMemoryBytes: 32L * 1024 * 1024,
             maxDiskBytes: 256L * 1024 * 1024);

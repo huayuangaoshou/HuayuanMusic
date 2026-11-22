@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -14,8 +14,7 @@ public sealed class KugouSessionPersistence : ISessionPersistence
     private const string StoreKey = "default";
 
     private static readonly string SessionPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "kugou",
+        AppDataPaths.RoamingRoot,
         "session.json");
 
     private static readonly KugouSessionJsonContext JsonContext = new(new JsonSerializerOptions
@@ -25,6 +24,8 @@ public sealed class KugouSessionPersistence : ISessionPersistence
 
     public KgSession? Load()
     {
+        if (IsolatedSessionPersistence.Current is { } memory) return memory.Load();
+
         try
         {
             var content = AppSqliteStore.LoadValue(StoreScope, StoreKey);
@@ -48,6 +49,8 @@ public sealed class KugouSessionPersistence : ISessionPersistence
 
     public void Save(KgSession session)
     {
+        if (IsolatedSessionPersistence.Current is { } memory) { memory.Save(session); return; }
+
         try
         {
             var dir = Path.GetDirectoryName(SessionPath);
@@ -67,6 +70,8 @@ public sealed class KugouSessionPersistence : ISessionPersistence
 
     public void Clear()
     {
+        if (IsolatedSessionPersistence.Current is { } memory) { memory.Clear(); return; }
+
         try
         {
             AppSqliteStore.DeleteValue(StoreScope, StoreKey);

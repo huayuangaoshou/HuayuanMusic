@@ -353,7 +353,7 @@ public partial class SettingViewModel : PageViewModelBase
 
     public override string DisplayName => "设置";
     public override string Icon => "/Assets/gear-svgrepo-com.svg";
-    public string AppDisplayName => "KA Music";
+    public string AppDisplayName => "Huayuan Music (P1)";
     public string AppVersion => $"v {GetCurrentVersion()}";
 
     public CloseBehavior[] AvailableCloseBehaviors { get; } = Enum.GetValues<CloseBehavior>();
@@ -479,8 +479,7 @@ public partial class SettingViewModel : PageViewModelBase
     private void OpenLogFolder()
     {
         var logDirectory = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "kugou",
+            AppDataPaths.RoamingRoot,
             "logs");
 
         Directory.CreateDirectory(logDirectory);

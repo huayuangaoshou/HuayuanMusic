@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
@@ -180,6 +180,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task InitializeStartupAsync()
     {
+        if (KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active) return;
+
         try
         {
             await LoadLocalSessionOrLogin();
@@ -195,6 +197,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private async Task ApplyDeferredStartupPreferencesAsync()
     {
+        if (KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active) return;
+
         try
         {
             await Task.Delay(TimeSpan.FromMilliseconds(800));

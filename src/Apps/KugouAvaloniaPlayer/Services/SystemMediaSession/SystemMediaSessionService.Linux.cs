@@ -15,12 +15,14 @@ using KugouAvaloniaPlayer.ViewModels;
 using Microsoft.Extensions.Logging;
 using Tmds.DBus.Protocol;
 
+using KugouAvaloniaPlayer.Services;
+
 namespace KugouAvaloniaPlayer.Services.SystemMediaSession;
 
 public sealed class SystemMediaSessionService(
     ILogger<SystemMediaSessionService> logger) : ISystemMediaSessionService, IPathMethodHandler
 {
-    private const string BusName = "org.mpris.MediaPlayer2.KugouAvaloniaPlayer";
+    private const string BusName = "org.mpris.MediaPlayer2.HuayuanMusicP1";
     private const string MediaObjectPath = "/org/mpris/MediaPlayer2";
     private const string RootInterface = "org.mpris.MediaPlayer2";
     private const string PlayerInterface = "org.mpris.MediaPlayer2.Player";
@@ -29,8 +31,7 @@ public sealed class SystemMediaSessionService(
     private const string ErrorPrefix = "org.freedesktop.DBus.Error.";
 
     private readonly string _artworkCacheDirectory = System.IO.Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "kugou",
+        AppDataPaths.LocalRoot,
         "media-session-artwork");
 
     private readonly SemaphoreSlim _initializationLock = new(1, 1);
@@ -526,8 +527,8 @@ public sealed class SystemMediaSessionService(
                 "CanQuit" or "Fullscreen" or "CanSetFullscreen" => VariantValue.Bool(false),
                 "CanRaise" => VariantValue.Bool(true),
                 "HasTrackList" => VariantValue.Bool(false),
-                "Identity" => VariantValue.String("KA Music"),
-                "DesktopEntry" => VariantValue.String("KugouAvaloniaPlayer"),
+                "Identity" => VariantValue.String("Huayuan Music (P1)"),
+                "DesktopEntry" => VariantValue.String("HuayuanMusicP1"),
                 "SupportedUriSchemes" or "SupportedMimeTypes" => VariantValue.Array(Array.Empty<string>()),
                 _ => throw new ArgumentOutOfRangeException(nameof(propertyName), propertyName, null)
             },
@@ -800,7 +801,7 @@ public sealed class SystemMediaSessionService(
     private async Task<string?> ResolveArtworkUrlAsync(string? cover)
     {
         if (string.IsNullOrWhiteSpace(cover))
-            return await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp")
+            return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp")
                 .ConfigureAwait(false);
 
         if (cover.StartsWith("avares://", StringComparison.OrdinalIgnoreCase))
@@ -814,7 +815,7 @@ public sealed class SystemMediaSessionService(
 
         return File.Exists(cover)
             ? new Uri(System.IO.Path.GetFullPath(cover)).AbsoluteUri
-            : await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp")
+            : await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp")
                 .ConfigureAwait(false);
     }
 
@@ -897,7 +898,7 @@ public sealed class SystemMediaSessionService(
             return default;
 
         var songKey = PlaybackQueueCacheService.BuildSongKey(song);
-        return new ObjectPath($"/com/kugou/KAMusic/Track/{GetStableHash(songKey)}");
+        return new ObjectPath($"/com/huayuan/Music/P1/Track/{GetStableHash(songKey)}");
     }
 
     private static double NormalizeSeconds(double seconds)

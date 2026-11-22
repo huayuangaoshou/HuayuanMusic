@@ -1,21 +1,39 @@
-using System;
+﻿using System;
 using Avalonia;
 #if KUGOU_WINDOWS
 using KugouAvaloniaPlayer.Services.SystemMediaSession;
 #endif
 using KugouAvaloniaPlayer.Services.Startup;
 using Serilog;
-using Velopack;
 
 namespace KugouAvaloniaPlayer;
 
 internal sealed class Program
 {
-    private static readonly StartupInstanceCoordinator StartupCoordinator = new();
+    private static StartupInstanceCoordinator? StartupCoordinator;
 
     [STAThread]
     public static void Main(string[] args)
     {
+        // Must precede logs, user paths, instance IPC, identity, Avalonia and DI.
+        // Only separately admitted offline modes can run; unrestricted startup remains refused.
+        if(args.Length>0 && args[0]=="--p15-offline-window")
+        {
+            Environment.ExitCode=NormalStartupGate.RunGui(args, Console.Out, (name,ticket,selftest,writer)=>OfflineGuiApplication.Run(name,ticket,selftest,writer,BuildAvaloniaApp));
+            return;
+        }
+        if(args.Length>0 && args[0]=="--p15a-r2-infrastructure")
+        {
+            Environment.ExitCode=NormalStartupGate.RunInfrastructure(args, Console.Out, OfflineInfrastructureProbe.Run);
+            return;
+        }
+        Environment.ExitCode = NormalStartupGate.Run(args, Console.Out);
+    }
+
+    private static void RunUnapprovedLegacyStartup(string[] args)
+    {
+        NormalStartupGate.DemandGuiAuthorization();
+        StartupCoordinator = new StartupInstanceCoordinator();
         CrashReporting.ConfigureLogging();
         CrashReporting.RegisterGlobalHandlers();
 
@@ -29,11 +47,8 @@ internal sealed class Program
 #if KUGOU_WINDOWS
         WindowsAppIdentity.Register();
 #endif
-        var velopack = VelopackApp.Build();
-
         try
         {
-            velopack.Run();
             BuildAvaloniaApp()
                 .StartWithClassicDesktopLifetime(args);
         }
@@ -50,7 +65,7 @@ internal sealed class Program
 
     internal static void ShutdownStartupCoordinator()
     {
-        StartupCoordinator.Dispose();
+        StartupCoordinator?.Dispose();
     }
 
     public static AppBuilder BuildAvaloniaApp()

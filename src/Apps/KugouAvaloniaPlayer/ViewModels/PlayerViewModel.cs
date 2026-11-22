@@ -195,6 +195,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
 
         _player = playbackCoordinator.Player;
         _player.PlaybackEnded += OnPlaybackEnded;
+        LocalMusicRecordStore.FavoritesChanged += OnLocalFavoritesChanged;
         MusicQuality = SettingsManager.Settings.MusicQuality;
         PlaybackSpeed = Math.Clamp(SettingsManager.Settings.PlaybackSpeed, 0.5f, 2.0f);
         IsSeamlessTransitionEnabled = SettingsManager.Settings.EnableSeamlessTransition;
@@ -261,6 +262,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
         _playbackTimer.Stop();
         _playbackTimer.Tick -= OnPlaybackTimerTick;
         _player.PlaybackEnded -= OnPlaybackEnded;
+        LocalMusicRecordStore.FavoritesChanged -= OnLocalFavoritesChanged;
         _queueManager.PlaybackQueue.CollectionChanged -= OnPlaybackQueueCollectionChanged;
         _personalFmService.StateChanged -= OnPersonalFmServiceStateChanged;
         PersonalFmStateChanged -= SyncDisplayPlaybackQueue;
@@ -323,7 +325,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
             CurrentPlayingSong.IsPlaying = true;
             DisplayedPlayingSong = song;
 
-            IsLiked = _favoriteService.IsLiked(song.Hash);
+            IsLiked = _favoriteService.IsLiked(song);
 
             StopAndReset();
 

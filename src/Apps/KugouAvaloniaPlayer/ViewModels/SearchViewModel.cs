@@ -26,9 +26,9 @@ public partial class SearchViewModel(
     ISukiToastManager toastManager,
     ILogger<SearchViewModel> logger) : PageViewModelBase
 {
-    private const string DefaultSongCover = "avares://KugouAvaloniaPlayer/Assets/default_song.webp";
-    private const string DefaultCardCover = "avares://KugouAvaloniaPlayer/Assets/default_listcard.webp";
-    private const string DefaultSingerCover = "avares://KugouAvaloniaPlayer/Assets/default_singer.webp";
+    private const string DefaultSongCover = "avares://HuayuanMusic.P1/Assets/default_song.webp";
+    private const string DefaultCardCover = "avares://HuayuanMusic.P1/Assets/default_listcard.webp";
+    private const string DefaultSingerCover = "avares://HuayuanMusic.P1/Assets/default_singer.webp";
     private const int PlaylistSongPageSize = 200;
     private string _currentDetailId = "";
     private long _currentAlbumAuthorId;

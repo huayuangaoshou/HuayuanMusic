@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using KuGou.Net.Clients;
@@ -21,6 +21,8 @@ internal sealed class VipEntitlementService(
     public async Task<VipEntitlementResult> TryEnsureDailyVipAsync(
         CancellationToken cancellationToken = default)
     {
+        if (Startup.OfflineStartupProfile.Active) return VipEntitlementResult.Failed(VipEntitlementFailureReason.HistoryUnavailable, null);
+
         cancellationToken.ThrowIfCancellationRequested();
         VipReceiveHistoryResponse? history;
         try

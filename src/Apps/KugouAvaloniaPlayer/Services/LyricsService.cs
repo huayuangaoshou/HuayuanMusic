@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -83,6 +83,8 @@ public class LyricsService(LyricClient lyricClient, ILogger<LyricsService> logge
 
     public async Task LoadOnlineLyricsAsync(string hash, string name)
     {
+        if (Startup.OfflineStartupProfile.Active) { Clear(); return; }
+
         Clear();
         try
         {
@@ -124,6 +126,8 @@ public class LyricsService(LyricClient lyricClient, ILogger<LyricsService> logge
 
     public async Task<DownloadedOnlineLyric?> DownloadOnlineLyricAsync(string hash, string name)
     {
+        if (Startup.OfflineStartupProfile.Active) return null;
+
         var searchJson = await lyricClient.SearchLyricAsync(hash, null, name, "no");
         if (!searchJson.TryGetProperty("candidates", out var candidatesElem) ||
             candidatesElem.ValueKind != JsonValueKind.Array)
@@ -152,6 +156,8 @@ public class LyricsService(LyricClient lyricClient, ILogger<LyricsService> logge
         DownloadedOnlineLyric lyric,
         CancellationToken cancellationToken = default)
     {
+        if (Startup.OfflineStartupProfile.Active) throw new InvalidOperationException("Embedding disabled in offline startup checks");
+
         if (!File.Exists(audioFilePath))
             throw new FileNotFoundException("本地音频文件不存在。", audioFilePath);
 
@@ -179,6 +185,8 @@ public class LyricsService(LyricClient lyricClient, ILogger<LyricsService> logge
 
     public async Task LoadLocalLyricsAsync(string audioFilePath)
     {
+        if (Startup.OfflineStartupProfile.Active) { Startup.OfflineStartupProfile.Current.DemandMedia(audioFilePath); Startup.OfflineStartupProfile.Current.ValidateMediaTree(Path.GetDirectoryName(audioFilePath)!); }
+
         Clear();
         try
         {

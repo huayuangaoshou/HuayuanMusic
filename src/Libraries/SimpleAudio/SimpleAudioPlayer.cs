@@ -376,7 +376,7 @@ public partial class SimpleAudioPlayer
 
     private static void TryLoadBassPlugin(string baseName)
     {
-        var pluginName = GetBassPluginName(baseName);
+        var pluginName = Path.Combine(AppContext.BaseDirectory, GetBassPluginName(baseName));
         var handle = Bass.PluginLoad(pluginName);
         if (handle == 0)
         {

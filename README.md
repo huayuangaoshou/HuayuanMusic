@@ -1,3 +1,18 @@
+# Huayuan Music P1 personal development preview
+
+This private, noncommercial personal fork is based on **KA Music v4.2.2**,
+copyright (c) 2026 Linsxyx, baseline `faeeb676f7315c70d43e4edc32b966fff55e5364`.
+The upstream [MIT license](LICENSE) is retained. Closed-source personal development
+is the intended scope; this is **not a release or a claim of cleared third-party rights**.
+The upstream README below contains a noncommercial-use restriction that conflicts
+with the MIT grant; it is preserved as evidence and remains a review item.
+Native BASS libraries, artwork, fonts and other dependencies have separate terms.
+See [P1 acceptance](docs/P1_CODEX_ACCEPTANCE.md) and [license risks](docs/P1_LICENSE_REVIEW.md).
+Upstream download, community and release links below refer to KA Music, not fork updates.
+For the safe offline gates, run `python tools/run_p1_offline.py` and
+`python tools/verify_huayuan_p1.py`. Do not use the inherited online startup instructions
+as evidence of P1 acceptance.
+
 <div align="center">
   <img src="src/Apps/KugouAvaloniaPlayer/Assets/ka-logo.png" alt="KA Music Logo" width="128" />
 

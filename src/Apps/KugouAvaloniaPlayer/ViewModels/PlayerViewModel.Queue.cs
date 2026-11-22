@@ -345,7 +345,7 @@ public partial class PlayerViewModel
                 currentSong.IsPlaying = true;
                 CurrentPlayingSong = currentSong;
                 DisplayedPlayingSong = currentSong;
-                IsLiked = _favoriteService.IsLiked(currentSong.Hash);
+                IsLiked = _favoriteService.IsLiked(currentSong);
                 TotalDurationSeconds = currentSong.DurationSeconds;
                 CurrentPositionSeconds = 0;
                 IsPlayingAudio = false;

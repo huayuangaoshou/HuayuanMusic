@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Encodings.Web;
@@ -36,8 +36,7 @@ public static class SettingsManager
     private const string StoreKey = "app";
 
     private static readonly string SettingsPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "kugou",
+        AppDataPaths.RoamingRoot,
         "AvaloniaPlayerSettings.json");
 
     private static readonly AppSettingsJsonContext JsonContext = new(new JsonSerializerOptions
@@ -50,6 +49,8 @@ public static class SettingsManager
 
     public static void Load()
     {
+        if (Startup.OfflineStartupProfile.Active) { Settings = new AppSettings { AutoCheckUpdate=false, OpenDesktopLyricOnStartup=false, EnableTaskbarLyrics=false, EnableNativeDesktopLyrics=false, EnableSeamlessTransition=false, EnableVolumeNormalization=false, MusicVolume=0 }; return; }
+
         try
         {
             var json = AppSqliteStore.LoadValue(StoreScope, StoreKey);
@@ -79,7 +80,7 @@ public static class SettingsManager
         {
             var json = JsonSerializer.Serialize(Settings, JsonContext.AppSettings);
             AppSqliteStore.SaveValue(StoreScope, StoreKey, json);
-            AppSqliteStore.DeleteFileIfExists(SettingsPath);
+            if (!Startup.OfflineStartupProfile.Active) AppSqliteStore.DeleteFileIfExists(SettingsPath);
         }
         catch (Exception ex)
         {

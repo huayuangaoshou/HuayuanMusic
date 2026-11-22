@@ -135,7 +135,7 @@
                                            TextTrimming="CharacterEllipsis" />
 
                                 <Svg Grid.Column="2"
-                                     Path="avares://KugouAvaloniaPlayer/Assets/NavigateNext.svg" />
+                                     Path="avares://HuayuanMusic.P1/Assets/NavigateNext.svg" />
                             </Grid>
                         </suki:GlassCard>
                     </DataTemplate>

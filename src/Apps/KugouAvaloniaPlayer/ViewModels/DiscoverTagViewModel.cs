@@ -44,8 +44,8 @@ public partial class DiscoverPlaylistTagGroup : ObservableObject
 
 public partial class DiscoverTagViewModel : PageViewModelBase
 {
-    private const string DefaultCardCover = "avares://KugouAvaloniaPlayer/Assets/default_listcard.webp";
-    private const string DefaultSongCover = "avares://KugouAvaloniaPlayer/Assets/default_song.webp";
+    private const string DefaultCardCover = "avares://HuayuanMusic.P1/Assets/default_listcard.webp";
+    private const string DefaultSongCover = "avares://HuayuanMusic.P1/Assets/default_song.webp";
     private const int PlaylistSongPageSize = 200;
 
     private readonly RecommendClient _discoveryClient;

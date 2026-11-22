@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using ZLinq;
 using System.Threading.Tasks;
@@ -31,6 +31,8 @@ public sealed class FolderPickerService : IFolderPickerService
 
     public async Task<string?> PickSingleFolderAsync(string title)
     {
+        if (Startup.OfflineStartupProfile.Active) return null;
+
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow == null)
             return null;
@@ -49,6 +51,8 @@ public sealed class FolderPickerService : IFolderPickerService
 
     public async Task<string?> PickSingleImageFileAsync(string title)
     {
+        if (Startup.OfflineStartupProfile.Active) return null;
+
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow == null)
             return null;
@@ -68,6 +72,8 @@ public sealed class FolderPickerService : IFolderPickerService
 
     public async Task<IReadOnlyList<string>> PickAudioFilesAsync(string title)
     {
+        if (Startup.OfflineStartupProfile.Active) return Array.Empty<string>();
+
         if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
             desktop.MainWindow == null)
             return Array.Empty<string>();

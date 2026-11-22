@@ -22,8 +22,8 @@ public partial class SingerViewModel : PageViewModelBase, IDisposable
     private const string HotSortText = "热门";
     private const string NewSortText = "最新";
     private const string AlbumsText = "专辑";
-    private const string DefaultSongCover = "avares://KugouAvaloniaPlayer/Assets/default_song.webp";
-    private const string DefaultCardCover = "avares://KugouAvaloniaPlayer/Assets/default_listcard.webp";
+    private const string DefaultSongCover = "avares://HuayuanMusic.P1/Assets/default_song.webp";
+    private const string DefaultCardCover = "avares://HuayuanMusic.P1/Assets/default_listcard.webp";
 
     private readonly string _authorId;
     private readonly ILogger<SingerViewModel> _logger;
@@ -111,12 +111,12 @@ public partial class SingerViewModel : PageViewModelBase, IDisposable
         _logger = logger;
         _authorId = authorId;
         SingerName = singerName;
-        SingerAvatar = "avares://KugouAvaloniaPlayer/Assets/default_singer.webp";
+        SingerAvatar = "avares://HuayuanMusic.P1/Assets/default_singer.webp";
         _ = LoadSongsAsync();
     }
 
     public override string DisplayName => "歌手详情";
-    public override string Icon => "avares://KugouAvaloniaPlayer/Assets/default_singer.webp";
+    public override string Icon => "avares://HuayuanMusic.P1/Assets/default_singer.webp";
 
     public IReadOnlyList<string> SortOptions { get; } = [HotSortText, NewSortText, AlbumsText];
 

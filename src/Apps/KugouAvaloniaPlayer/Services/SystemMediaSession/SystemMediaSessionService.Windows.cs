@@ -15,17 +15,18 @@ using Windows.Media;
 using Windows.Storage;
 using Windows.Storage.Streams;
 
+using KugouAvaloniaPlayer.Services;
+
 namespace KugouAvaloniaPlayer.Services.SystemMediaSession;
 
 public sealed class SystemMediaSessionService(
     IHttpClientFactory httpClientFactory,
     ILogger<SystemMediaSessionService> logger) : ISystemMediaSessionService
 {
-    private const string DefaultWindowTitle = "KA Music";
+    private const string DefaultWindowTitle = "Huayuan Music (P1)";
     private static readonly TimeSpan TimelineUpdateInterval = TimeSpan.FromMilliseconds(750);
     private readonly string _artworkCacheDirectory = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "kugou",
+        AppDataPaths.LocalRoot,
         "media-session-artwork");
 
     private Window? _mainWindow;
@@ -233,7 +234,7 @@ public sealed class SystemMediaSessionService(
     private async Task<string?> ResolveArtworkPathAsync(string? cover)
     {
         if (string.IsNullOrWhiteSpace(cover))
-            return await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp");
+            return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
 
         if (cover.StartsWith("avares://", StringComparison.OrdinalIgnoreCase))
             return await CopyAssetArtworkAsync(cover);
@@ -247,7 +248,7 @@ public sealed class SystemMediaSessionService(
                 return uri.LocalPath;
         }
 
-        return File.Exists(cover) ? cover : await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp");
+        return File.Exists(cover) ? cover : await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
     }
 
     private async Task<string?> DownloadArtworkAsync(Uri uri)
@@ -263,7 +264,7 @@ public sealed class SystemMediaSessionService(
                 uri,
                 HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
-                return await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp");
+                return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
 
             var contentExtension = GetArtworkExtension(response.Content.Headers.ContentType?.MediaType);
             if (!string.Equals(contentExtension, Path.GetExtension(cachePath), StringComparison.OrdinalIgnoreCase))
@@ -277,7 +278,7 @@ public sealed class SystemMediaSessionService(
         catch (Exception ex)
         {
             logger.LogDebug(ex, "下载 Windows 系统媒体控件封面失败。");
-            return await CopyAssetArtworkAsync("avares://KugouAvaloniaPlayer/Assets/default_song.webp");
+            return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
         }
     }
 

@@ -1,4 +1,4 @@
-using System.Security.Cryptography;
+﻿using System.Security.Cryptography;
 using System.Text;
 using MemoryPack;
 
@@ -12,8 +12,8 @@ internal static class PersistentAudioAnalysisCache
     private const long MaxCacheBytes = 64L * 1024 * 1024;
 
     private static readonly string CacheRoot = Path.Combine(
-        ResolveLocalCacheRoot(),
-        "kugou",
+        AudioCacheLocation.GetLocalRoot(),
+        "HuayuanMusic-P1",
         "simple-audio-cache");
 
     public static string? GetTrackAnalysisMemoryKey(string source, bool isLocal)

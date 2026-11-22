@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using ZLinq;
@@ -204,6 +204,9 @@ public partial class FavoritePlaylistService(
         return false;
     }
 
+    public bool IsLiked(SongItem song) => LocalMusicRecordStore.IsLocal(song)
+        ? LocalMusicRecordStore.IsFavorite(song) : IsLiked(song.Hash);
+
     public bool IsLiked(string hash)
     {
         var normalizedHash = NormalizeHash(hash);
@@ -218,6 +221,11 @@ public partial class FavoritePlaylistService(
 
     public async Task<bool> ToggleLikeAsync(SongItem song, bool currentIsLiked)
     {
+        if (LocalMusicRecordStore.IsLocal(song))
+        {
+            try { return LocalMusicRecordStore.ToggleFavorite(song); }
+            catch (Exception ex) { logger.LogError(ex, "本地收藏写入失败"); ShowToast(NotificationType.Error, "本地收藏失败", "原记录保留，请检查本地存储。"); return currentIsLiked; }
+        }
         var hash = NormalizeHash(song.Hash);
         if (hash.Length == 0)
             return currentIsLiked;
@@ -299,6 +307,11 @@ public partial class FavoritePlaylistService(
 
     public async Task ShowAddToPlaylistDialogAsync(SongItem song)
     {
+        if (LocalMusicRecordStore.IsLocal(song))
+        {
+            ShowToast(NotificationType.Information, "这是在线歌单入口", "本地歌曲请在本地音乐库选择歌单后添加。");
+            return;
+        }
         if (!await _addToPlaylistDialogLock.WaitAsync(0))
         {
             ShowToast(NotificationType.Information, "请稍候", "歌单列表正在加载中...");
@@ -365,7 +378,7 @@ public partial class FavoritePlaylistService(
 
         var dialogViewModel = new SongBatchActionDialogViewModel(
             songs,
-            allowAddToPlaylist,
+            allowAddToPlaylist && !songs.AsValueEnumerable().Any(LocalMusicRecordStore.IsLocal),
             selectedSongs =>
             {
                 DismissDialog();
@@ -871,7 +884,7 @@ public partial class FavoritePlaylistService(
             ListId = cache.PlaylistListId == 0 ? 2 : cache.PlaylistListId,
             Count = cache.PlaylistCount > 0 ? cache.PlaylistCount : cache.Items.Count,
             Type = PlaylistType.Online,
-            Cover = "avares://KugouAvaloniaPlayer/Assets/LikeList.jpg"
+            Cover = "avares://HuayuanMusic.P1/Assets/LikeList.jpg"
         };
 
         var songs = cache.Items.AsValueEnumerable().Where(x => !string.IsNullOrWhiteSpace(x.Hash)).Select(x => new SongItem
@@ -883,7 +896,7 @@ public partial class FavoritePlaylistService(
             FileId = x.FileId,
             Singers = x.Singers ?? new List<SingerLite>(),
             Cover = string.IsNullOrWhiteSpace(x.Cover)
-                ? "avares://KugouAvaloniaPlayer/Assets/default_song.webp"
+                ? "avares://HuayuanMusic.P1/Assets/default_song.webp"
                 : x.Cover,
             DurationSeconds = x.DurationSeconds > 0 ? x.DurationSeconds : 0
         }).ToList();
@@ -939,8 +952,7 @@ public partial class FavoritePlaylistService(
         try
         {
             var legacyPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "kugou",
+                AppDataPaths.RoamingRoot,
                 "favorite_like_cache.json");
             if (!File.Exists(legacyPath))
                 return false;
@@ -1113,8 +1125,7 @@ public partial class FavoritePlaylistService(
     {
         var uid = GetCurrentUserId();
         return Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "kugou",
+            AppDataPaths.RoamingRoot,
             $"favorite_like_cache_{uid}.json");
     }
 

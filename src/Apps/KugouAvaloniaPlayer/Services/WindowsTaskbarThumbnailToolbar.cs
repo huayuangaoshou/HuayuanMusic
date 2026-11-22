@@ -145,6 +145,7 @@ public sealed class WindowsTaskbarThumbnailToolbar : IDisposable
 
     private static class NativeMethods
     {
+        [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.System32)]
         [DllImport("KugouTaskbarNative.dll", EntryPoint = "KgTaskbarToolbar_Create", CharSet = CharSet.Unicode)]
         public static extern IntPtr KgTaskbarToolbar_Create(
             IntPtr hwnd,
@@ -157,11 +158,13 @@ public sealed class WindowsTaskbarThumbnailToolbar : IDisposable
             TaskbarButtonClickCallback callback,
             IntPtr userData);
 
+        [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.System32)]
         [DllImport("KugouTaskbarNative.dll", EntryPoint = "KgTaskbarToolbar_UpdatePlayPause")]
         public static extern void KgTaskbarToolbar_UpdatePlayPause(
             IntPtr toolbar,
             [MarshalAs(UnmanagedType.Bool)] bool isPlaying);
 
+        [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.System32)]
         [DllImport("KugouTaskbarNative.dll", EntryPoint = "KgTaskbarToolbar_UpdateEnabled")]
         public static extern void KgTaskbarToolbar_UpdateEnabled(
             IntPtr toolbar,
@@ -170,12 +173,14 @@ public sealed class WindowsTaskbarThumbnailToolbar : IDisposable
             [MarshalAs(UnmanagedType.Bool)] bool nextEnabled,
             [MarshalAs(UnmanagedType.Bool)] bool likeEnabled);
 
+        [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.System32)]
         [DllImport("KugouTaskbarNative.dll", EntryPoint = "KgTaskbarToolbar_UpdateLike")]
         public static extern void KgTaskbarToolbar_UpdateLike(
             IntPtr toolbar,
             [MarshalAs(UnmanagedType.Bool)] bool isLiked,
             [MarshalAs(UnmanagedType.Bool)] bool enabled);
 
+        [DefaultDllImportSearchPaths(DllImportSearchPath.AssemblyDirectory | DllImportSearchPath.System32)]
         [DllImport("KugouTaskbarNative.dll", EntryPoint = "KgTaskbarToolbar_Destroy")]
         public static extern void KgTaskbarToolbar_Destroy(IntPtr toolbar);
     }

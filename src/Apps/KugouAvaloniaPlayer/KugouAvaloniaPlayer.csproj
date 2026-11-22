@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework Condition="$([MSBuild]::IsOSPlatform('Windows'))">net10.0-windows10.0.19041.0</TargetFramework>
         <TargetFramework Condition="!$([MSBuild]::IsOSPlatform('Windows'))">net10.0</TargetFramework>
-        <AssemblyName>KugouAvaloniaPlayer</AssemblyName>
-        <PackageId>KugouAvaloniaPlayer</PackageId>
+        <AssemblyName>HuayuanMusic.P1</AssemblyName>
+        <PackageId>HuayuanMusic.P1</PackageId>
         <Nullable>enable</Nullable>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -92,13 +92,13 @@
                  CopyToPublishDirectory="PreserveNewest"
                  TargetPath="KugouTaskbarNative.dll"
                  Condition="Exists('Native\KugouTaskbarNative.dll')" />
-        <Content Include="Native\KugouTaskbarLyrics.exe"
+        <Content Include="Native\KugouTaskbarLyrics.exe" Condition="'$(HuayuanNativeLyricHelpersApproved)' == 'true'"
                  CopyToOutputDirectory="PreserveNewest"
                  CopyToPublishDirectory="PreserveNewest"
                  TargetPath="KugouTaskbarLyrics.exe" />
     </ItemGroup>
 
-    <ItemGroup Condition="Exists('Native/kugou-wayland-lyrics') And ($([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('linux-')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux'))))">
+    <ItemGroup Condition="'$(HuayuanNativeLyricHelpersApproved)' == 'true' And Exists('Native/kugou-wayland-lyrics') And ($([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('linux-')) Or ('$(RuntimeIdentifier)' == '' And $([MSBuild]::IsOSPlatform('Linux'))))">
         <Content Include="Native/kugou-wayland-lyrics"
                  CopyToOutputDirectory="PreserveNewest"
                  CopyToPublishDirectory="PreserveNewest"

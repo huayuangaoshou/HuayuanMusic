@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -16,7 +16,7 @@ namespace KugouAvaloniaPlayer.Behaviors;
 
 public static class LocalArtworkImageBehavior
 {
-    private const string DefaultSongCover = "avares://KugouAvaloniaPlayer/Assets/default_song.webp";
+    private const string DefaultSongCover = "avares://HuayuanMusic.P1/Assets/default_song.webp";
     private const int DefaultDecodePixelWidth = 96;
 
     private static readonly ConditionalWeakTable<Image, ImageState> States = new();
@@ -110,15 +110,25 @@ public static class LocalArtworkImageBehavior
 
         if (LocalImageSourceHelper.TryGetEmbeddedCoverFilePath(source, out var embeddedTrackPath))
         {
+            if (Services.Startup.OfflineStartupProfile.Active) { Services.Startup.OfflineStartupProfile.Current.DemandMedia(embeddedTrackPath!);Services.Startup.OfflineMediaImport.ValidateMetadataBudget(embeddedTrackPath!); }
             var track = new Track(embeddedTrackPath!);
             var picture = track.EmbeddedPictures.Count > 0 ? track.EmbeddedPictures[0] : null;
             var pictureData = picture?.PictureData;
-            if (pictureData is not { Length: > 0 })
+            if (pictureData is not { Length: > 0 } || (Services.Startup.OfflineStartupProfile.Active && pictureData.Length > 4*1024*1024))
                 return null;
 
             cancellationToken.ThrowIfCancellationRequested();
             using var stream = new MemoryStream(pictureData, writable: false);
-            return Bitmap.DecodeToWidth(stream, decodePixelWidth, interpolationMode);
+            if (Services.Startup.OfflineStartupProfile.Active)
+            {
+                using var codec = SkiaSharp.SKCodec.Create(stream);
+                if (codec == null || codec.Info.Width <= 0 || codec.Info.Height <= 0 ||
+                    codec.Info.Width > 8192 || codec.Info.Height > 8192 ||
+                    (long)codec.Info.Width * codec.Info.Height > 16_777_216) return null;
+            }
+            // SKCodec owns its input stream; decode from a separate bounded byte buffer.
+            using var decodeStream = new MemoryStream(pictureData, writable: false);
+            return Bitmap.DecodeToWidth(decodeStream, decodePixelWidth, interpolationMode);
         }
 
         var path = LocalImageSourceHelper.GetLocalFilePath(source);

@@ -5,8 +5,8 @@ namespace KugouAvaloniaPlayer.Services.Startup;
 
 internal static class StartupActivationConstants
 {
-    public const string MutexName = "KugouAvaloniaPlayer.SingleInstance";
-    public const string PipeName = "KugouAvaloniaPlayer.StartupActivation";
+    public const string MutexName = "HuayuanMusic.P1.SingleInstance";
+    public const string PipeName = "HuayuanMusic.P1.StartupActivation";
     public const string ActivateKind = "activate";
 
     public const int ForwardRetryCount = 5;
