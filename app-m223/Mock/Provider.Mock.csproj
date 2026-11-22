@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+  </PropertyGroup>
+  <ItemGroup><ProjectReference Include="..\Contracts\Provider.Contracts.csproj" /></ItemGroup>
+  <Target Name="EnforceProviderBoundary" BeforeTargets="CoreCompile">
+    <Error Condition="'$(OS)' != 'Windows_NT'" Text="Boundary guard unavailable: fail-closed, no plugin compilation." />
+    <Exec Condition="'$(OS)' == 'Windows_NT'" Command="&quot;$(SystemRoot)\System32\WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\..\Rules\Check-ProviderBoundary.ps1&quot;" />
+  </Target>
+</Project>
+

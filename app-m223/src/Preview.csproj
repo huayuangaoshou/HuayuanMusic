@@ -1,0 +1,8 @@
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup><OutputType>WinExe</OutputType><TargetFramework>net10.0-windows10.0.19041.0</TargetFramework><AssemblyName>HuayuanMusic.P17.Nightflight</AssemblyName><RuntimeIdentifier>win-x64</RuntimeIdentifier><SelfContained>false</SelfContained><Nullable>enable</Nullable><ImplicitUsings>enable</ImplicitUsings><RestorePackagesWithLockFile>true</RestorePackagesWithLockFile><ApplicationIcon>Assets/Huayuan-C31.ico</ApplicationIcon><ApplicationManifest>app.manifest</ApplicationManifest></PropertyGroup>
+<ItemGroup><PackageReference Include="Avalonia" Version="12.1.1"/><PackageReference Include="Avalonia.Desktop" Version="12.1.1"/><PackageReference Include="Avalonia.Themes.Fluent" Version="12.1.1"/></ItemGroup>
+<ItemGroup><AvaloniaResource Include="Assets/**"/></ItemGroup><ItemGroup><Compile Remove="RefractionProbe.cs;NightTest.cs;C31Test.cs;RedesignTest.cs;Benchmark.cs;NightMotionEvidence.cs" /></ItemGroup>
+<ItemGroup><ProjectReference Include="../core/src/Apps/KugouAvaloniaPlayer/KugouAvaloniaPlayer.csproj" /></ItemGroup>
+<ItemGroup><ProjectReference Include="../Contracts/Provider.Contracts.csproj" /><ProjectReference Include="../Mock/Provider.Mock.csproj" /><ProjectReference Include="../Kugou/Provider.Kugou.csproj" /></ItemGroup>
+<ItemGroup><EmbeddedResource Include="expected-media.json" /><EmbeddedResource Include="queue-media.json" /></ItemGroup>
+<ItemGroup><RuntimeHostConfigurationOption Include="Avalonia.Diagnostics.Diagnostic.IsEnabled" Value="false" /></ItemGroup></Project>

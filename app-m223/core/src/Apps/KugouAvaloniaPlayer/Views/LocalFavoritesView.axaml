@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:KugouAvaloniaPlayer.ViewModels" x:Class="KugouAvaloniaPlayer.Views.LocalFavoritesView"
+             x:DataType="vm:LocalFavoritesViewModel">
+  <Grid Margin="24" RowDefinitions="Auto,Auto,Auto,*" RowSpacing="16">
+    <TextBlock Text="本地收藏 · 无需登录" FontSize="26" />
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="16">
+      <Button Content="播放选中" Command="{Binding PlaySelectedCommand}" MinHeight="40" />
+      <Button Content="取消选中本地收藏" Command="{Binding RemoveSelectedCommand}" MinHeight="40" />
+    </StackPanel>
+    <TextBlock Grid.Row="2" Text="{Binding Status}" TextWrapping="Wrap" />
+    <ListBox Grid.Row="3" ItemsSource="{Binding Songs}" SelectedItem="{Binding SelectedSong, Mode=TwoWay}">
+      <ListBox.ItemTemplate>
+        <DataTemplate x:DataType="vm:SongItem">
+          <StackPanel Margin="8" Spacing="5">
+            <TextBlock Text="{Binding Name}" FontSize="18" TextTrimming="CharacterEllipsis" />
+            <TextBlock Text="{Binding Singer}" />
+            <TextBlock Text="{Binding LocalFilePath}" FontSize="12" TextTrimming="CharacterEllipsis" />
+          </StackPanel>
+        </DataTemplate>
+      </ListBox.ItemTemplate>
+    </ListBox>
+  </Grid>
+</UserControl>

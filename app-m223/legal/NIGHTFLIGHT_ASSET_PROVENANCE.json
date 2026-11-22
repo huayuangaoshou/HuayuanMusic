@@ -1,0 +1,55 @@
+{
+  "newGenerationCount": 3,
+  "reusedOriginalArtworkCount": 3,
+  "images": {
+    "moon.png": {
+      "sha256": "1a663024aa5de839edbac3f7eb1f332889e7d7d49ec0afc2e23f9ae338609262",
+      "source": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool",
+      "prompt": "Use case: stylized-concept. Asset type: original square album artwork for an independent music UI design prototype. An empty ultramarine ocean coast under a lavender dusk sky, one distant small porcelain-white moon, refracted pale pink light in slow waves, tiny distant dark cliff silhouette at far left, tactile analogue grain and atmospheric photographic realism. Rich cobalt blue, violet, rose, pearl-white accents, sophisticated editorial art direction, contemporary ambient music. Strong restrained visual composition, expansive detail, no concentric circles or gradient-only placeholder. Full-bleed square. No people, text, logos, watermark, UI or imitation of an existing album.",
+      "edit": "none; CSS display scaling only",
+      "use": "candidate album illustration, not official music artwork",
+      "rightsCaveat": "No assertion of exclusivity, trademark clearance or public-release approval."
+    },
+    "orchid.png": {
+      "sha256": "1597d23cfae7249f2331d742564f72da3047bfd44cc6517167b86eca706a8e59",
+      "source": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool",
+      "prompt": "Use case: stylized-concept. Asset type: original square album artwork for an independent music UI design prototype. A surreal close study of a translucent orchid with pale lilac petals, pearl pink glass folds and small fluid droplets, against deep burgundy-purple darkness. Sculptural macro photography, softly lit translucent material, rich fine detail, strong off-center floral composition, quietly luminous and sophisticated. Full bleed square artwork, no text, logos, watermark, UI, no imitation of existing album artwork.",
+      "edit": "none; CSS display scaling only",
+      "use": "candidate album illustration, not official music artwork",
+      "rightsCaveat": "No assertion of exclusivity, trademark clearance or public-release approval."
+    },
+    "valley.png": {
+      "sha256": "7b5ac2c0eba077498f0268a8b3c8de89200dbd9f169f752eb4fa7e533418d4e8",
+      "source": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool",
+      "prompt": "Use case: photorealistic-natural. Asset type: original square album artwork for an independent music UI design prototype. Dreamlike misty green mountain valley, tiny dark evergreens, a winding silver river crossing lower half, early pale apricot morning sky with layered cool teal mist. Editorial landscape photography, fine film grain, intricate forest textures and luminous fog, sophisticated music-cover composition, small-scale landscape shapes and beautiful negative space. Full bleed square, no people, text, logos, watermark, UI or existing album imitation.",
+      "edit": "none; CSS display scaling only",
+      "use": "candidate album illustration, not official music artwork",
+      "rightsCaveat": "No assertion of exclusivity, trademark clearance or public-release approval."
+    },
+    "paper.png": {
+      "sha256": "10139548d5fcd681a13897125d2696bc371e65c5cc15c83a745f35255b665d3e",
+      "source": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\4.png",
+      "author": "prior original procedural geometry in this repository",
+      "method": "Generate-Art.py, no external album art; copied byte-identically, old source untouched",
+      "font": "prior artwork raster uses locally installed Segoe UI; no font binaries bundled"
+    },
+    "gold.png": {
+      "sha256": "724f2a548fbfaa87b48e61a160ff640bc1ad04a70b1ac2b41a220e521ea808ef",
+      "source": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\6.png",
+      "author": "prior original procedural geometry in this repository",
+      "method": "Generate-Art.py, no external album art; copied byte-identically, old source untouched",
+      "font": "prior artwork raster uses locally installed Segoe UI; no font binaries bundled"
+    },
+    "city.png": {
+      "sha256": "f4924c26f0408c9ea3f2d8176bf12348ec550c624fde5ac668af6fb4577fbc51",
+      "source": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\7.png",
+      "author": "prior original procedural geometry in this repository",
+      "method": "Generate-Art.py, no external album art; copied byte-identically, old source untouched",
+      "font": "prior artwork raster uses locally installed Segoe UI; no font binaries bundled"
+    }
+  },
+  "icons": "original inline vector paths in prototype.js; no third-party icon package",
+  "logo": "original H / sound-wave line candidate; user and trademark approval pending",
+  "musicAndLyrics": "fictional authored design fixtures; no audio or actual artist tracks",
+  "history": "HuayuanGlass Apache-2.0 implementation was read only, not imported. Existing upstream notices and product release blocks unchanged."
+}

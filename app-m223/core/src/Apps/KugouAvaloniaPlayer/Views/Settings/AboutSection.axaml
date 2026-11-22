@@ -1,0 +1,74 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:vm="using:KugouAvaloniaPlayer.ViewModels" xmlns:suki="https://github.com/kikipoulet/SukiUI" xmlns:localControls="using:KugouAvaloniaPlayer.Controls" x:Class="KugouAvaloniaPlayer.Views.Settings.AboutSection" x:Name="UserRoot" x:DataType="vm:SettingViewModel">
+    <StackPanel>
+        <localControls:SettingsCard>
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16" Margin="18">
+                <Border Width="72" Height="72" CornerRadius="18" ClipToBounds="True" Background="{DynamicResource SukiPrimaryColorLow}">
+                    <Image Source="/Assets/ka-logo.webp" Stretch="UniformToFill" />
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                    <TextBlock Text="{Binding AppDisplayName}" FontSize="18" FontWeight="SemiBold" TextWrapping="Wrap" />
+                    <WrapPanel>
+                        <Border Classes="Pill" Margin="0,0,8,0"><TextBlock Text="{Binding AppVersion}" /></Border>
+                        <TextBlock Text="基于 KA Music v4.2.2 · © 2026 Linsxyx · MIT" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource SukiLowText}" />
+                    </WrapPanel>
+                </StackPanel>
+                <Button Grid.Column="2" Classes="Basic" VerticalAlignment="Center" Command="{Binding OpenRepositoryCommand}" Cursor="Hand" ToolTip.Tip="KA Music 上游项目（非本分支更新渠道）">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Svg Classes="ThemeSvgIcon" Path="/Assets/github.svg" Width="18" Height="18" />
+                        <TextBlock Text="KA Music 上游" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+        </localControls:SettingsCard>
+
+        <TextBlock Classes="GroupHeader" Text="更新" />
+        <localControls:SettingsCard>
+            <localControls:SettingsRow ColumnDefinitions="*,Auto">
+                <StackPanel>
+                    <TextBlock Classes="RowTitle" Text="检查更新" />
+                    <TextBlock Classes="RowHint" Text="{Binding UpdateStatus}" />
+                </StackPanel>
+                <Button Grid.Column="1" Classes="Basic" Command="{Binding CheckForUpdateCommand}" IsEnabled="{Binding !IsCheckingUpdate}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <PathIcon Data="{x:Static suki:Icons.Refresh}" Width="16" Height="16" />
+                        <TextBlock Text="立即检查" />
+                    </StackPanel>
+                </Button>
+            </localControls:SettingsRow>
+            <localControls:SettingsRow ColumnDefinitions="*,Auto">
+                <TextBlock Classes="RowTitle" Text="启动时自动检查" />
+                <ToggleSwitch Grid.Column="1" IsChecked="{Binding AutoCheckUpdate, Mode=TwoWay}" />
+            </localControls:SettingsRow>
+        </localControls:SettingsCard>
+
+        <Grid Classes="GroupHeader" ColumnDefinitions="*,Auto">
+            <TextBlock Classes="GroupHeader" Text="更新日志" />
+            <Button Grid.Column="1" Classes="Basic" Command="{Binding RefreshReleaseNotesCommand}" IsEnabled="{Binding !IsLoadingReleaseNotes}">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <PathIcon Data="{x:Static suki:Icons.Refresh}" Width="12" Height="12" />
+                    <TextBlock Text="刷新" FontSize="12" />
+                </StackPanel>
+            </Button>
+        </Grid>
+        <TextBlock Classes="RowHint" Text="{Binding ReleaseNotesStatus}" IsVisible="{Binding IsReleaseNotesStatusVisible}" Margin="4,0,0,10" />
+        <ItemsControl ItemsSource="{Binding RecentReleaseNotes}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate><localControls:SettingsCard /></ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="vm:ReleaseNoteItemViewModel">
+                    <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12" Margin="16,14">
+                        <Ellipse Width="8" Height="8" Margin="0,6,0,0" VerticalAlignment="Top" Fill="{DynamicResource SukiPrimaryColor}" />
+                        <StackPanel Grid.Column="1" Spacing="6">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <TextBlock Text="{Binding Title}" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Grid.Column="1" Text="{Binding PublishedAt}" FontSize="12" VerticalAlignment="Center" Foreground="{DynamicResource SukiLowText}" />
+                            </Grid>
+                            <TextBlock Text="{Binding Summary}" TextWrapping="Wrap" FontSize="12" LineHeight="19" Foreground="{DynamicResource SukiLowText}" />
+                        </StackPanel>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </StackPanel>
+</UserControl>

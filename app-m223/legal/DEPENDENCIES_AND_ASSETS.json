@@ -1,0 +1,1955 @@
+{
+  "packages": [
+    {
+      "id": "AsyncImageLoader.Avalonia",
+      "version": "3.8.0",
+      "archiveSHA256": "b1f231317a7d0c0e74d8ef17ad822e51efc7e9413b99adb972ce82ffbdd7bd3f",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUtils/AsyncImageLoader.Avalonia",
+        "commit": "70bca7105bcf747725e7df0538e0815600a873f0"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia",
+      "version": "12.1.1",
+      "archiveSHA256": "193bf6ae8b90293acb72bca8a1d62e8e46b460a48527f5f1f18f629073d9d77d",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Angle.Windows.Natives",
+      "version": "2.1.27548.20260419",
+      "archiveSHA256": "76d67901097e9173d155efc4c2b7d2c8e3122f2c2e0415028eb0c88478a386f9",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/angle/",
+        "commit": "1c89805903c1482166356d3b950d474973180e61"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE",
+          "copiedPath": "legal\\packages\\Avalonia.Angle.Windows.Natives\\2.1.27548.20260419\\c693279643b8.txt",
+          "sha256": "54aff7276217df9f6b5181613999d208c9e40d2b1d51bf55217837e6871a4a63"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.BuildServices",
+      "version": "11.3.2",
+      "archiveSHA256": "eb0c74ead8d229640e957d9ccdda7a5a1d27bb055aa71e6a7ffb3c423e707b8d",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia.BuildServices",
+        "commit": "777f975b0a0cecf0311273711d56697212c558c0"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Controls.ColorPicker",
+      "version": "12.0.5",
+      "archiveSHA256": "b247fcfff0c929a3968d309c4abc5d5755610fbc07d9e9e8b763e530bef2bbe1",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "fee9c561ce036e8a3e8cee2397c75ca599b4790d"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Controls.DataGrid",
+      "version": "12.0.1",
+      "archiveSHA256": "e328a06d1fab3ce1b653a41e3232e3613f67340754da62b27f16f32bbe2c96e5",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia.Controls.DataGrid",
+        "commit": "3c105a7ac457b273f3e5cf172cd8d1049a1066a0"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Controls.ItemsRepeater",
+      "version": "12.0.0",
+      "archiveSHA256": "203e92f49796c26cf2f10d2907ad3491905edd02b9f463797dc67a39950fbab4",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia.Controls.ItemsRepeater/",
+        "branch": "refs/heads/main",
+        "commit": "a112dedb82af5bc9f5b56d52cbb3784ce436550b"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Desktop",
+      "version": "12.1.1",
+      "archiveSHA256": "6fbcae9f07d3efe8413f35b7861f8f5fab3cb18a557c8a6e9bb4313e250d4000",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Fonts.Inter",
+      "version": "12.1.1",
+      "archiveSHA256": "9add330251e85b9b7ea13a6ee708b8dc842f656018b013f3b584a29ef7ce17d9",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.FreeDesktop",
+      "version": "12.1.1",
+      "archiveSHA256": "c3ad45d5f03f459753db9c6d25645eb36484612d62c5cefdedc50e7d1bb8b663",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.FreeDesktop.AtSpi",
+      "version": "12.1.1",
+      "archiveSHA256": "73e076795e6ffe0660059aa3e19d507896c78323c911e9f2142bad890054c115",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.HarfBuzz",
+      "version": "12.1.1",
+      "archiveSHA256": "ee50a1a9c8a6b042d62e5c772755611c9ab75740286798921ecb59ad3ec8b410",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Native",
+      "version": "12.1.1",
+      "archiveSHA256": "d557d6177bc589f8018ae3352d5eafeace836e1d2e510f821cbdcfc66b569552",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Remote.Protocol",
+      "version": "12.1.1",
+      "archiveSHA256": "130c7dc7b5ec56b9afdd9d9392a5734c04b19684a28cb7edae4601f582b93011",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Skia",
+      "version": "12.1.1",
+      "archiveSHA256": "f683dbe5f5dcdfde62cb8bee0cc75e3b9bec95d9f924796ca3627bda8bfa4f25",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Themes.Fluent",
+      "version": "12.1.1",
+      "archiveSHA256": "627455e679f6efa8983fb3df6d7faef4adf1a43dd15f88cdf342b7aef1c46db4",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Themes.Simple",
+      "version": "12.0.5",
+      "archiveSHA256": "fd04cfd287bfa9d7901fc40c09ffde2e6414d31f66fc3527ffbbe705599415af",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "fee9c561ce036e8a3e8cee2397c75ca599b4790d"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.Win32",
+      "version": "12.1.1",
+      "archiveSHA256": "e23ceb93fe69dff585ebf672688d3b4cbe0ee0733c3678da1e4ef51fb1fa194c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Avalonia.X11",
+      "version": "12.1.1",
+      "archiveSHA256": "fc3dbe2c6ddf88e78aa6b155f3610cccda0a7f14977e1de90ef6fe333365e0a8",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/AvaloniaUI/Avalonia/",
+        "commit": "e33eaed9c106846b200680751022385d9cc5dc6f"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "AvaloniaUI.DiagnosticsSupport",
+      "version": "2.2.3",
+      "archiveSHA256": "24815c9879f1540ade19a149ee72b54444a0d3360834be99c9cefd9364301549",
+      "licenseType": null,
+      "licenseDeclaration": null,
+      "licenseURL": null,
+      "repository": {
+        "type": "git",
+        "commit": "92df9d92acf0bbe8b2ffa96370c1bf848df81d27"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "CommunityToolkit.Mvvm",
+      "version": "8.4.2",
+      "archiveSHA256": "8cb4b5be8e95f9f1ec26cf341d84fbee8244e88102ebc7c88242e960e0e35805",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/CommunityToolkit/dotnet",
+        "branch": "refs/heads/rel/8.4.2",
+        "commit": "35dfe7b12da0e64384bfaec7ebc0883196a89f9f"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "License.md",
+          "copiedPath": "legal\\packages\\CommunityToolkit.Mvvm\\8.4.2\\bf5e2da79bc7.txt",
+          "sha256": "651997ef19dbb9ecb8dd660dbc86444a65af21f18cfe08daa69bf201cd5cfdfc"
+        },
+        {
+          "archivePath": "ThirdPartyNotices.txt",
+          "copiedPath": "legal\\packages\\CommunityToolkit.Mvvm\\8.4.2\\39b094970d27.txt",
+          "sha256": "7774f8b0ab66bfb47ec154ce24a2d6d574febc44a74d940b8a037d1c56756163"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "ExCSS",
+      "version": "4.3.1",
+      "archiveSHA256": "9cd9f9f9811aa8a4942e1b43b0898d1329dd53f3079daed5a593541319a8f34a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/TylerBrinks/ExCSS",
+        "commit": "c97e84d6126bb2e42658cf5af627d52e697c8779"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp",
+      "version": "8.3.1.2",
+      "archiveSHA256": "9bd1cb0ffd2888301b4dd51d206fb4c8579eaee61f579e180fd71aa5735ae906",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.1",
+        "commit": "cc78b5933d23e6383db5d246e70db915770d55d6"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp\\8.3.1.2\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp",
+      "version": "8.3.1.3",
+      "archiveSHA256": "ffe644863a4eb3c078b4c3f0def0f2b90a861991c9116bf2dd668a31a0f09ab5",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp\\8.3.1.3\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.Linux",
+      "version": "8.3.1.3",
+      "archiveSHA256": "7de58e9daffc9dcbe6aeaec2c670dccefd5f69c576a68655e51f8ec82b687295",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Linux\\8.3.1.3\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        },
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Linux\\8.3.1.3\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.macOS",
+      "version": "8.3.1.2",
+      "archiveSHA256": "306a73e811f7b37540c54e90da11ebc07a6cfa7f68766a6776c5a2ce00180664",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.1",
+        "commit": "cc78b5933d23e6383db5d246e70db915770d55d6"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.macOS\\8.3.1.2\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.macOS\\8.3.1.2\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.macOS",
+      "version": "8.3.1.3",
+      "archiveSHA256": "e962ac27f8c5f691e7696710bda7b3739015e9f96edd7b0ec50b3b8b8046609b",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.macOS\\8.3.1.3\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.macOS\\8.3.1.3\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.WebAssembly",
+      "version": "8.3.1.3",
+      "archiveSHA256": "6ab06223cd9f5cf8c0a9fb6a9c6ed6737051cd9ebebca77b6f9f2f412589564d",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.WebAssembly\\8.3.1.3\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        },
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.WebAssembly\\8.3.1.3\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.Win32",
+      "version": "8.3.1.2",
+      "archiveSHA256": "117b14db26273a911dce8ae92a3112bb40400ece9ac4d8a43e9cf8efe97fb6db",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.1",
+        "commit": "cc78b5933d23e6383db5d246e70db915770d55d6"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Win32\\8.3.1.2\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Win32\\8.3.1.2\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "HarfBuzzSharp.NativeAssets.Win32",
+      "version": "8.3.1.3",
+      "archiveSHA256": "58d51098b595152c01293f71ed47614b3f53d8503bc226efc23b8f7b0ff7c943",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.2",
+        "commit": "2888c737ad016d584c74525e2d35db5097ea8576"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Win32\\8.3.1.3\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        },
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\HarfBuzzSharp.NativeAssets.Win32\\8.3.1.3\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "ManagedBass",
+      "version": "4.1.0-prerelease",
+      "archiveSHA256": "b7e44ee6bb9a7099ff40f99d699538e6e99ba51e23942587d8579287c8c68134",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE.md",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ManagedBass/ManagedBass",
+        "commit": "99f145271158b40ab1ce7cf8af754f21a7a9509e"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.md",
+          "copiedPath": "legal\\packages\\ManagedBass\\4.1.0-prerelease\\4673a3aba018.txt",
+          "sha256": "47e8fd82ebc9778e642585093e5e541f28add1aba62d0fe82fa7ce9b900029f1"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "ManagedBass.Fx",
+      "version": "4.1.0-prerelease",
+      "archiveSHA256": "c7c95eb2d98e53c567902763af2bd42c0ca3895257c4c7bfedf7fa77bb9f36bf",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE.md",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ManagedBass/ManagedBass",
+        "commit": "99f145271158b40ab1ce7cf8af754f21a7a9509e"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.md",
+          "copiedPath": "legal\\packages\\ManagedBass.Fx\\4.1.0-prerelease\\4673a3aba018.txt",
+          "sha256": "47e8fd82ebc9778e642585093e5e541f28add1aba62d0fe82fa7ce9b900029f1"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "ManagedBass.Loud",
+      "version": "4.1.0-prerelease",
+      "archiveSHA256": "14e32a4aedb5831f3b727946046c0afb9aa441a8cdfdaa6953d59c2b0d48aa9b",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE.md",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ManagedBass/ManagedBass",
+        "commit": "99f145271158b40ab1ce7cf8af754f21a7a9509e"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.md",
+          "copiedPath": "legal\\packages\\ManagedBass.Loud\\4.1.0-prerelease\\4673a3aba018.txt",
+          "sha256": "47e8fd82ebc9778e642585093e5e541f28add1aba62d0fe82fa7ce9b900029f1"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "MemoryPack",
+      "version": "1.21.4",
+      "archiveSHA256": "8a0bffb85a0c58fd4a05cfcc87cc2380a9502afba6fe2eaf5e700d1333b2d0f8",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "0f2fe0827907940768293b7bb81b9605a7d8cba8"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "MemoryPack.Core",
+      "version": "1.21.4",
+      "archiveSHA256": "1f687cf37048c4a831db5ef04a9a32c8604dcfbd5db289c65a7ad21c108ec558",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "0f2fe0827907940768293b7bb81b9605a7d8cba8"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "MemoryPack.Generator",
+      "version": "1.21.4",
+      "archiveSHA256": "11f6126a00ee7bf6c662cedde623ff8cccd00b20d8d1a3a708c6906efc91fe94",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/MemoryPack",
+        "commit": "0f2fe0827907940768293b7bb81b9605a7d8cba8"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "MicroCom.Runtime",
+      "version": "0.11.6",
+      "archiveSHA256": "453af6d34477b19bb2c62d17436e68c76a75915b7947509b1ff601b36d7e78d8",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/kekekeks/MicroCom",
+        "commit": "76785efcafd91b5902fd19dd11145f6dd655b7b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.AspNetCore.App.Runtime.win-x64",
+      "version": "10.0.12",
+      "archiveSHA256": "59025d88c8f5178e8569f91c7cbc56ad3ead3d83a777477d17fade3f9cdd8103",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\Microsoft.AspNetCore.App.Runtime.win-x64\\10.0.12\\d0ed4cc3fb70.txt",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.AspNetCore.App.Runtime.win-x64\\10.0.12\\7d4036406978.txt",
+          "sha256": "307d014f65d8482314f1400ddeae7a0cbabb96c2207bcc77f6233cc10588e5d9"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Data.Sqlite",
+      "version": "10.0.8",
+      "archiveSHA256": "f2a0b9328b5a77083de9420eed8fb6a4412e5e2200f507f32e8ad788f77ee124",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "94ea82652cdd4e0f8046b5bd5becbd11461482ca"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Data.Sqlite.Core",
+      "version": "10.0.8",
+      "archiveSHA256": "dc31e393411cfabf62134176a649c5c60993bab4472ef863c0e44a48eb335656",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "94ea82652cdd4e0f8046b5bd5becbd11461482ca"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.DotNet.PlatformAbstractions",
+      "version": "3.1.6",
+      "archiveSHA256": "45f336a978aa7626a63e45ebe080e435cd0865217d89366fe2ea2efc4ef3352d",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE.TXT",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "git://github.com/dotnet/core-setup",
+        "commit": "3acd9b0cd16596bad450c82be08780875a73c05c"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.DotNet.PlatformAbstractions\\3.1.6\\14538857e2a6.txt",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.DotNet.PlatformAbstractions\\3.1.6\\7d4036406978.txt",
+          "sha256": "2e3b2cb5cb57ff44310801dd46e51dab1d35d9cfe196a9709ee8cb9c6f8e4d4a"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration",
+      "version": "10.0.3",
+      "archiveSHA256": "41e87fede3223ff4477a4a0adcba084581c43fbbcf2969ff8b77136624509483",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Configuration\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Abstractions",
+      "version": "10.0.3",
+      "archiveSHA256": "39f70f783bfb449befbfb9ecfb008c01009d1bf1ded8ab7157a311970be9df92",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Configuration.Abstractions\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Configuration.Binder",
+      "version": "10.0.3",
+      "archiveSHA256": "5c11d98d798acfc5b9e6476a652c75625c6bd5b42d7a454fb7a6dcc513b5bb79",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Configuration.Binder\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyInjection",
+      "version": "10.0.3",
+      "archiveSHA256": "87fc2249a56d442206764bfafeca00e350e17659aed88f618effecc0ff0e8c39",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.DependencyInjection\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyInjection.Abstractions",
+      "version": "10.0.3",
+      "archiveSHA256": "4a107de2312db2ae57e6beb10d943ec28b59606dce3ca3821cd1b2e01ecd545b",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.DependencyInjection.Abstractions\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.DependencyModel",
+      "version": "9.0.9",
+      "archiveSHA256": "d32818f092ce20ab98170c1d542b4397cffc7d5e480bd2608af7f35ec8d75ec2",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/runtime",
+        "commit": "893c2ebbd49952ca49e93298148af2d95a61a0a4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.DependencyModel\\9.0.9\\14538857e2a6.txt",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.DependencyModel\\9.0.9\\7d4036406978.txt",
+          "sha256": "40686c6447a7d5b5d3693068e4571b5f483d7ed335aeee773ef662440de4c5d5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Diagnostics",
+      "version": "10.0.3",
+      "archiveSHA256": "6d3cd873be9251e0c83584a0be603752b19304e2b2ecd7658b969acb860c44b4",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Diagnostics\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Diagnostics.Abstractions",
+      "version": "10.0.3",
+      "archiveSHA256": "26094ab42ebe8df8a0811514e405c2ea6474716d6ddccdf7c11ed65cac898c1b",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Diagnostics.Abstractions\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Http",
+      "version": "10.0.3",
+      "archiveSHA256": "2bae0872c3403fa55cddeeb4302138dca078a23d17140e0e85a21f242a4a9858",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Http\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Logging",
+      "version": "10.0.3",
+      "archiveSHA256": "526a66a0e6b1049966e052faa46b515ca2bef18623e6113fe7da31daf19997e0",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Logging\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Logging.Abstractions",
+      "version": "10.0.3",
+      "archiveSHA256": "9484ad4883d3c5aa024685011ec04f5d96ee563e62a34db7f745a4c9ea727e5c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Logging.Abstractions\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Options",
+      "version": "10.0.3",
+      "archiveSHA256": "28361a54149d344ba1b37535eb8455d27db4723c2ba62eee23bd41d23fd416c0",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Options\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Options.ConfigurationExtensions",
+      "version": "10.0.3",
+      "archiveSHA256": "5a26bb2a21188cc8a59174839ac63b79d5efb6f505c3b929a6ffc9fdc60c3d7a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Options.ConfigurationExtensions\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Extensions.Primitives",
+      "version": "10.0.3",
+      "archiveSHA256": "c341be216f64cfbd2e835044b894de4b537bc1ead0866b3781097a383ccd2294",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "c2435c3e0f46de784341ac3ed62863ce77e117b4"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.Extensions.Primitives\\10.0.3\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.IO.RecyclableMemoryStream",
+      "version": "3.0.1",
+      "archiveSHA256": "ba7160ff911c53f5ca25ba1be06b500b8dd87608b95637811acee17e18f8118a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Microsoft/Microsoft.IO.RecyclableMemoryStream",
+        "commit": "e29a28387da9018fa9605a1dcb3f7a0435aa9974"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.NET.ILLink.Tasks",
+      "version": "10.0.12",
+      "archiveSHA256": "37aa984da51fdc01cc7d57a8647893392f3539cdd5a1d32ce4982be5309bc08b",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.NET.ILLink.Tasks\\10.0.12\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.NETCore.App.Runtime.win-x64",
+      "version": "10.0.12",
+      "archiveSHA256": "0f63dee7ca4383cb16848966f81e439399e2058e1671ebe27e5eaf4b200e8691",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.NETCore.App.Runtime.win-x64\\10.0.12\\14538857e2a6.txt",
+          "sha256": "d7a68596ab69b06f51ca278a6545148e4269a9381c26d597c13df5d88e08cf5b"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\Microsoft.NETCore.App.Runtime.win-x64\\10.0.12\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.Windows.SDK.NET.Ref",
+      "version": "10.0.19041.57",
+      "archiveSHA256": "90b18f2cf7d7a23f5b0bfe2b86d8dda45881481f677ce36eccaf6e9ab50b6b4b",
+      "licenseType": null,
+      "licenseDeclaration": null,
+      "licenseURL": "https://aka.ms/WinSDKLicenseURL",
+      "repository": null,
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Microsoft.WindowsDesktop.App.Runtime.win-x64",
+      "version": "10.0.12",
+      "archiveSHA256": "68bce56d2402969d82ac77fbd2b2a54f55fda86ea060366e6ddb832353dab80a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "95017c711e6afc1085133d440e42b4bd78155701"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE",
+          "copiedPath": "legal\\packages\\Microsoft.WindowsDesktop.App.Runtime.win-x64\\10.0.12\\c693279643b8.txt",
+          "sha256": "a89886665765362eb77e0f8e26602c924520041d1711b2eedc136434fe4d01ab"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Pure.DI",
+      "version": "2.5.4",
+      "archiveSHA256": "381f14759122f15d3a95bb9b2b071523460b9f3100a5aeffe771010f51a9c2d0",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/DevTeam/Pure.DI.git",
+        "commit": "d6930b7fd8a158db10757909a64ff7e84c5f9b83"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog",
+      "version": "4.4.0",
+      "archiveSHA256": "b4fe17d3a4e170354be975ed60885d272c67e2e2fd8cb2f4b370d13ba1cd424f",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog",
+        "branch": "refs/heads/main",
+        "commit": "497f80fda4f9e8f98b9c13ba34b1f0530f8c4449"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog.Extensions.Logging",
+      "version": "10.0.0",
+      "archiveSHA256": "3207d62bf4895943f13f3ae70949f19fa4b2f9205598fddd61deb4bb2f3435d1",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog-extensions-logging",
+        "branch": "refs/heads/main",
+        "commit": "538cf2fd64baf760950e202a00dd426c6b76e18c"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog.Sinks.Async",
+      "version": "2.1.0",
+      "archiveSHA256": "2c3a0ba57925783d8c54f2b6281b0b1917f9caaaf07240620276036ee21b6943",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog-sinks-async",
+        "commit": "5c6e5df7dffe5535978475c9ce8c5c6fb1cc9dca"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog.Sinks.Console",
+      "version": "6.1.1",
+      "archiveSHA256": "09f220e14b38912310027eab536aec01e136da0e8ca45899761a195b24a965e6",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog-sinks-console",
+        "branch": "refs/heads/main",
+        "commit": "b3cb1f042f5636161b831fa8816d70d865a5eec4"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog.Sinks.Debug",
+      "version": "3.0.0",
+      "archiveSHA256": "eff2e6a11175ad40c5849e3b6d34504054604879d90cef38f38af7b021aa62f1",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog-sinks-debug.git",
+        "commit": "ee5eca4093be269bf3c1b609e6c2088d79a1b132"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Serilog.Sinks.File",
+      "version": "7.0.0",
+      "archiveSHA256": "2f165852850f9028c82156ab2629675e7a9088cac5349b68462966cd336d523a",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/serilog/serilog-sinks-file",
+        "branch": "refs/heads/main",
+        "commit": "23c732a8658a0df2a5434fe69b0011800b14f0da"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "ShimSkiaSharp",
+      "version": "5.0.0",
+      "archiveSHA256": "ccd66e0cafb15aee309793591b8cf6261b9a60dfc8ea2ef4b37539c8a0fa386c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Silk.NET.Core",
+      "version": "2.23.0",
+      "archiveSHA256": "2e0ae765cbb1d3d571ec95257c7e3ec9c2593b922fe8f4b2fb9915f88ea8c301",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "Git",
+        "url": "https://github.com/dotnet/Silk.NET.git",
+        "commit": "94605142f7b7bd6e69c9201e8e721d245c69eb7e"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Silk.NET.Maths",
+      "version": "2.23.0",
+      "archiveSHA256": "6c471eb49d9b597b10e15be0b24b63bab44523def9480e3318e08fbc0171cf4a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "Git",
+        "url": "https://github.com/dotnet/Silk.NET.git",
+        "commit": "94605142f7b7bd6e69c9201e8e721d245c69eb7e"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Silk.NET.OpenGL",
+      "version": "2.23.0",
+      "archiveSHA256": "ccaf53cd7d043f66b035ea5849cf31b247a5fcced82a21469500314e28ff5a4c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "Git",
+        "url": "https://github.com/dotnet/Silk.NET.git",
+        "commit": "94605142f7b7bd6e69c9201e8e721d245c69eb7e"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp",
+      "version": "3.119.4",
+      "archiveSHA256": "e32a449d31945c0b9d169eb5bc676e1e3f589aab69888e49d703fdc1c384c176",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.4",
+        "commit": "f568ac94dd768ef9a2f593537cfde2dd0d348ef5"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp\\3.119.4\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp.HarfBuzz",
+      "version": "3.119.1",
+      "archiveSHA256": "976ef9d8ef5d2cc40091bd01b6d77aa79c69e3841b0a707d2391badb2fcdb092",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.1",
+        "commit": "cc78b5933d23e6383db5d246e70db915770d55d6"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.HarfBuzz\\3.119.1\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp.NativeAssets.Linux",
+      "version": "3.119.4",
+      "archiveSHA256": "fae0554059b1107ef7888e46c20bdfb548401ef7a7a6f7391ad4fadc7432d50a",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.4",
+        "commit": "f568ac94dd768ef9a2f593537cfde2dd0d348ef5"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.Linux\\3.119.4\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.Linux\\3.119.4\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp.NativeAssets.macOS",
+      "version": "3.119.4",
+      "archiveSHA256": "f7f2f539ce5bba337aa4a8d6eac25caf58cbdd12edf3f32ddcc98294e730cf2c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.4",
+        "commit": "f568ac94dd768ef9a2f593537cfde2dd0d348ef5"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.macOS\\3.119.4\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.macOS\\3.119.4\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp.NativeAssets.WebAssembly",
+      "version": "3.119.4",
+      "archiveSHA256": "c4b7ec581b05169bf9420efd188322fb908ce980df720fffa32c0d941e58dc9d",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.4",
+        "commit": "f568ac94dd768ef9a2f593537cfde2dd0d348ef5"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.WebAssembly\\3.119.4\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        },
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.WebAssembly\\3.119.4\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SkiaSharp.NativeAssets.Win32",
+      "version": "3.119.4",
+      "archiveSHA256": "5a5698b1b4e1fdc9ffe9868df6874db5fa69f21a4de76ba71a01a542e9b43391",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://go.microsoft.com/fwlink/?linkid=868515",
+        "branch": "release/3.119.4",
+        "commit": "f568ac94dd768ef9a2f593537cfde2dd0d348ef5"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.Win32\\3.119.4\\d0ed4cc3fb70.txt",
+          "sha256": "89101e35a8c66fd4d6dffc1763259161d35cb564c169714ec227a768c89f2938"
+        },
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.txt",
+          "copiedPath": "legal\\packages\\SkiaSharp.NativeAssets.Win32\\3.119.4\\af59ad43ec29.txt",
+          "sha256": "21504c46c4c58aa64c1055bd2dcbc5f9a136b4b8c412ed3cc6740e22c5b127f5"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SQLitePCLRaw.bundle_e_sqlite3",
+      "version": "2.1.11",
+      "archiveSHA256": "91645aa4c4d511f71cd03c6723d022d7e470000711dbe1d4bbe585f8e78b242b",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "SQLitePCLRaw.core",
+      "version": "2.1.11",
+      "archiveSHA256": "b3f7f112862535ff5cd82e0766e78cccf081be98958835654a983b7a90741976",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "SQLitePCLRaw.lib.e_sqlite3",
+      "version": "3.53.3",
+      "archiveSHA256": "72cb724779218e024833a21e2903c795a9e90c0bfa01520f27990c36413f32d4",
+      "licenseType": "file",
+      "licenseDeclaration": "LICENSE.txt",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/sourcegear/sqlite-builds",
+        "branch": "refs/heads/public_package_alternate_name_js",
+        "commit": "e7d537a1576bac9d7452411c4468640fa730de3e"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "LICENSE.txt",
+          "copiedPath": "legal\\packages\\SQLitePCLRaw.lib.e_sqlite3\\3.53.3\\d0ed4cc3fb70.txt",
+          "sha256": "99464c3a88df7b708ce59e462cdcb85f72dfc9b1335b4fcc68be56131b634b95"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "SQLitePCLRaw.provider.e_sqlite3",
+      "version": "2.1.11",
+      "archiveSHA256": "2dd7d5df6e409988013b09b03fb30d67130966434ee9bc2b1ef07a0b94b222d0",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/ericsink/SQLitePCL.raw"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "SukiUI",
+      "version": "7.0.2-nightly20260801",
+      "archiveSHA256": "1f9d671fdfccd4d478871672e5ded50fd811086c40ce965491b352fc7154f79f",
+      "licenseType": null,
+      "licenseDeclaration": null,
+      "licenseURL": null,
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/kikipoulet/SukiUI",
+        "commit": "15bf1900cc37a8084e982b051b23b66d0a80a31c"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.Animation",
+      "version": "5.0.0",
+      "archiveSHA256": "a5a2988a72380313a7568f8d2a28580f9300ffacaee7b09d2fd6b827f9dc1b0c",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.Controls.Skia.Avalonia",
+      "version": "12.0.0.11",
+      "archiveSHA256": "fc95c6ba3877da8f4c3937b5682a321a0d269f4fde25589af1fda23fa78dd8e7",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.Custom",
+      "version": "5.0.0",
+      "archiveSHA256": "594bb7953f5bc86a638b01e79b361425ecb94fbb163e830ae4464febe5248056",
+      "licenseType": "expression",
+      "licenseDeclaration": "MS-PL",
+      "licenseURL": "https://licenses.nuget.org/MS-PL",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.Model",
+      "version": "5.0.0",
+      "archiveSHA256": "44e1e5b36e5f4bc63b315ef44b6a7312a5a4c1319e4ceabd6df61dd108c40ee3",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.SceneGraph",
+      "version": "5.0.0",
+      "archiveSHA256": "380d6a3149678fb689065b4ad0c9f0cf603c96feeec7c0ef796b7b81a8288ee7",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Svg.Skia",
+      "version": "5.0.0",
+      "archiveSHA256": "e68d475f911ba2b9f6186d67b37e00ad85dea366c4b8889bf625e1302487a00f",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/wieslawsoltes/Svg.Skia",
+        "commit": "3a7b6c71b0144530ad422bf7f490022e73401228"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "System.Linq.Dynamic.Core",
+      "version": "1.7.2",
+      "archiveSHA256": "b8f0b76dfb1e776a84563c65cd203d68519718e0d8b24c4011f2a13e6ee5c052",
+      "licenseType": "expression",
+      "licenseDeclaration": "Apache-2.0",
+      "licenseURL": "https://licenses.nuget.org/Apache-2.0",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/zzzprojects/System.Linq.Dynamic.Core",
+        "branch": "refs/heads/master",
+        "commit": "e33dc6c16338e9538c27116d4a8a89868dc75836"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "System.Security.Cryptography.ProtectedData",
+      "version": "10.0.0",
+      "archiveSHA256": "8684759555d51145df22d373276dff491c9b2c1a9a7f8658cc9063956807a523",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/dotnet/dotnet",
+        "commit": "b0f34d51fccc69fd334253924abd8d6853fad7aa"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "THIRD-PARTY-NOTICES.TXT",
+          "copiedPath": "legal\\packages\\System.Security.Cryptography.ProtectedData\\10.0.0\\7d4036406978.txt",
+          "sha256": "6d15e10a101c6bfff2ab4429ed061bf76c456fc4b23ad6b03e0d0f8377148a21"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Tmds.DBus.Protocol",
+      "version": "0.95.1",
+      "archiveSHA256": "2d4ba6d63078471ce07e8ab0c4aa1345eed47614e291b061e449bb83882fa775",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/tmds/Tmds.DBus.git",
+        "branch": "refs/heads/main",
+        "commit": "491bde2c16d65a7904397933cffa24e15e45eb2a"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "Ude.NetStandard",
+      "version": "1.2.0",
+      "archiveSHA256": "f43abb504e4e8aebdc89445057c01ad777a5a25b757f30e1bc5f1cf18c739e1c",
+      "licenseType": "file",
+      "licenseDeclaration": "COPYING",
+      "licenseURL": "https://aka.ms/deprecateLicenseUrl",
+      "repository": {
+        "url": "https://github.com/yinyue200/ude"
+      },
+      "embeddedLicenseOrNoticeFiles": [
+        {
+          "archivePath": "COPYING",
+          "copiedPath": "legal\\packages\\Ude.NetStandard\\1.2.0\\400d38e5cfee.txt",
+          "sha256": "7c102fa34ae773762ba480b71c05a2025d254b60b9b614c783b8e7e034e849f7"
+        }
+      ],
+      "status": "DECLARATION_AND_LOCAL_TEXT_RECORDED"
+    },
+    {
+      "id": "Velopack",
+      "version": "1.2.0",
+      "archiveSHA256": "b97a28814938b58e4a34c47ef6e84baa3e436b0fc9b1f417089f28c8be522193",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/velopack/velopack",
+        "branch": "refs/heads/master",
+        "commit": "f2edcbcafb81da5b3c884aaea330e225ad91d8b6"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "z440.atl.core",
+      "version": "7.16.0",
+      "archiveSHA256": "a103264a0e98f25b0abce0f637f1221ba0db217082c231a4f7af62ba39f07d83",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Zeugma440/atldotnet.git",
+        "commit": "09e9703ecc18d416cd4c0ea02179d05315c63904"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    },
+    {
+      "id": "ZLinq",
+      "version": "1.5.6",
+      "archiveSHA256": "067d546b9d17940c72ae06e47d482194501ca6f9d3b3178944646ffad2c9e2ca",
+      "licenseType": "expression",
+      "licenseDeclaration": "MIT",
+      "licenseURL": "https://licenses.nuget.org/MIT",
+      "repository": {
+        "type": "git",
+        "url": "https://github.com/Cysharp/ZLinq",
+        "branch": "refs/heads/main",
+        "commit": "f69303ff08a2c3678d1362bd5abdc24adab3ab8c"
+      },
+      "embeddedLicenseOrNoticeFiles": [],
+      "status": "NO_EMBEDDED_TEXT_RECORDED"
+    }
+  ],
+  "packageCount": 95,
+  "withoutEmbeddedTexts": 54,
+  "withoutLicenseDeclaration": 3,
+  "native": [
+    {
+      "path": "preview\\bass.dll",
+      "sha256": "febb2cf1882d554c3a958280777da0b69f07de6e262df271de11c56e4a54afd4",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "SHLWAPI.dll",
+        "MSACM32.dll",
+        "WINMM.dll",
+        "ole32.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bass_aac.dll",
+      "sha256": "9832f4e2d3716c7453b40b9e20284977f20f264c7c7b87381d63aa5c572be97c",
+      "imports": [
+        "bass.dll",
+        "KERNEL32.dll",
+        "USER32.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bass_fx.dll",
+      "sha256": "a6e1847eef52d882b4137af514d834c2e220daceb417c821d1e502fb7a34c84a",
+      "imports": [
+        "msvcrt.dll",
+        "bass.dll",
+        "KERNEL32.dll",
+        "USER32.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bassape.dll",
+      "sha256": "3638177a4fec909c85c378ea327feb67d26a3d50011b3f8b7ddac6d2a0d5bb25",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "bass.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bassdsd.dll",
+      "sha256": "2fb0fa095cc04046185ff572689ec0b74baa3124a907e7be3796aabfdb1a266f",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "bass.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bassflac.dll",
+      "sha256": "b62dc49051b8aa47662373c4402c77b9d9d60742b51815ea395f9359f9b9e59f",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "bass.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\bassloud.dll",
+      "sha256": "cc2cf3a72087d2d19ce5a370d06d59a0804922592ee3b54abe61aa9d6c618108",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "bass.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\basswebm.dll",
+      "sha256": "da08ad1520423d00aea75d813651a6dac7ea16b92a83ed5a93244729e44f2a90",
+      "imports": [
+        "user32.dll",
+        "kernel32.dll",
+        "bass.dll",
+        "msvcrt.dll"
+      ],
+      "kind": "native",
+      "licensing": "NATIVE_VERSION_PROVENANCE_AND_TERMS_REQUIRE_INDIVIDUAL_REVIEW"
+    },
+    {
+      "path": "preview\\ManagedBass.dll",
+      "sha256": "669bdb9f9bfbca47116d794c3e525443c9136a41123335215eed17f690114649",
+      "imports": [
+        "mscoree.dll"
+      ],
+      "kind": "managed-wrapper",
+      "licensing": "SEE_MANAGED_PACKAGE_DECLARATION"
+    },
+    {
+      "path": "preview\\ManagedBass.Fx.dll",
+      "sha256": "fa0b799508767116cd6e6abebc88a503a033e121aa3d081170690a598dec1b9d",
+      "imports": [
+        "mscoree.dll"
+      ],
+      "kind": "managed-wrapper",
+      "licensing": "SEE_MANAGED_PACKAGE_DECLARATION"
+    },
+    {
+      "path": "preview\\ManagedBass.Loud.dll",
+      "sha256": "6d3a5c5b64ca6514d6d750bde4aea0ff550b11689897b5d727cb8fa37235f11a",
+      "imports": [
+        "mscoree.dll"
+      ],
+      "kind": "managed-wrapper",
+      "licensing": "SEE_MANAGED_PACKAGE_DECLARATION"
+    }
+  ],
+  "runtimeConfig": {
+    "runtimeOptions": {
+      "tfm": "net10.0",
+      "framework": {
+        "name": "Microsoft.NETCore.App",
+        "version": "10.0.0"
+      },
+      "configProperties": {
+        "Avalonia.Diagnostics.Diagnostic.IsEnabled": true,
+        "MVVMTOOLKIT_ENABLE_INOTIFYPROPERTYCHANGING_SUPPORT": true,
+        "System.Reflection.Metadata.MetadataUpdater.IsSupported": false,
+        "System.Runtime.Serialization.EnableUnsafeBinaryFormatterSerialization": false,
+        "CSWINRT_USE_WINDOWS_UI_XAML_PROJECTIONS": false
+      }
+    }
+  },
+  "assets": [
+    {
+      "name": "moon.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool"
+    },
+    {
+      "name": "orchid.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool"
+    },
+    {
+      "name": "valley.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "OpenAI built-in imagegen in this task; mode native, not CLI; model identifier and deterministic seed not supplied by tool"
+    },
+    {
+      "name": "paper.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\4.png"
+    },
+    {
+      "name": "gold.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\6.png"
+    },
+    {
+      "name": "city.png",
+      "matchesHistoricalProvenance": true,
+      "sourceRecord": "D:\\AI\\Projects\\HuayuanMusic\\.p1-work\\ui-c3_1-redesign-20261025\\src\\Assets\\Art\\7.png"
+    }
+  ],
+  "inheritedAssetExamples": [
+    "core\\src\\Apps\\KugouAvaloniaPlayer\\Assets\\default_song.webp",
+    "core\\src\\Apps\\KugouAvaloniaPlayer\\Assets\\ka-music.ico"
+  ],
+  "taskbarHelperExcluded": true,
+  "release": "NO_GO",
+  "sources": [
+    "https://www.un4seen.com/bass.html",
+    "https://www.un4seen.com/doc/bass/bass.html",
+    "https://www.un4seen.com/doc/bassflac/bassflac.html"
+  ]
+}

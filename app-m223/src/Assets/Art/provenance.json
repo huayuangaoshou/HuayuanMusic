@@ -1,0 +1,23 @@
+{
+  "source": "Generate-Art.py; deterministic original geometry, no external artwork",
+  "font": "locally installed Segoe UI rasterized; font binary not bundled",
+  "assets": {
+    "0.png": "736c2818c5c59650f8757d5569c293a215688d5526b1c3909f27140712db5103",
+    "1.png": "f4c255e790bd014998f4f0101119a0fd26524c06cfadef4d79c62dcf002ce044",
+    "2.png": "880405afa8778089a876a8dd08c6def912d00d5a857f9e7bbae7fea9b1bd8d5f",
+    "3.png": "8953ed190951db12b3714a8781e86c1d408eff6ecaf7b4e62666722563d0ac1c",
+    "4.png": "10139548d5fcd681a13897125d2696bc371e65c5cc15c83a745f35255b665d3e",
+    "5.png": "fc9632926b9bc3e1d4a88f692697a0937cd8b53b64b22c19f2d889cc4ac33447",
+    "6.png": "724f2a548fbfaa87b48e61a160ff640bc1ad04a70b1ac2b41a220e521ea808ef",
+    "7.png": "f4924c26f0408c9ea3f2d8176bf12348ec550c624fde5ac668af6fb4577fbc51",
+    "landscape-0.png": "cfd97b584b59ac2186dd8c90e8d37ffb5e07ad82bc87539235797508b0c68149",
+    "landscape-1.png": "b3411ca34ae0e9e1312d457014e817e6192c22e63ffbd09dfd5c9b2bccf794ca",
+    "landscape-2.png": "05dc2a2b341939d2f57b42c034bb52e6b49d4723aeaab3ee354699d191e85e62",
+    "landscape-3.png": "6a5cb7e30d9480e7a533fa7a0ad0c3f98f8aa8b6f02e13b313838af9d966ec0c",
+    "landscape-4.png": "5944864b8f6290fd8aa27c82419f31893f8cbc06a80c4a1c3bcaf01e0deab549",
+    "landscape-5.png": "a284ef2d191f251cf33145230ef64c1a0b5b93941266b8e94f520cafece7c566",
+    "landscape-6.png": "a0c58594e853da7ef629849358c508ced0d05aa7b3801ba5b62700997286174a",
+    "landscape-7.png": "560c679f0b49970e0b15eaac174a3d849bdba47e0b8f38e2623553ea805f74ac"
+  },
+  "landscape_method": "same original geometry illustration cropped y=180..520 excluding poster lettering"
+}

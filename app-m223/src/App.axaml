@@ -1,0 +1,30 @@
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="HuayuanPreview.App">
+<Application.Styles><FluentTheme/>
+<Style Selector="Window"><Setter Property="FontFamily" Value="Microsoft YaHei UI, Segoe UI"/><Setter Property="FontSize" Value="13"/></Style>
+<Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
+<Style Selector="Button"><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Padding" Value="12,8"/><Setter Property="CornerRadius" Value="10"/><Setter Property="MinHeight" Value="32"/><Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="Transparent"/><Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
+<Style Selector="Button.primary"><Setter Property="Foreground" Value="{DynamicResource PrimaryInk}"/></Style>
+<Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource PrimaryHover}"/><Setter Property="Foreground" Value="{DynamicResource PrimaryInk}"/></Style>
+<Style Selector="Button:focus-visible /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/><Setter Property="BorderThickness" Value="2"/></Style>
+<Style Selector="Button.selected"><Setter Property="Background" Value="{DynamicResource Selected}"/><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/></Style>
+<Style Selector="Button:disabled"><Setter Property="Opacity" Value="0.65"/></Style>
+<Style Selector="ToolTip"><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
+<Style Selector="ComboBox"><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="CornerRadius" Value="9"/></Style>
+<Style Selector="ListBoxItem"><Setter Property="CornerRadius" Value="7"/></Style>
+<Style Selector="ListBoxItem"><Setter Property="Padding" Value="4"/><Setter Property="CornerRadius" Value="0"/></Style>
+<Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Selected}"/><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/><Setter Property="BorderThickness" Value="2,0,0,0"/></Style>
+<Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Selected}"/></Style>
+<Style Selector="Slider /template/ Thumb"><Setter Property="Width" Value="8"/><Setter Property="Height" Value="8"/><Setter Property="MinWidth" Value="8"/><Setter Property="MinHeight" Value="8"/></Style>
+<Style Selector="Slider /template/ Thumb /template/ Border"><Setter Property="Background" Value="{DynamicResource Primary}"/></Style>
+<Style Selector="ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource Surface2}"/></Style>
+<Style Selector="TextBox"><Setter Property="PlaceholderForeground" Value="{DynamicResource Sub}"/><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="BorderBrush" Value="{DynamicResource Line}"/></Style>
+<Style Selector="TextBox /template/ TextBlock#PART_Placeholder"><Setter Property="Opacity" Value="1"/></Style>
+<Style Selector="Slider"><Setter Property="Foreground" Value="{DynamicResource Primary}"/></Style>
+<Style Selector="MenuItem"><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
+
+<Style Selector="Slider.player-slider"><Setter Property="Height" Value="32"/><Setter Property="MinHeight" Value="32"/><Setter Property="Background" Value="{DynamicResource Line}"/><Setter Property="Foreground" Value="{DynamicResource Primary}"/></Style>
+<Style Selector="Slider.player-slider /template/ Thumb"><Setter Property="Width" Value="12"/><Setter Property="Height" Value="12"/><Setter Property="MinWidth" Value="12"/><Setter Property="MinHeight" Value="12"/><Setter Property="Background" Value="{DynamicResource Primary}"/><Setter Property="BorderBrush" Value="{DynamicResource Surface}"/><Setter Property="BorderThickness" Value="2"/><Setter Property="RenderTransformOrigin" Value="50%,50%"/><Setter Property="RenderTransform" Value="scale(1)"/></Style>
+<Style Selector="Slider.player-slider:pointerover /template/ Thumb"><Setter Property="RenderTransform" Value="scale(1.25)"/></Style>
+<Style Selector="Slider.player-slider.editing /template/ Thumb"><Setter Property="RenderTransform" Value="scale(1.35)"/></Style>
+<Style Selector="Slider.player-slider:focus-visible"><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="5"/></Style>
+</Application.Styles></Application>

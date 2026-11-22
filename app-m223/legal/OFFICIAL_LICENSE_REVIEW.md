@@ -1,0 +1,10 @@
+# Official-source review, 2026-10-28
+
+- [BASS official licensing](https://www.un4seen.com/bass.html) and [official manual](https://www.un4seen.com/doc/bass/bass.html): qualifying non-commercial use is permitted without a commercial licence. This does not identify the origin or complete terms of each existing binary. BASS FX/AAC/loudness and other add-ons remain subject to exact-version provenance and their own terms. ManagedBass licence declarations do not replace native licences.
+- [Avalonia official FAQ](https://docs.avaloniaui.net/tools/faq): the framework remains MIT; DiagnosticsSupport is a tooling bridge and can be referenced without obtaining a tooling licence, while opening the professional tools requires the applicable licence/account. The vendor recommends excluding tooling integration from production for security and size. This candidate did not open professional tools or register an account. Package 2.2.3 has no licence field in the local nuspec; this remains an inventory evidence gap, not a claim that it is unlicensed. Current runtime configuration still carries the diagnostics flag; this needs production packaging review.
+- [SukiUI upstream repository](https://github.com/kikipoulet/SukiUI): repository describes MIT licensing, but the exact package is 7.0.2-nightly20260801 with repository commit 15bf1900cc37a8084e982b051b23b66d0a80a31c. Fetching the licence at that exact commit through the web tool returned a cache-miss error. We do not substitute main-branch text as attested exact-version evidence.
+- Microsoft.Windows.SDK.NET.Ref 10.0.19041.57 points to https://aka.ms/WinSDKLicenseURL in its nuspec. It is SDK/reference material, not evidence that every SDK asset may be redistributed as application runtime. Keep its classification separate from runtime libraries.
+
+This is an engineering preflight record, not a vendor permission, legal opinion or public-release approval. Source README restrictions, native/plugin notices, transitive notices and inherited assets remain review items. No contact, purchase, installation, replacement of binaries or change of licence declarations occurred.
+
+PUBLIC_RELEASE=NO_GO.

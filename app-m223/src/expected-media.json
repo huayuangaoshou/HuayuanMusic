@@ -1,0 +1,10 @@
+{
+  "invalid/bad.wav": "2e58d842ea61cd41b4d46b6ccb37bf41570cf02447c319e98ec8265f1c9e8b8e",
+  "invalid/note.txt": "e23b51a40d21aad70200ec1f08c6e4883d6ca40c22b6ffbdff306c9c62c408e4",
+  "loose/c.lrc": "a7a82aa8d341c4d901eeada887fbe53875411c35dfeb3c6258a3e64ccc61965d",
+  "loose/c.wav": "c9586065e0d8ae3f72bae82733b6a908abdf68bda10e11663d57234dc34bfd2c",
+  "scan/a.lrc": "a7a82aa8d341c4d901eeada887fbe53875411c35dfeb3c6258a3e64ccc61965d",
+  "scan/a.wav": "d91a09d3d1ccd26b4a4307fae115d96e91847b383ff112939c03a06f9eabfe86",
+  "scan/nested/b.lrc": "a7a82aa8d341c4d901eeada887fbe53875411c35dfeb3c6258a3e64ccc61965d",
+  "scan/nested/b.wav": "7fe2acdcd74d87f52cd4b8d6b578291a0d2e80541f3608b62092bb4de0c5556b"
+}

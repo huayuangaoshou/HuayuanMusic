@@ -1,0 +1,36 @@
+<Window xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ xmlns:art="using:KugouAvaloniaPlayer.Behaviors" xmlns:vm="using:KugouAvaloniaPlayer.ViewModels" x:Class="KugouAvaloniaPlayer.Views.OfflinePlayerWindow"
+ x:DataType="vm:OfflinePlayerViewModel" Title="Huayuan Music · 受控本地播放器 · 临时验收界面" Width="1080" Height="700" MinWidth="900" MinHeight="600">
+ <Window.Styles><Style Selector="Button"><Setter Property="MinHeight" Value="36"/><Setter Property="Margin" Value="3"/></Style></Window.Styles>
+ <Grid Margin="16" RowDefinitions="Auto,*,Auto,Auto,Auto" RowSpacing="10">
+  <StackPanel><TextBlock Text="Huayuan Music · 本地离线功能验收" FontSize="23" FontWeight="Bold"/><TextBlock Text="独立 profile · 明确选择文件的受控副本 · 无账号/在线服务 · 临时界面，非最终设计" FontSize="13"/></StackPanel>
+  <TabControl Grid.Row="1" x:Name="Pages">
+   <TabItem Header="曲库与歌单"><Grid ColumnDefinitions="230,*" ColumnSpacing="14">
+    <StackPanel Spacing="5"><TextBox x:Name="PlaylistNameBox" Text="{Binding PlaylistName,Mode=TwoWay}" PlaceholderText="本地歌单名称"/>
+     <WrapPanel><Button x:Name="CreateButton" Content="新建本地歌单" Tag="Create" Click="ActionClick"/><Button Content="删除歌单" Tag="Delete" Click="ActionClick"/></WrapPanel>
+     <ListBox x:Name="PlaylistList" Height="240" ItemsSource="{Binding Library.LocalLibraryPlaylists}" SelectedItem="{Binding SelectedPlaylist,Mode=TwoWay}" SelectionChanged="PlaylistChanged">
+      <ListBox.ItemTemplate><DataTemplate x:DataType="vm:PlaylistItem"><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/></DataTemplate></ListBox.ItemTemplate>
+     </ListBox><Button Content="打开选中歌单" Tag="Open" Click="ActionClick"/>
+    </StackPanel>
+    <Grid Grid.Column="1" RowDefinitions="Auto,*"><WrapPanel><Button x:Name="ImportButton" Content="导入 MP3 / FLAC / WAV…" Click="ImportClick"/><Button Content="取消导入" Click="CancelImport"/><Button x:Name="AddButton" Content="添加合成曲 C" Tag="Add" Click="ActionClick"/><Button x:Name="PlayButton" Content="播放选中" Tag="Play" Click="ActionClick"/><Button x:Name="RemoveButton" Content="从歌单移除" Tag="Remove" Click="ActionClick"/><Button Content="刷新" Tag="Refresh" Click="ActionClick"/></WrapPanel>
+     <ListBox Grid.Row="1" x:Name="SongList" ItemsSource="{Binding Library.SelectedPlaylistSongs}" SelectedItem="{Binding SelectedSong,Mode=TwoWay}">
+      <ListBox.ItemTemplate><DataTemplate x:DataType="vm:SongItem"><StackPanel Margin="6"><Image Width="48" Height="48" HorizontalAlignment="Left" art:LocalArtworkImageBehavior.Source="{Binding Cover}"/><TextBlock Text="{Binding Name}" FontSize="18" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Singer}"/><TextBlock Text="{Binding AlbumName}"/><TextBlock Text="{Binding DurationSeconds,StringFormat='{}{0:F1} 秒'}"/><TextBlock Text="{Binding LocalFilePath}" FontSize="11" TextTrimming="CharacterEllipsis"/></StackPanel></DataTemplate></ListBox.ItemTemplate>
+     </ListBox>
+    </Grid>
+   </Grid></TabItem>
+   <TabItem Header="本地收藏"><Grid RowDefinitions="Auto,*"><WrapPanel><Button x:Name="PlayFavoriteButton" Content="播放选中收藏" Tag="PlayFavorite" Click="ActionClick"/><Button x:Name="RemoveFavoriteButton" Content="取消选中收藏" Tag="RemoveFavorite" Click="ActionClick"/></WrapPanel>
+    <ListBox Grid.Row="1" ItemsSource="{Binding Favorites.Songs}" SelectedItem="{Binding Favorites.SelectedSong,Mode=TwoWay}"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:SongItem"><TextBlock Text="{Binding Name}" Margin="8" FontSize="19"/></DataTemplate></ListBox.ItemTemplate></ListBox>
+   </Grid></TabItem>
+   <TabItem Header="本地历史"><Grid RowDefinitions="Auto,*"><WrapPanel><Button x:Name="PlayHistoryButton" Content="播放选中历史" Tag="PlayHistory" Click="ActionClick"/><Button x:Name="ClearHistoryButton" Content="清除本地历史" Tag="ClearHistory" Click="ActionClick"/></WrapPanel>
+    <ListBox Grid.Row="1" ItemsSource="{Binding History.Songs}" SelectedItem="{Binding SelectedHistory,Mode=TwoWay}"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:SongItem"><TextBlock Text="{Binding Name}" Margin="8" FontSize="19"/></DataTemplate></ListBox.ItemTemplate></ListBox>
+   </Grid></TabItem>
+   <TabItem Header="歌词"><ListBox ItemsSource="{Binding Player.LyricLines}"><ListBox.ItemTemplate><DataTemplate x:DataType="vm:LyricLineViewModel"><TextBlock Text="{Binding Content}" Margin="8" FontSize="20"/></DataTemplate></ListBox.ItemTemplate></ListBox></TabItem>
+  </TabControl>
+  <StackPanel Grid.Row="2" Spacing="5"><TextBlock Text="{Binding Player.DisplayedPlayingSong.Name}" FontSize="19" TextTrimming="CharacterEllipsis"/><TextBlock x:Name="CurrentLyric" Text="{Binding Player.CurrentLyricLine.Content}" FontSize="20" Foreground="#345ABB"/>
+   <StackPanel Orientation="Horizontal" Spacing="12"><TextBlock Text="{Binding Player.CurrentPositionSeconds,StringFormat='{}{0:F1}s'}"/><TextBlock Text="{Binding Player.TotalDurationSeconds,StringFormat='共 {0:F1}s'}"/></StackPanel>
+   <Slider x:Name="SeekSlider" Minimum="0" Maximum="{Binding Player.TotalDurationSeconds}" Value="{Binding Player.CurrentPositionSeconds,Mode=TwoWay}"/>
+  </StackPanel>
+  <WrapPanel Grid.Row="3"><Button x:Name="PreviousButton" Content="上一首" Tag="Previous" Click="ActionClick"/><Button x:Name="PauseButton" Content="暂停 / 继续" Tag="Pause" Click="ActionClick"/><Button x:Name="StopButton" Content="停止" Tag="Stop" Click="ActionClick"/><Button x:Name="NextButton" Content="下一首" Tag="Next" Click="ActionClick"/><Button x:Name="LikeButton" Content="收藏 / 取消" Tag="Like" Click="ActionClick"/><CheckBox Content="已收藏" IsChecked="{Binding Player.IsLiked,Mode=OneWay}" IsHitTestVisible="False" Margin="8"/><Button x:Name="MuteButton" Content="静音 / 恢复" Tag="Mute" Click="ActionClick"/><TextBlock Text="音量" VerticalAlignment="Center"/><Slider x:Name="VolumeSlider" Width="125" Minimum="0" Maximum="1" Value="{Binding Player.MusicVolume,Mode=TwoWay}"/></WrapPanel>
+  <TextBox MaxHeight="95" Grid.Row="4" Text="{Binding Status,Mode=OneWay}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" ScrollViewer.VerticalScrollBarVisibility="Auto" FontSize="12"/>
+ </Grid>
+</Window>

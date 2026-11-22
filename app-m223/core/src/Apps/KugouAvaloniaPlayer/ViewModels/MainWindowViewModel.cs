@@ -1,0 +1,800 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.IO;
+using ZLinq;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Collections;
+using Avalonia.Controls.Notifications;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using KuGou.Net.Protocol.Session;
+using KugouAvaloniaPlayer.Models;
+using KugouAvaloniaPlayer.Services;
+using Microsoft.Extensions.Logging;
+using SukiUI.Dialogs;
+using SukiUI.Toasts;
+
+namespace KugouAvaloniaPlayer.ViewModels;
+
+public partial class MainWindowViewModel : ObservableObject, IDisposable
+{
+    private static readonly Lock CustomBackgroundImageSync = new();
+    private static Bitmap? _sCachedCustomBackgroundBitmap;
+    private static string? _sCachedCustomBackgroundPath;
+    private static int _sCachedCustomBackgroundDecodeWidth;
+
+    private const int DefaultCustomBackgroundDecodeWidth = 1920;
+    private const int MaxCustomBackgroundDecodeWidth = 2560;
+
+    private readonly IAppUpdateService _appUpdateService;
+    private readonly IDesktopLyricWindowService _desktopLyricWindowService;
+    private readonly DailyRecommendViewModel _dailyRecommendViewModel;
+    private readonly ILogger<MainWindowViewModel> _logger;
+    private readonly ILoginDialogService _loginDialogService;
+    private readonly ILoginInitializationService _loginInitializationService;
+    private readonly IMainWindowService _mainWindowService;
+    private readonly IMessenger _messenger;
+    private readonly INavigationService _navigationService;
+    private readonly INetworkConnectivityService _networkConnectivityService;
+    private readonly IUiPreferencesState _uiPreferencesState;
+    private readonly IVipEntitlementService _vipEntitlementService;
+    private readonly SearchViewModel _searchViewModel;
+    private readonly UserCloudViewModel _userCloudViewModel;
+    private readonly KgSessionManager _sessionManager;
+    private readonly SettingViewModel _settingViewModel;
+
+    [ObservableProperty]
+    public partial PageViewModelBase ActivePage { get; set; }
+
+    [ObservableProperty]
+    public partial PageViewModelBase? SelectedMenuPage { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsDesktopLyricEnabled { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsLoggedIn { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsCreatedPlaylistsExpanded { get; set; } = true;
+
+    [ObservableProperty]
+    public partial bool IsCollectedPlaylistsExpanded { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsAlbumPlaylistsExpanded { get; set; }
+
+    [ObservableProperty]
+    public partial PlaylistItem? QuickLikePlaylist { get; set; }
+
+    [ObservableProperty]
+    public partial bool IsMiniPlayerOpaque { get; set; } = true;
+
+    private bool _isUpdatingActivePageFromNavigation;
+    private bool _isUpdatingSelectedMenuPageFromNavigation;
+    private bool _isClosingDesktopLyricForShutdown;
+    private bool _isDisposed;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SearchCommand))]
+    public partial string SearchKeyword { get; set; } = "";
+
+    [ObservableProperty]
+    public partial string? UserAvatar { get; set; }
+
+    [ObservableProperty]
+    public partial string UserName { get; set; } = "未登录";
+
+    public MainWindowViewModel(
+        ISukiToastManager toastManager,
+        PlayerViewModel player,
+        ISukiDialogManager dialogManager,
+        KgSessionManager sessionManager,
+        ISongInteractionService songInteractionService,
+        IAppUpdateService appUpdateService,
+        IDesktopLyricWindowService desktopLyricWindowService,
+        ILoginDialogService loginDialogService,
+        ILoginInitializationService loginInitializationService,
+        IMainWindowService mainWindowService,
+        IMessenger messenger,
+        IUiPreferencesState uiPreferencesState,
+        IVipEntitlementService vipEntitlementService,
+        INetworkConnectivityService networkConnectivityService,
+        INavigationService navigationService,
+        NowPlayingViewModel nowPlaying,
+        LoginViewModel loginViewModel,
+        SearchViewModel searchViewModel,
+        UserCloudViewModel userCloudViewModel,
+        SettingViewModel settingViewModel,
+        DailyRecommendViewModel dailyRecommendViewModel,
+        HistoryViewModel historyViewModel,
+        DiscoverViewModel discoverViewModel,
+        LocalMusicLibraryViewModel localMusicLibraryViewModel,
+        MyPlaylistsViewModel myPlaylistsViewModel,
+        ILogger<MainWindowViewModel> logger)
+    {
+        DialogManager = dialogManager;
+        _sessionManager = sessionManager;
+        _dailyRecommendViewModel = dailyRecommendViewModel;
+        _appUpdateService = appUpdateService;
+        _desktopLyricWindowService = desktopLyricWindowService;
+        _loginDialogService = loginDialogService;
+        _loginInitializationService = loginInitializationService;
+        _mainWindowService = mainWindowService;
+        _messenger = messenger;
+        _uiPreferencesState = uiPreferencesState;
+        _vipEntitlementService = vipEntitlementService;
+        _networkConnectivityService = networkConnectivityService;
+        _navigationService = navigationService;
+
+        LoginViewModel = loginViewModel;
+        _searchViewModel = searchViewModel;
+        _userCloudViewModel = userCloudViewModel;
+        _settingViewModel = settingViewModel;
+        PlaylistsViewModel = myPlaylistsViewModel;
+        _logger = logger;
+
+        _settingViewModel.CheckForUpdateRequested += OnCheckForUpdateRequested;
+        _desktopLyricWindowService.IsOpenChanged += OnDesktopLyricWindowStateChanged;
+
+        Player = player;
+        SongInteractions = songInteractionService;
+        NowPlaying = nowPlaying;
+        ToastManager = toastManager;
+
+        Pages.Add(_dailyRecommendViewModel);
+        Pages.Add(historyViewModel);
+        Pages.Add(localMusicLibraryViewModel);
+        Pages.Add(discoverViewModel);
+        Pages.Add(_userCloudViewModel);
+        _navigationService.CurrentPageChanged += OnNavigationCurrentPageChanged;
+        _navigationService.NavigateRoot(_dailyRecommendViewModel);
+        ActivePage = _dailyRecommendViewModel;
+        SelectedMenuPage = _dailyRecommendViewModel;
+        IsDesktopLyricEnabled = _desktopLyricWindowService.IsOpen;
+        ApplyCustomBackgroundImage(_uiPreferencesState.Current.AppBackground);
+        _uiPreferencesState.PropertyChanged += OnUiPreferencesChanged;
+
+        PlaylistsViewModel.Items.CollectionChanged += OnPlaylistItemsChanged;
+        PlaylistsViewModel.PropertyChanged += OnPlaylistViewModelPropertyChanged;
+        RefreshSidebarPlaylists();
+
+        _messenger.Register<AuthStateChangedEvent>(this, (_, m) =>
+        {
+            if (m.IsLoggedIn)
+                _ = OnLoginSuccessAsync();
+            else
+                OnLogoutRequested();
+        });
+
+        _ = InitializeStartupAsync();
+
+        _ = ApplyDeferredStartupPreferencesAsync();
+    }
+
+    private async Task InitializeStartupAsync()
+    {
+        if (KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active) return;
+
+        try
+        {
+            await LoadLocalSessionOrLogin();
+            await GetDailyRecommendations();
+            if (SettingsManager.Settings.AutoCheckUpdate)
+                await _appUpdateService.CheckForUpdatesAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "启动后台初始化任务失败");
+        }
+    }
+
+    private async Task ApplyDeferredStartupPreferencesAsync()
+    {
+        if (KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active) return;
+
+        try
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(800));
+            await Player.RestoreCachedPlaybackQueueAsync();
+
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                var savedPlaybackMode = SettingsManager.Settings.PlaybackMode;
+                if (savedPlaybackMode != PlayMode.Normal)
+                    Player.ApplySavedPlaybackModePreference();
+
+                if (SettingsManager.Settings.OpenDesktopLyricOnStartup && !_desktopLyricWindowService.IsOpen)
+                    _desktopLyricWindowService.Toggle();
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "应用延迟启动设置失败");
+        }
+    }
+
+    private void ApplyCustomBackgroundImage(
+        bool useCustomImage,
+        string? customImagePath,
+        double customImageOpacity)
+    {
+        var hasCustomImage = UpdateCustomBackgroundBrush(useCustomImage, customImagePath, Math.Clamp(customImageOpacity, 0.1, 1.0));
+        IsMiniPlayerOpaque = !hasCustomImage;
+    }
+
+    private static bool UpdateCustomBackgroundBrush(bool useCustomImage, string? path, double opacity)
+    {
+        var brush = CreateCustomBackgroundBrush(useCustomImage, path, opacity, out var hasCustomImage);
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (Avalonia.Application.Current is not { } app) return;
+            app.Resources["KugouCustomBackgroundBrush"] = brush;
+            app.Resources["KugouHeroBackgroundImageVisible"] = !hasCustomImage;
+        });
+
+        return hasCustomImage;
+    }
+
+    private static IBrush CreateCustomBackgroundBrush(
+        bool useCustomImage,
+        string? path,
+        double opacity,
+        out bool hasCustomImage)
+    {
+        hasCustomImage = false;
+
+        if (!useCustomImage || string.IsNullOrWhiteSpace(path) || !System.IO.File.Exists(path))
+        {
+            ReleaseCachedCustomBackgroundBitmap();
+            return Brushes.Transparent;
+        }
+
+        try
+        {
+            var brush = new ImageBrush(GetOrCreateCustomBackgroundBitmap(path))
+            {
+                Stretch = Stretch.UniformToFill,
+                Opacity = opacity
+            };
+            hasCustomImage = true;
+            return brush;
+        }
+        catch
+        {
+            ReleaseCachedCustomBackgroundBitmap(path);
+            return Brushes.Transparent;
+        }
+    }
+
+    private static Bitmap GetOrCreateCustomBackgroundBitmap(string path)
+    {
+        var decodeWidth = GetCustomBackgroundDecodeWidth();
+
+        lock (CustomBackgroundImageSync)
+        {
+            if (_sCachedCustomBackgroundBitmap is not null &&
+                string.Equals(_sCachedCustomBackgroundPath, path, StringComparison.OrdinalIgnoreCase) &&
+                _sCachedCustomBackgroundDecodeWidth == decodeWidth)
+            {
+                return _sCachedCustomBackgroundBitmap;
+            }
+
+            _sCachedCustomBackgroundBitmap?.Dispose();
+            using var stream = File.OpenRead(path);
+            _sCachedCustomBackgroundBitmap = Bitmap.DecodeToWidth(stream, decodeWidth);
+            _sCachedCustomBackgroundPath = path;
+            _sCachedCustomBackgroundDecodeWidth = decodeWidth;
+            return _sCachedCustomBackgroundBitmap;
+        }
+    }
+
+    private static int GetCustomBackgroundDecodeWidth()
+    {
+        var mainWindow = (Avalonia.Application.Current?.ApplicationLifetime
+                           as Avalonia.Controls.ApplicationLifetimes.IClassicDesktopStyleApplicationLifetime)
+            ?.MainWindow;
+
+        var renderScaling = mainWindow?.RenderScaling ?? 1;
+        var clientWidth = mainWindow?.ClientSize.Width ?? 0;
+        var width = clientWidth > 0
+            ? (int)Math.Ceiling(clientWidth * renderScaling)
+            : DefaultCustomBackgroundDecodeWidth;
+
+        return Math.Clamp(width, 1, MaxCustomBackgroundDecodeWidth);
+    }
+
+    private static void ReleaseCachedCustomBackgroundBitmap(string? path = null)
+    {
+        lock (CustomBackgroundImageSync)
+        {
+            if (path is not null &&
+                !string.Equals(_sCachedCustomBackgroundPath, path, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _sCachedCustomBackgroundBitmap?.Dispose();
+            _sCachedCustomBackgroundBitmap = null;
+            _sCachedCustomBackgroundPath = null;
+            _sCachedCustomBackgroundDecodeWidth = 0;
+        }
+    }
+
+    //public string Version => Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "1.0.0";
+
+    public PlayerViewModel Player { get; }
+    public ISongInteractionService SongInteractions { get; }
+    public NowPlayingViewModel NowPlaying { get; }
+    public ISukiToastManager ToastManager { get; }
+    public ISukiDialogManager DialogManager { get; }
+
+    public AvaloniaList<PageViewModelBase> Pages { get; } = new();
+
+    private LoginViewModel LoginViewModel { get; }
+    public MyPlaylistsViewModel PlaylistsViewModel { get; }
+
+    public AvaloniaList<PlaylistItem> SidebarCreatedPlaylists { get; } = new();
+    public AvaloniaList<PlaylistItem> SidebarCollectedPlaylists { get; } = new();
+    public AvaloniaList<PlaylistItem> SidebarAlbumPlaylists { get; } = new();
+
+    private void OnDesktopLyricWindowStateChanged(bool isOpen)
+    {
+        if (!_isClosingDesktopLyricForShutdown)
+        {
+            SettingsManager.Settings.OpenDesktopLyricOnStartup = isOpen;
+            SettingsManager.Save();
+        }
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            IsDesktopLyricEnabled = isOpen;
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => IsDesktopLyricEnabled = isOpen);
+    }
+
+    partial void OnIsCreatedPlaylistsExpandedChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        IsCollectedPlaylistsExpanded = false;
+        IsAlbumPlaylistsExpanded = false;
+    }
+
+    partial void OnIsCollectedPlaylistsExpandedChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        IsCreatedPlaylistsExpanded = false;
+        IsAlbumPlaylistsExpanded = false;
+    }
+
+    partial void OnIsAlbumPlaylistsExpandedChanged(bool value)
+    {
+        if (!value)
+            return;
+
+        IsCreatedPlaylistsExpanded = false;
+        IsCollectedPlaylistsExpanded = false;
+    }
+
+    partial void OnActivePageChanged(PageViewModelBase value)
+    {
+        if (_isUpdatingActivePageFromNavigation)
+            return;
+
+        NavigateToPage(value);
+    }
+
+    partial void OnSelectedMenuPageChanged(PageViewModelBase? value)
+    {
+        if (_isUpdatingSelectedMenuPageFromNavigation || value == null)
+            return;
+
+        NavigateToPage(value);
+    }
+
+    private void OnNavigationCurrentPageChanged(PageViewModelBase? page)
+    {
+        if (page == null)
+            return;
+
+        if (Dispatcher.UIThread.CheckAccess())
+        {
+            ApplyNavigationPage(page);
+            return;
+        }
+
+        Dispatcher.UIThread.Post(() => ApplyNavigationPage(page));
+    }
+
+    private void ApplyNavigationPage(PageViewModelBase page)
+    {
+        NowPlaying.CloseCommand.Execute(null);
+        _isUpdatingActivePageFromNavigation = true;
+        ActivePage = page;
+        _isUpdatingActivePageFromNavigation = false;
+
+        if (!Pages.Contains(page))
+            return;
+
+        _isUpdatingSelectedMenuPageFromNavigation = true;
+        SelectedMenuPage = page;
+        _isUpdatingSelectedMenuPageFromNavigation = false;
+    }
+
+    private void NavigateToPage(PageViewModelBase page)
+    {
+        if (_navigationService.CurrentPage == page)
+            return;
+
+        if (Pages.Contains(page))
+        {
+            _navigationService.NavigateRoot(page);
+            return;
+        }
+
+        _navigationService.Navigate(page);
+    }
+
+    // --- 登录相关 ---
+    private async Task LoadLocalSessionOrLogin()
+    {
+        var result = await _loginInitializationService.InitializeLocalSessionAsync();
+        if (!result.IsLoggedIn)
+            return;
+
+        IsLoggedIn = true;
+        ApplyUserProfile(result.Profile);
+
+        if (result.UserProfileLoadFailed)
+            ShowLoadUserInfoFailedToast();
+
+        _ = InitializeVipAndLikesAsync("获取VIP或喜欢列表失败", LogLevel.Warning);
+    }
+
+    private async Task LoadUserInfo()
+    {
+        var result = await _loginInitializationService.LoadCurrentUserProfileAsync();
+        ApplyUserProfile(result.Profile);
+        if (result.Failed)
+            ShowLoadUserInfoFailedToast();
+    }
+
+    private async Task OnLoginSuccessAsync()
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            DialogManager.DismissDialog();
+            IsLoggedIn = true;
+        });
+
+        await LoadUserInfo();
+        _logger.LogInformation("登录成功");
+
+        if (ReferenceEquals(ActivePage, _userCloudViewModel))
+            await _userCloudViewModel.LoadCloudCommand.ExecuteAsync(null);
+
+        _ = InitializeVipAndLikesAsync("初始化VIP或喜欢列表失败", LogLevel.Error);
+
+        await GetDailyRecommendations();
+    }
+
+    private async Task InitializeVipAndLikesAsync(string failureMessage, LogLevel logLevel)
+    {
+        try
+        {
+            var token = _sessionManager.Session.Token;
+            var vipResult = await _vipEntitlementService.TryEnsureDailyVipAsync();
+            await ShowVipInitializationFailureAsync(vipResult, token);
+
+            await Player.LoadLikeListAsync();
+        }
+        catch (Exception ex)
+        {
+            _logger.Log(logLevel, ex, failureMessage);
+        }
+    }
+
+    private async Task ShowVipInitializationFailureAsync(VipEntitlementResult result, string? token)
+    {
+        if (result.FailureReason == VipEntitlementFailureReason.HistoryUnavailable)
+        {
+            var networkAvailable = await _networkConnectivityService.IsInternetAvailableAsync();
+            await Dispatcher.UIThread.InvokeAsync(() =>
+            {
+                // Ignore a startup result belonging to a session that has since changed.
+                if (_isDisposed || !IsLoggedIn || _sessionManager.Session.Token != token)
+                    return;
+
+                if (networkAvailable)
+                {
+                    _loginDialogService.ShowSessionExpiredDialog();
+                    return;
+                }
+
+                ToastManager.CreateToast()
+                    .OfType(NotificationType.Warning)
+                    .WithTitle("网络异常")
+                    .WithContent("无法连接网络，请检查网络连接后重试。")
+                    .Dismiss().After(TimeSpan.FromSeconds(3))
+                    .Queue();
+            });
+            return;
+        }
+
+        var toastContent = result.FailureReason switch
+        {
+            VipEntitlementFailureReason.ReceiveFailed =>
+                ("领取VIP失败", "请重新登录或在手机上手动领取"),
+            _ => default
+        };
+        if (toastContent == default)
+            return;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
+            ToastManager.CreateToast()
+                .OfType(NotificationType.Warning)
+                .WithTitle(toastContent.Item1)
+                .Dismiss().After(TimeSpan.FromSeconds(3))
+                .WithContent(toastContent.Item2)
+                .Queue());
+    }
+
+    private void ApplyUserProfile(UserProfileSnapshot? profile)
+    {
+        if (profile == null)
+            return;
+
+        UserName = profile.UserName;
+        UserAvatar = profile.UserAvatar;
+        _settingViewModel.UserName = profile.UserName;
+        _settingViewModel.UserAvatar = profile.UserAvatar;
+        _settingViewModel.UserId = profile.UserId;
+    }
+
+    private void ShowLoadUserInfoFailedToast()
+    {
+        ToastManager.CreateToast()
+            .OfType(NotificationType.Warning)
+            .WithTitle("加载用户失败")
+            .Dismiss().After(TimeSpan.FromSeconds(3))
+            .Dismiss().ByClicking()
+            .Queue();
+    }
+
+    private void OnLogoutRequested()
+    {
+        Dispatcher.UIThread.Post(() =>
+        {
+            IsLoggedIn = false;
+            UserName = "未登录";
+            UserAvatar = null;
+            _settingViewModel.UserName = UserName;
+            _settingViewModel.UserAvatar = null;
+            _settingViewModel.UserId = string.Empty;
+            _settingViewModel.VipStatus = "未开通";
+            Player.ClearPersonalFmSession();
+            _userCloudViewModel.LoadCloudCommand.Execute(null);
+            _ = _dailyRecommendViewModel.OnAuthStateChangedAsync();
+            _logger.LogInformation("已退出登录");
+
+            // 返回每日推荐页面
+            _navigationService.NavigateRoot(_dailyRecommendViewModel);
+        });
+    }
+
+    private void OnCheckForUpdateRequested()
+    {
+        _ = CheckForUpdatesFromUserAsync();
+    }
+
+    private async Task CheckForUpdatesFromUserAsync()
+    {
+        try
+        {
+            var result = await _appUpdateService.CheckForUpdatesAsync(true);
+            Dispatcher.UIThread.Post(() => _settingViewModel.UpdateStatus = result.Message);
+        }
+        finally
+        {
+            Dispatcher.UIThread.Post(() => _settingViewModel.SetCheckingUpdateState(false));
+        }
+    }
+
+    [RelayCommand]
+    private void ShowLoginDialog()
+    {
+        _loginDialogService.ShowLoginDialog(LoginViewModel);
+    }
+
+    [RelayCommand]
+    private void NavigateToUser()
+    {
+        if (IsLoggedIn)
+            _ = _settingViewModel.LoadUserInfoAsync();
+
+        NavigateToPage(_settingViewModel);
+    }
+
+    [RelayCommand]
+    private void RequestWindowToggleFullScreen()
+    {
+        _mainWindowService.ToggleFullScreen();
+    }
+
+    [RelayCommand]
+    private void RequestWindowMinimize()
+    {
+        _mainWindowService.Minimize();
+    }
+
+    [RelayCommand]
+    private void RequestWindowToggleMaximize()
+    {
+        _mainWindowService.ToggleMaximize();
+    }
+
+    [RelayCommand]
+    private void RequestWindowClose()
+    {
+        _mainWindowService.Close();
+    }
+
+    [RelayCommand]
+    private async Task GetDailyRecommendations()
+    {
+        await _dailyRecommendViewModel.LoadContentAsync();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanSearch))]
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(SearchKeyword))
+            return;
+
+        _navigationService.NavigateTransient(_searchViewModel);
+        await _searchViewModel.SearchAsync(SearchKeyword);
+    }
+
+    private bool CanSearch()
+    {
+        return !string.IsNullOrWhiteSpace(SearchKeyword);
+    }
+
+    [RelayCommand]
+    private async Task OpenSidebarPlaylist(PlaylistItem? item)
+    {
+        if (item == null || item.Type == PlaylistType.AddButton) return;
+
+        NavigateToPage(PlaylistsViewModel);
+        await PlaylistsViewModel.OpenPlaylistCommand.ExecuteAsync(item);
+    }
+
+    private void OnPlaylistViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MyPlaylistsViewModel.SelectedPlaylist))
+            UpdateSidebarSelection();
+    }
+
+    private void OnPlaylistItemsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        RefreshSidebarPlaylists();
+    }
+
+    private void UpdateSidebarSelection()
+    {
+        var selected = PlaylistsViewModel.SelectedPlaylist;
+
+        foreach (var item in SidebarCreatedPlaylists)
+            item.IsSelected = IsSameItem(selected, item);
+        foreach (var item in SidebarCollectedPlaylists)
+            item.IsSelected = IsSameItem(selected, item);
+        foreach (var item in SidebarAlbumPlaylists)
+            item.IsSelected = IsSameItem(selected, item);
+    }
+
+    private static bool IsSameItem(PlaylistItem? a, PlaylistItem b)
+    {
+        if (a == null) return false;
+        if (a.Type != b.Type) return false;
+
+        return a.Type switch
+        {
+            PlaylistType.Online or PlaylistType.Album => a.ListId > 0 && b.ListId > 0
+                ? a.ListId == b.ListId
+                : string.Equals(a.Id, b.Id, StringComparison.OrdinalIgnoreCase),
+            _ => false
+        };
+    }
+
+    private void RefreshSidebarPlaylists()
+    {
+        SidebarCreatedPlaylists.Clear();
+        SidebarCollectedPlaylists.Clear();
+        SidebarAlbumPlaylists.Clear();
+
+        SidebarCreatedPlaylists.AddRange(PlaylistsViewModel.Items.AsValueEnumerable().Where(IsCreatedOnlinePlaylist).ToArray());
+        SidebarCollectedPlaylists.AddRange(PlaylistsViewModel.Items.AsValueEnumerable().Where(IsCollectedOnlinePlaylist).ToArray());
+        SidebarAlbumPlaylists.AddRange(PlaylistsViewModel.Items.AsValueEnumerable().Where(x => x.Type == PlaylistType.Album).ToArray());
+        QuickLikePlaylist = PlaylistsViewModel.Items.AsValueEnumerable().FirstOrDefault(x => x.IsLikePlaylist);
+
+        UpdateSidebarSelection();
+    }
+
+    private static bool IsCreatedOnlinePlaylist(PlaylistItem item)
+    {
+        return item.Type == PlaylistType.Online && item.UserPlaylistType == 0;
+    }
+
+    private static bool IsCollectedOnlinePlaylist(PlaylistItem item)
+    {
+        return item.Type == PlaylistType.Online && item.UserPlaylistType != 0;
+    }
+
+    [RelayCommand]
+    private void ToggleDesktopLyric()
+    {
+        SettingsManager.Settings.OpenDesktopLyricOnStartup = !_desktopLyricWindowService.IsOpen;
+        SettingsManager.Save();
+        _desktopLyricWindowService.Toggle();
+    }
+
+
+    [RelayCommand]
+    private void NavigateBack()
+    {
+        if (_navigationService.GoBack())
+            return;
+
+        var dailyVm = Pages.AsValueEnumerable().OfType<DailyRecommendViewModel>().FirstOrDefault();
+        if (dailyVm != null) _navigationService.NavigateRoot(dailyVm);
+    }
+
+
+    public void ForceCloseDesktopLyric()
+    {
+        _isClosingDesktopLyricForShutdown = true;
+        _desktopLyricWindowService.Close();
+    }
+
+    private void OnUiPreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(IUiPreferencesState.Current))
+            ApplyCustomBackgroundImage(_uiPreferencesState.Current.AppBackground);
+    }
+
+    private void ApplyCustomBackgroundImage(AppBackgroundPreferences preferences)
+    {
+        ApplyCustomBackgroundImage(
+            preferences.UseCustomImage,
+            preferences.CustomImagePath,
+            preferences.CustomImageOpacity);
+    }
+
+    public void Dispose()
+    {
+        if (_isDisposed)
+            return;
+
+        _isDisposed = true;
+        _messenger.UnregisterAll(this);
+        _uiPreferencesState.PropertyChanged -= OnUiPreferencesChanged;
+        _settingViewModel.CheckForUpdateRequested -= OnCheckForUpdateRequested;
+        _desktopLyricWindowService.IsOpenChanged -= OnDesktopLyricWindowStateChanged;
+        _navigationService.CurrentPageChanged -= OnNavigationCurrentPageChanged;
+        PlaylistsViewModel.Items.CollectionChanged -= OnPlaylistItemsChanged;
+        PlaylistsViewModel.PropertyChanged -= OnPlaylistViewModelPropertyChanged;
+    }
+
+}

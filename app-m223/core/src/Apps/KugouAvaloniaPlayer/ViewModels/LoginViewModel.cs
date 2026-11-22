@@ -1,0 +1,379 @@
+using System;
+using System.Collections.ObjectModel;
+using ZLinq;
+using System.Threading;
+using System.Threading.Tasks;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
+using KuGou.Net.Abstractions.Models;
+using KuGou.Net.Clients;
+using KugouAvaloniaPlayer.Models;
+using Microsoft.Extensions.Logging;
+
+namespace KugouAvaloniaPlayer.ViewModels;
+
+public partial class LoginViewModel(
+    LoginClient authClient,
+    RegisterClient deviceClient,
+    IMessenger messenger,
+    ILogger<LoginViewModel> logger)
+    : ObservableObject
+{
+    [ObservableProperty] public partial string Code { get; set; } = "";
+
+    [ObservableProperty] public partial int Countdown { get; set; }
+
+    [ObservableProperty] public partial bool IsLoggingIn { get; set; }
+
+    [ObservableProperty] public partial bool IsQrExpired { get; set; }
+
+    [ObservableProperty] public partial bool IsQrLoginSelected { get; set; }
+
+    [ObservableProperty] public partial bool IsSendingCode { get; set; }
+
+    [ObservableProperty] public partial bool HasLoginAccountChoices { get; set; }
+
+    [ObservableProperty] public partial string Mobile { get; set; } = "";
+
+    [ObservableProperty] public partial string? QrCodeImageUrl { get; set; }
+
+    private string? _qrCodeKey;
+    private CancellationTokenSource? _qrPollingCts;
+    private int _qrRequestVersion;
+    [ObservableProperty] public partial string QrStatusMessage { get; set; } = "请使用酷狗音乐概念版App扫码";
+
+    [ObservableProperty] public partial string StatusMessage { get; set; } = "";
+
+    public ObservableCollection<LoginAccountOptionViewModel> LoginAccountChoices { get; } = [];
+
+    partial void OnCodeChanged(string value)
+    {
+        ClearLoginAccountChoices();
+    }
+
+    partial void OnIsQrLoginSelectedChanged(bool value)
+    {
+        if (value)
+            _ = RefreshQrCode();
+        else
+            StopQrPolling();
+    }
+
+    partial void OnMobileChanged(string value)
+    {
+        ClearLoginAccountChoices();
+    }
+
+    [RelayCommand]
+    private async Task RefreshQrCode()
+    {
+        StopQrPolling();
+        var requestVersion = _qrRequestVersion;
+        QrStatusMessage = "正在获取二维码...";
+        QrCodeImageUrl = null;
+        IsQrExpired = false;
+
+        try
+        {
+            var qr = await authClient.GetQrCodeAsync();
+            if (requestVersion != _qrRequestVersion)
+                return;
+
+            if (qr != null && !string.IsNullOrEmpty(qr.Qrcode))
+            {
+                _qrCodeKey = qr.Qrcode;
+                QrCodeImageUrl = qr.QrcodeImg;
+                QrStatusMessage = "请使用酷狗音乐App扫码";
+                StartQrPolling();
+            }
+            else
+            {
+                QrStatusMessage = "获取二维码失败，请重试";
+                IsQrExpired = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            if (requestVersion != _qrRequestVersion)
+                return;
+
+            logger.LogWarning(ex, "获取二维码失败");
+            QrStatusMessage = $"获取二维码出错: {ex.Message}";
+            IsQrExpired = true;
+        }
+    }
+
+    private void StartQrPolling()
+    {
+        _qrPollingCts = new CancellationTokenSource();
+        var token = _qrPollingCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (!token.IsCancellationRequested)
+                {
+                    await Task.Delay(2000, token);
+                    if (token.IsCancellationRequested) break;
+
+                    if (string.IsNullOrEmpty(_qrCodeKey)) continue;
+
+                    try
+                    {
+                        var status = await authClient.CheckQrStatusAsync(_qrCodeKey);
+
+                        if (status?.QrStatus == QrLoginStatus.WaitingForScan)
+                        {
+                            Dispatcher.UIThread.Post(() => QrStatusMessage = "请使用酷狗音乐App扫码");
+                        }
+                        else if (status?.QrStatus == QrLoginStatus.WaitingForConfirm)
+                        {
+                            Dispatcher.UIThread.Post(() => QrStatusMessage = "扫码成功，请在手机上确认");
+                        }
+                        else if (status?.QrStatus == QrLoginStatus.Success)
+                        {
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                QrStatusMessage = "登录成功";
+                                StopQrPolling();
+
+                                _ = Task.Run(async () =>
+                                {
+                                    try
+                                    {
+                                        await deviceClient.InitDeviceAsync();
+                                        await authClient.RefreshSessionAsync();
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        logger.LogError(ex, "设备验证失败");
+                                    }
+
+                                    Dispatcher.UIThread.Post(() =>
+                                    {
+                                        messenger.Send(new AuthStateChangedEvent(true));
+                                    });
+                                });
+                            });
+                            break;
+                        }
+                        else if (status?.QrStatus == QrLoginStatus.Expired)
+                        {
+                            Dispatcher.UIThread.Post(() =>
+                            {
+                                QrStatusMessage = "二维码已过期，请点击刷新";
+                                IsQrExpired = true;
+                            });
+                            StopQrPolling();
+                            break;
+                        }
+                    }
+                    catch (Exception ex) when (ex is not OperationCanceledException)
+                    {
+                        logger.LogError(ex, "轮询二维码登录状态出错");
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "二维码登录轮询任务异常退出");
+            }
+        }, token);
+    }
+
+    public void StopQrPolling()
+    {
+        _qrRequestVersion++;
+        if (_qrPollingCts != null)
+        {
+            _qrPollingCts.Cancel();
+            _qrPollingCts.Dispose();
+            _qrPollingCts = null;
+        }
+    }
+
+    [RelayCommand]
+    private void StopQrPollingOnUnload()
+    {
+        StopQrPolling();
+        if (IsQrLoginSelected)
+        {
+            IsQrExpired = true;
+            QrStatusMessage = "请刷新二维码后重新扫码";
+        }
+    }
+
+    [RelayCommand]
+    private async Task SendCode()
+    {
+        if (string.IsNullOrWhiteSpace(Mobile) || Mobile.Length != 11)
+        {
+            StatusMessage = "请输入正确的手机号";
+            return;
+        }
+
+        IsSendingCode = true;
+        StatusMessage = "正在发送验证码...";
+
+        try
+        {
+            var result = await authClient.SendCodeAsync(Mobile);
+            if (result is not null && result.Status == 1)
+            {
+                StatusMessage = "验证码已发送";
+                StartCountdown();
+            }
+            else
+            {
+                var msg = result?.ErrorCode;
+                StatusMessage = $"发送失败: {msg}";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"发送出错: {ex.Message}";
+        }
+        finally
+        {
+            IsSendingCode = false;
+        }
+    }
+
+    [RelayCommand]
+    private async Task Login()
+    {
+        await SubmitMobileLoginAsync(null);
+    }
+
+    [RelayCommand]
+    private async Task SelectLoginAccount(LoginAccountOptionViewModel account)
+    {
+        await SubmitMobileLoginAsync(account.UserId.ToString());
+    }
+
+    private async Task SubmitMobileLoginAsync(string? userid)
+    {
+        if (string.IsNullOrWhiteSpace(Mobile) || Mobile.Length != 11)
+        {
+            StatusMessage = "请输入正确的手机号";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Code))
+        {
+            StatusMessage = "请输入验证码";
+            return;
+        }
+
+        IsLoggingIn = true;
+        StatusMessage = userid is null ? "正在登录..." : "正在登录所选账号...";
+        if (userid is not null)
+            ClearLoginAccountChoices();
+
+        try
+        {
+            var result = await authClient.LoginByMobileAsync(Mobile, Code, userid);
+            if (result is not null && result.Status == 1)
+            {
+                await CompleteLoginAsync();
+            }
+            else if (result?.RequiresUserSelection == true)
+            {
+                SetLoginAccountChoices(result);
+                StatusMessage = "请选择需要登录的账号";
+            }
+            else
+            {
+                var errorMessage = result?.FailureMessage;
+                StatusMessage = string.IsNullOrWhiteSpace(errorMessage)
+                    ? $"登录失败: {result?.ErrorCode?.ToString() ?? "未知错误"}"
+                    : $"登录失败: {errorMessage}";
+            }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"登录出错: {ex.Message}";
+        }
+        finally
+        {
+            IsLoggingIn = false;
+        }
+    }
+
+    private async Task CompleteLoginAsync()
+    {
+        ClearLoginAccountChoices();
+        StatusMessage = "登录成功";
+
+        try
+        {
+            await deviceClient.InitDeviceAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "设备初始化失败");
+        }
+
+        messenger.Send(new AuthStateChangedEvent(true));
+    }
+
+    private void SetLoginAccountChoices(LoginResponse result)
+    {
+        LoginAccountChoices.Clear();
+        foreach (var account in result.Data?.InfoList ?? [])
+        {
+            var displayName = string.IsNullOrWhiteSpace(account.Nickname)
+                ? account.Username ?? account.UserId.ToString()
+                : account.Nickname;
+
+            LoginAccountChoices.Add(new LoginAccountOptionViewModel(
+                account.UserId,
+                displayName,
+                account.Pic,
+                account.Username));
+        }
+
+        HasLoginAccountChoices = LoginAccountChoices.AsValueEnumerable().Any();
+    }
+
+    private void ClearLoginAccountChoices()
+    {
+        if (LoginAccountChoices.Count == 0 && !HasLoginAccountChoices)
+            return;
+
+        LoginAccountChoices.Clear();
+        HasLoginAccountChoices = false;
+    }
+
+    private void StartCountdown()
+    {
+        Countdown = 60;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                while (Countdown > 0)
+                {
+                    await Task.Delay(1000);
+                    Countdown--;
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "验证码倒计时任务异常退出");
+            }
+        });
+    }
+}
+
+public sealed record LoginAccountOptionViewModel(
+    long UserId,
+    string DisplayName,
+    string? Avatar,
+    string? Username);

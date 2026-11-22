@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="44">
+<Grid ColumnDefinitions="2*,*,60,54,54,70" Margin="0,0,2,0">
+<StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Song.Name}" FontSize="13" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Song.Singer}" FontSize="11" Foreground="#7A8698" TextTrimming="CharacterEllipsis"/></StackPanel>
+<TextBlock Grid.Column="1" Text="{Binding Song.AlbumName}" Foreground="#7A8698" FontSize="12" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+<TextBlock Grid.Column="2" Text="{Binding Duration}" FontSize="12" Foreground="#7A8698" VerticalAlignment="Center"/>
+<Button Name="PlayButton" Grid.Column="3" Content="播放" Command="{Binding PlayCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding PlayLabel}" AutomationProperties.AutomationId="{Binding TrialPlayId}"/>
+<Button Name="AddButton" Grid.Column="4" Content="入队" Command="{Binding AddCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding AddLabel}" AutomationProperties.AutomationId="{Binding TrialAddId}"/>
+<Button Name="InspectButton" Grid.Column="5" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
+</Grid></UserControl>
