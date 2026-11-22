@@ -21,7 +21,7 @@ public sealed partial class DirectSdkGateway
         Environment.GetEnvironmentVariable("M208B_F3_HTTP_RISK_APPROVED")=="1";
 
     static HttpMessageHandler CreateDesktopMediaHandler() =>
-        new HttpsOnlyMediaGuard(new SocketsHttpHandler
+        new DesktopMediaGuard(new SocketsHttpHandler
         {
             UseProxy = true,
             AllowAutoRedirect = false,
@@ -158,6 +158,35 @@ public sealed partial class DirectSdkGateway
                proxy.Scheme is not ("http" or "https" or "socks4" or "socks5"))
                 throw new UnauthorizedAccessException("F2 requires a usable, non-bypassed system proxy");
             return proxy;
+        }
+    }
+
+    private static bool ContainsLoginQuery(Uri uri)
+    {
+        foreach (var field in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var key = Uri.UnescapeDataString(field.Split('=', 2)[0])
+                .Replace("_", "").Replace("-", "").ToLowerInvariant();
+            if (key is "token" or "accesstoken" or "refreshtoken" or "authorization" or "cookie" or "password" or "sessionid")
+                return true;
+        }
+        return false;
+    }
+
+    private sealed class DesktopMediaGuard(HttpMessageHandler inner) : DelegatingHandler(inner)
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var url = request.RequestUri;
+            if (url == null || !TrustedMedia(url) || url.AbsolutePath == "/" ||
+                request.Method != HttpMethod.Get || request.Content != null ||
+                request.Headers.Contains("Cookie") || request.Headers.Contains("Authorization") ||
+                request.Headers.Contains("Proxy-Authorization") || ContainsLoginQuery(url))
+                throw new UnauthorizedAccessException("Unauthorized media request");
+
+            // Forward the original request, including any Range header, to the system proxy.
+            return base.SendAsync(request, cancellationToken);
         }
     }
 

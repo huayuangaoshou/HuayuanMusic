@@ -1,6 +1,6 @@
 # Huayuan Music 仓库开发协作规则
 
-**2026-11-22 现行主线 · M2-23 桌面版。** 在 `feat/m223-real-desktop` 的 `app-m223/src/Preview.csproj` 上继续开发，入口为 R2UI 和本地、酷狗概念版独立工作空间。复用 M2-23 随附 Core、BASS 和唯一全局队列。普通启动、入队、播放、切歌和重播长期取消项目审批、试播票据、租约和次数门槛。平台登录、服务端权益、媒体来源和 HTTPS 校验继续生效。旧外壳与封存候选用作历史基线。进度与验收范围见 [CURRENT_STAGE_V2.md](docs/CURRENT_STAGE_V2.md)。
+**2026-11-22 现行主线 · M2-23 桌面版。** 在 `feat/m223-real-desktop` 的 `app-m223/src/Preview.csproj` 上继续开发，入口为 R2UI 和本地、酷狗概念版独立工作空间。复用 M2-23 随附 Core、BASS 和唯一全局队列。普通启动、入队、播放、切歌和重播长期取消项目审批、试播票据、租约和次数门槛。平台登录及接口保持 HTTPS，服务端权益和媒体来源校验继续生效。仅桌面播放可使用平台授权且无登录凭据的 HTTP 音频 CDN 地址。旧外壳与封存候选用作历史基线。进度与验收范围见 [CURRENT_STAGE_V2.md](docs/CURRENT_STAGE_V2.md)。
 
 **2026-11-07 唯一最新阶段（以下所有旧 NEXT 仅为历史）：** P2BP-F2 **OFFLINE_PASS / REAL_HTTPS_NOT_TESTED**。新隔离候选 `.p1-work/m2-08b-p2bpf2-proxy-https-20261107` 仅在 combinedVipAudio 且显式开启 `M208B_P2BPF2_MEDIA_SYSTEM_PROXY=1` 时，让媒体 HTTPS GET 使用现有 .NET 默认系统代理。代理绕过/不可达失败即拒绝、禁直连/HTTP/Cookie/凭据/重定向、TLS校验不变。模拟代理CONNECT专项15/15、旧媒体13/13、SDK安全2过11拒、本地/自包含R2各75×3与自包含UIA全部PASS；**没有新的真实账号或CDN访问，在线BASS仍未PASS**。唯一下阶段：[F2-LIVE 一次HTTPS系统代理短试听（需新明确授权）](docs/project-control/M2_08B_P2BPF2_LIVE_HTTPS_NEXT_20261107.md)。旧P2B-R真实歌单只读保留，正式仓库76项tracked差异不清理、不发布。
 

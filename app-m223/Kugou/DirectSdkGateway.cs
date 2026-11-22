@@ -718,10 +718,17 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
             throw new UnauthorizedAccessException("Trial only admits the original HTTP grant");
         if(source.Scheme=="https")SongDiag("SDK_CDN_DIRECT_HTTPS");
         HttpResponseMessage response;
+        if (desktop)
+        {
+            SongDiag(source.Scheme == Uri.UriSchemeHttp ? "SDK_CDN_DIRECT_HTTP" : "SDK_CDN_DESKTOP_HTTPS");
+            using var request = new HttpRequestMessage(HttpMethod.Get, source);
+            request.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(0, null);
+            response = await mediaHttp.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, token);
+        }
         // Compare KA Music's original URL transport only with a process-local
         // synthetic SDK and an injected in-memory media fixture. There is
         // deliberately NO factory exposing original HTTP for a real account.
-        if(source.Scheme=="http"&&offline&&await confirmPlainHttp(source.Host))
+        else if(source.Scheme=="http"&&offline&&await confirmPlainHttp(source.Host))
         {
             SongDiag("SDK_ORIGINAL_HTTP_SYNTHETIC_ONLY");
             token.ThrowIfCancellationRequested();
@@ -774,11 +781,25 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
         }
         using(response)
         {
-            SongDiag(response.StatusCode==HttpStatusCode.OK?"SDK_CDN_HTTP_200":"SDK_CDN_NON_200");
-            if(response.StatusCode!=HttpStatusCode.OK)
-                throw new HttpRequestException("音频 CDN HTTP "+(int)response.StatusCode+"；不跟随跳转");
+            bool fullRange = desktop && response.StatusCode == HttpStatusCode.PartialContent;
+            SongDiag(fullRange ? "SDK_CDN_HTTP_206" : response.StatusCode == HttpStatusCode.OK
+                ? "SDK_CDN_HTTP_200" : "SDK_CDN_NON_200");
+            if (response.StatusCode != HttpStatusCode.OK && !fullRange)
+                throw new HttpRequestException("CDN media HTTP " + (int)response.StatusCode);
+
+            long? expectedLength = response.Content.Headers.ContentLength;
+            if (fullRange)
+            {
+                var range = response.Content.Headers.ContentRange;
+                if (range == null || range.Unit != "bytes" || range.From != 0 ||
+                    range.Length is not > 0 || range.To != range.Length - 1 ||
+                    (expectedLength.HasValue && expectedLength != range.Length))
+                    throw new InvalidDataException("CDN returned an incomplete media range");
+                expectedLength = range.Length;
+            }
+
             const int limit=24*1024*1024;
-            if(response.Content.Headers.ContentLength>limit)
+            if(expectedLength>limit)
                 throw new InvalidDataException("当前音频超过媒体缓冲上限");
             var mime=response.Content.Headers.ContentType?.MediaType??"";
             if(mime.StartsWith("text/",StringComparison.OrdinalIgnoreCase)||
@@ -796,7 +817,7 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
                     if(buffer.Length+n>limit)throw new InvalidDataException("媒体超出24MiB上限");
                     await buffer.WriteAsync(data.AsMemory(0,n),token);
                 }
-                if(buffer.Length<1024)throw new InvalidDataException("音频内容不完整");
+                if(buffer.Length<1024 || (desktop && expectedLength.HasValue && buffer.Length != expectedLength))throw new InvalidDataException("音频内容不完整");
                 SongDiag("SDK_CDN_AUDIO_BUFFERED");
                 if(!Allows(handle))throw new UnauthorizedAccessException("缓冲期间许可已撤销");
                 buffer.Position=0;
