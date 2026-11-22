@@ -1,1 +1,13 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="HuayuanPreview.R2.SongTableHeader" x:CompileBindings="False"><StackPanel><TextBlock Text="{Binding StatusText}" FontSize="11" Foreground="#75829A" Margin="6,4"/><Grid ColumnDefinitions="2*,*,60,54,54" Margin="6,10,8,10"><StackPanel Orientation="Horizontal"><Button Content="歌曲" Command="{Binding SortTitleCommand}"/><Button Content="歌手" Command="{Binding SortArtistCommand}"/></StackPanel><Button Grid.Column="1" Content="专辑" Command="{Binding SortAlbumCommand}" HorizontalContentAlignment="Left"/><TextBlock Grid.Column="2" Text="时长"/><TextBlock Grid.Column="3" Grid.ColumnSpan="2" Name="ActionHeading" Text="操作"/></Grid></StackPanel></UserControl>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HuayuanPreview.R2.SongTableHeader" x:CompileBindings="False">
+  <Border BorderBrush="{DynamicResource R2Edge}" BorderThickness="0,0,0,1">
+    <Grid ColumnDefinitions="34,46,2*,*,*,57,37,37" ColumnSpacing="6" Margin="7,0" Height="39">
+      <TextBlock Text="#" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+      <Button Grid.Column="2" Content="音乐标题" Classes="nav" Command="{Binding SortTitleCommand}"/>
+      <Button Grid.Column="3" Content="歌手" Classes="nav" Command="{Binding SortArtistCommand}"/>
+      <Button Grid.Column="4" Content="专辑" Classes="nav" Command="{Binding SortAlbumCommand}"/>
+      <TextBlock Grid.Column="5" Text="时长" Classes="muted" VerticalAlignment="Center"/>
+      <TextBlock Grid.Column="6" Grid.ColumnSpan="2" Name="ActionHeading" Text="操作" Classes="muted" VerticalAlignment="Center"/>
+    </Grid>
+  </Border>
+</UserControl>

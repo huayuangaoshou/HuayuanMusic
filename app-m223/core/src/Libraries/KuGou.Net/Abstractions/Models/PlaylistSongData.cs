@@ -84,8 +84,8 @@ public record PlaylistSong : KgBaseModel
     [property: JsonPropertyName("cover")]
     public string? Cover
     {
-       get;
-    set => field = value?.Replace("{size}", "400");
+        get;
+        set => field = string.IsNullOrWhiteSpace(value) ? null : value;
     }
     
     /// <summary>

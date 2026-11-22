@@ -682,6 +682,10 @@ internal sealed partial class P2AWorkspace : IDisposable
         Report(RealReadOnly?"已断开真实账号只读会话 · 保留官方歌单快照":"已撤销合成会话 · 保留只读快照","revoked");
     }
 
+    internal int CatalogDuration(string trackId) => core.Kugou.CatalogTrackForPlaylist(trackId)?.Seconds ?? 0;
+
+    internal Task<Avalonia.Media.Imaging.Bitmap?> LoadLocalCover(string source) => artwork.LoadLocal(source);
+
     internal Control Cover(string? account,string? url,double size)=>new PreviewWindow.ArtworkTile(
         artwork,account??"none",url,size,Connected,null);
 

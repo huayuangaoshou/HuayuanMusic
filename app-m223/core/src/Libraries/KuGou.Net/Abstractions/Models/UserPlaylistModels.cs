@@ -66,8 +66,8 @@ public record UserPlaylistItem : KgBaseModel
     [JsonPropertyName("pic")]
     public string? Pic
     {
-       get;
-    set => field = value?.Replace("{size}", "400");
+        get;
+        set => field = string.IsNullOrWhiteSpace(value) ? null : value;
     }
 
     /// <summary>

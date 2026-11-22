@@ -1,9 +1,15 @@
-<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="44">
-<Grid ColumnDefinitions="2*,*,60,54,54,70" Margin="0,0,2,0">
-<StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding Song.Name}" FontSize="13" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Song.Singer}" FontSize="11" Foreground="#7A8698" TextTrimming="CharacterEllipsis"/></StackPanel>
-<TextBlock Grid.Column="1" Text="{Binding Song.AlbumName}" Foreground="#7A8698" FontSize="12" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-<TextBlock Grid.Column="2" Text="{Binding Duration}" FontSize="12" Foreground="#7A8698" VerticalAlignment="Center"/>
-<Button Name="PlayButton" Grid.Column="3" Content="播放" Command="{Binding PlayCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding PlayLabel}" AutomationProperties.AutomationId="{Binding TrialPlayId}"/>
-<Button Name="AddButton" Grid.Column="4" Content="入队" Command="{Binding AddCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding AddLabel}" AutomationProperties.AutomationId="{Binding TrialAddId}"/>
-<Button Name="InspectButton" Grid.Column="5" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
-</Grid></UserControl>
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
+  <Grid ColumnDefinitions="34,46,2*,*,*,57,37,37" ColumnSpacing="6" Margin="7,0">
+    <TextBlock Text="{Binding Number}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsPlaying}"/>
+    <TextBlock Text="▂▅▃" Classes="wave current" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsPlaying}"/>
+    <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="2" Text="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="3" Text="{Binding Singer}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="4" Text="{Binding AlbumName}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="5" Text="{Binding Duration}" Classes="muted" FontFamily="Consolas" VerticalAlignment="Center"/>
+    <Button Grid.Column="6" Content="▶" Command="{Binding PlayCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放"/>
+    <Button Grid.Column="7" Content="↪" Command="{Binding NextCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首"/>
+    <Button Grid.Column="7" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
+  </Grid>
+</UserControl>

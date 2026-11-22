@@ -1,0 +1,94 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <ResourceDictionary>
+      <SolidColorBrush x:Key="Primary" Color="#EC4141"/>
+      <SolidColorBrush x:Key="R2Accent" Color="#EC4141"/>
+      <SolidColorBrush x:Key="R2AccentHover" Color="#D8313B"/>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="R2Main" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="R2Side" Color="#F5F6F8"/>
+          <SolidColorBrush x:Key="R2Edge" Color="#ECEEF2"/>
+          <SolidColorBrush x:Key="R2Ink" Color="#1F2329"/>
+          <SolidColorBrush x:Key="R2Muted" Color="#707988"/>
+          <SolidColorBrush x:Key="R2Hover" Color="#EFF1F5"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="#F8F9FB"/>
+          <SolidColorBrush x:Key="R2Tint" Color="#FDEBEC"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="#C42532"/>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="R2Main" Color="#16171A"/>
+          <SolidColorBrush x:Key="R2Side" Color="#1E1F24"/>
+          <SolidColorBrush x:Key="R2Edge" Color="#30323A"/>
+          <SolidColorBrush x:Key="R2Ink" Color="#F2F3F5"/>
+          <SolidColorBrush x:Key="R2Muted" Color="#A0A5B1"/>
+          <SolidColorBrush x:Key="R2Hover" Color="#2B2D34"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="#1B1C20"/>
+          <SolidColorBrush x:Key="R2Tint" Color="#3B252A"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="#FF8288"/>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+    </ResourceDictionary>
+  </Styles.Resources>
+  <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
+  <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
+  <Style Selector="TextBlock.current"><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/></Style>
+  <Style Selector="Button">
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="CornerRadius" Value="8"/>
+    <Setter Property="Padding" Value="10,6"/>
+    <Setter Property="MinHeight" Value="30"/>
+  </Style>
+  <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource R2Hover}"/>
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+  </Style>
+  <Style Selector="Button.nav"><Setter Property="HorizontalAlignment" Value="Stretch"/>
+    <Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="MinHeight" Value="36"/>
+  </Style>
+  <Style Selector="Button.nav.selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource R2Tint}"/>
+    <Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/>
+    <Setter Property="BorderThickness" Value="2,0,0,0"/>
+  </Style>
+  <Style Selector="Button.primary">
+    <Setter Property="Background" Value="{DynamicResource R2Accent}"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="CornerRadius" Value="100"/><Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource R2AccentHover}"/><Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Button.primary:pressed"><Setter Property="RenderTransform" Value="scale(0.9)"/></Style>
+  <Style Selector="Button.caption"><Setter Property="Width" Value="38"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/></Style>
+  <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Accent}"/><Setter Property="Foreground" Value="White"/></Style>
+  <Style Selector="TextBox">
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/><Setter Property="PlaceholderForeground" Value="{DynamicResource R2Muted}"/>
+    <Setter Property="Background" Value="{DynamicResource R2Side}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/>
+    <Setter Property="CornerRadius" Value="16"/><Setter Property="Padding" Value="13,6"/><Setter Property="MinHeight" Value="34"/>
+  </Style>
+  <Style Selector="ListBox"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
+  <Style Selector="ListBox.songs > ListBoxItem:nth-child(even)"><Setter Property="Background" Value="{DynamicResource R2Stripe}"/></Style>
+  <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
+  <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Slider"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/><Setter Property="Background" Value="{DynamicResource R2Edge}"/></Style>
+  <Style Selector="Slider /template/ RepeatButton#PART_DecreaseButton"><Setter Property="Background" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Slider /template/ Thumb"><Setter Property="Background" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Slider.progress"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Slider.progress /template/ Thumb"><Setter Property="Opacity" Value="0"/><Setter Property="RenderTransform" Value="scale(0.7)"/></Style>
+  <Style Selector="Slider.progress:pointerover /template/ Thumb"><Setter Property="Opacity" Value="1"/><Setter Property="RenderTransform" Value="scale(1.2)"/></Style>
+  <Style Selector="Slider.progress.editing /template/ Thumb"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="Border.playlist-tile">
+    <Setter Property="RenderTransform" Value="translateY(0px)"/>
+    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/></Transitions></Setter>
+  </Style>
+  <Style Selector="Border.playlist-tile:pointerover"><Setter Property="RenderTransform" Value="translateY(-4px)"/></Style>
+  <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18"/></Transitions></Setter></Style>
+  <Style Selector="Border.playlist-tile:pointerover Button.card-play"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="Button.card-play:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="TextBlock.wave"><Style.Animations><Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.4"/></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame></Animation></Style.Animations></Style>
+</Styles>
