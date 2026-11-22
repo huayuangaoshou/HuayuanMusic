@@ -54,7 +54,7 @@ public sealed partial class WorkspaceState
             {
                 var result = await Host.Concept.FindDesktopSongs(onlineQuery, ct);
                 ct.ThrowIfCancellationRequested();
-                ShowSongs(result.Tracks);
+                ShowSongs(result.Tracks, search: true);
             }
             else
             {
@@ -157,12 +157,13 @@ public sealed partial class WorkspaceState
         Navigate(onlinePage!);
     }
 
-    private void ShowSongs(IEnumerable<CatalogTrack> tracks, bool detail = false)
+    private void ShowSongs(IEnumerable<CatalogTrack> tracks, bool detail = false, bool search = false)
     {
         var rows = tracks.Select(track => new TrackRow(new CoreTrack(-1,
             "kugou-concept:" + Host.Concept.AccountKey + ":" + track.Id, track.Title,
             track.Artist, track.Album, track.Seconds, track.Cover), this)).ToArray();
         var page = detail ? onlineDetailPage! : onlineSongsPage!;
+        InteractionController.For(Lists[page]).IsOnlineSearch = search;
         Fill(page, rows);
         onlineStatus!.Text = rows.Length == 0 ? "暂无可播放曲目" : $"{rows.Length} 首曲目";
         onlineResults!.Content = page.View;

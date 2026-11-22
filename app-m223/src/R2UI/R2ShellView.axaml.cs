@@ -13,9 +13,11 @@ public partial class R2ShellView : UserControl
 {
     private readonly DispatcherTimer filterDelay = new() { Interval = TimeSpan.FromMilliseconds(150) };
     private readonly DispatcherTimer drawerDelay = new() { Interval = TimeSpan.FromMilliseconds(240) };
+    private readonly DispatcherTimer toastDelay = new() { Interval = TimeSpan.FromMilliseconds(2250) };
     private ShellModel? model;
     private bool queueOpen;
     private bool updatingFilter;
+    private string? ignoredFilterText;
 
     public R2ShellView()
     {
@@ -31,8 +33,14 @@ public partial class R2ShellView : UserControl
         DesktopProgress.PointerEntered += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 6d;
         DesktopProgress.PointerExited += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 3d;
         drawerDelay.Tick += (_, _) => { drawerDelay.Stop(); if (!queueOpen) DrawerLayer.IsVisible = false; };
+        toastDelay.Tick += (_, _) =>
+        {
+            toastDelay.Stop();
+            ToastPlate.Opacity = 0;
+            DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, TimeSpan.FromMilliseconds(160));
+        };
         DataContextChanged += (_, _) => BindModel();
-        DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); };
+        DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); toastDelay.Stop(); };
         AddHandler(KeyDownEvent, TransportKeyDown, RoutingStrategies.Tunnel);
     }
 
@@ -42,16 +50,27 @@ public partial class R2ShellView : UserControl
         {
             model.PropertyChanged -= WorkspaceChanged;
             model.Player.Updated -= UpdateVolume;
+            model.Player.Toast -= ShowToast;
         }
         model = DataContext as ShellModel;
         if (model == null)
             return;
         model.PropertyChanged += WorkspaceChanged;
         model.Player.Updated += UpdateVolume;
+        model.Player.Toast += ShowToast;
         VolumeSlider.Submit = model.Player.SetVolume;
         UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
+    }
+
+    private void ShowToast(string text)
+    {
+        ToastText.Text = text;
+        ToastPlate.IsVisible = true;
+        ToastPlate.Opacity = 1;
+        toastDelay.Stop();
+        toastDelay.Start();
     }
 
     private void WorkspaceChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
@@ -62,8 +81,15 @@ public partial class R2ShellView : UserControl
     private void SyncFilter()
     {
         filterDelay.Stop();
+        SetFilterText(model?.Workspace.FilterText);
+    }
+
+    private void SetFilterText(string? value)
+    {
+        if (CurrentFilter.Text == value) return;
+        ignoredFilterText = value ?? "";
         updatingFilter = true;
-        CurrentFilter.Text = model?.Workspace.FilterText;
+        CurrentFilter.Text = value;
         updatingFilter = false;
     }
 
@@ -83,9 +109,17 @@ public partial class R2ShellView : UserControl
 
     private void FilterChanged(object? sender, TextChangedEventArgs args)
     {
-        if (updatingFilter)
+        var ignored = ignoredFilterText;
+        ignoredFilterText = null;
+        if (updatingFilter || ignored != null && ignored == (CurrentFilter.Text ?? ""))
             return;
-        if(model?.Workspace.IsKugou==true){_ = RequestSuggestionsAsync(CurrentFilter.Text?.Trim()??"");return;}
+        if(model?.Workspace.IsKugou==true)
+        {
+            var query=CurrentFilter.Text?.Trim()??"";
+            if(lastSubmittedSearch!=query) lastSubmittedSearch=null;
+            _ = RequestSuggestionsAsync(query);
+            return;
+        }
         filterDelay.Stop();
         filterDelay.Start();
     }
@@ -136,13 +170,13 @@ public partial class R2ShellView : UserControl
     {
         if (model == null)
             return;
-        if(args.Key==Key.Escape && lyricOpen){CloseLyricOverlay(); args.Handled=true; return;}
         if (args.Key == Key.Escape && queueOpen)
         {
             SetQueueOpen(false);
             args.Handled = true;
             return;
         }
+        if(args.Key==Key.Escape && lyricOpen){CloseLyricOverlay(); args.Handled=true; return;}
         if (args.Source is Visual source &&
             (source is TextBox || source.GetVisualAncestors().OfType<TextBox>().Any() || source is Slider))
             return;

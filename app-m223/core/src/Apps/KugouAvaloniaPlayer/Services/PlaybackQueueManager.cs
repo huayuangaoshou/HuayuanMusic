@@ -9,12 +9,12 @@ namespace KugouAvaloniaPlayer.Services;
 
 public class PlaybackQueueManager
 {
-    public const int MaxQueueSize = 1000;
+    public static int MaxQueueSize => Startup.OfflineStartupProfile.Active ? 1000 : 5000;
     private readonly Random _random = new();
     private readonly Stack<SongItem> _shuffleHistory=new();
     public bool IsSequentialMode {get;private set;}
     public static void DemandCapacity(IReadOnlyCollection<SongItem> songs){
-        if(songs.Count>MaxQueueSize||songs.Any(x=>x is null))throw new InvalidOperationException("队列最多1000条，未截断或改变队列");
+        if(songs.Count>MaxQueueSize||songs.Any(x=>x is null))throw new InvalidOperationException($"队列最多{MaxQueueSize}条，未截断或改变队列");
     }
     static List<SongItem> Occurrences(IEnumerable<SongItem> source){
         var ids=new HashSet<Guid>();var result=new List<SongItem>();
@@ -113,7 +113,7 @@ public class PlaybackQueueManager
         }
         if(Equals(song,currentPlaying))return;
         if(PlaybackQueue.Count>0&&(currentPlaying==null||!PlaybackQueue.Contains(currentPlaying)))throw new InvalidOperationException("当前曲目不在队列；未插入。请选定队列曲目或明确追加末尾");
-        if(!PlaybackQueue.Contains(song)&&PlaybackQueue.Count>=MaxQueueSize)throw new InvalidOperationException("队列已满1000首");
+        if(!PlaybackQueue.Contains(song)&&PlaybackQueue.Count>=MaxQueueSize)throw new InvalidOperationException("播放队列已满");
         PlaybackQueue.Remove(song);
         OriginalQueue.Remove(song);
 

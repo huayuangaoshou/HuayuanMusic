@@ -1,0 +1,9 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:r2="using:HuayuanPreview.R2" x:Class="HuayuanPreview.R2.HeartButton"
+             x:DataType="r2:TrackRow" x:CompileBindings="True" Width="34" Height="34">
+  <Button Classes="heart" Classes.liked="{Binding IsFavorite}" Command="{Binding FavoriteCommand}"
+          Width="34" Height="34" Padding="0" ToolTip.Tip="{Binding FavoriteLabel}" AutomationProperties.Name="{Binding FavoriteLabel}">
+    <Path Width="20" Height="20" Stretch="Uniform" Data="{DynamicResource R2Heart}"
+          StrokeThickness="1.8" StrokeJoin="Round" StrokeLineCap="Round"/>
+  </Button>
+</UserControl>

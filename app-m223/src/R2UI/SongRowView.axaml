@@ -1,16 +1,31 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
-  <Grid ColumnDefinitions="34,46,2*,*,*,57,37,37,37" ColumnSpacing="6" Margin="7,0">
-    <TextBlock Text="{Binding Number}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsPlaying}"/>
-    <TextBlock Text="▂▅▃" Classes="wave current" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsPlaying}"/>
+  <Border Classes.song-current="{Binding IsCurrent}" CornerRadius="7">
+  <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,56" ColumnSpacing="7" Margin="7,0">
+    <TextBlock Text="{Binding Number}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
+    <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsCurrent}">
+      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="8" VerticalAlignment="Bottom"/>
+      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="14" VerticalAlignment="Bottom"/>
+      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="10.5" VerticalAlignment="Bottom"/>
+      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="6" VerticalAlignment="Bottom"/>
+    </StackPanel>
     <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
-    <TextBlock Grid.Column="2" Text="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="5">
+      <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+      <StackPanel Grid.Column="1" Classes="row-actions" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center" IsVisible="{Binding CanUsePlatform}">
+        <Button Padding="0" Width="34" Height="34" Click="PlayInline" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放">
+          <PathIcon Width="13" Height="13" Data="M4,2 L16,9 L4,16 Z"/>
+        </Button>
+        <vm:HeartButton/>
+        <Button Padding="0" Width="34" Height="34" Command="{Binding NextCommand}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首">
+          <PathIcon Width="15" Height="15" Data="M2,4 H13 V6 H2 Z M2,9 H9 V11 H2 Z M2,14 H9 V16 H2 Z M11,9 L18,13 L11,17 Z"/>
+        </Button>
+      </StackPanel>
+      <Button Grid.Column="1" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
+    </Grid>
     <TextBlock Grid.Column="3" Text="{Binding Singer}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
     <TextBlock Grid.Column="4" Text="{Binding AlbumName}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
     <TextBlock Grid.Column="5" Text="{Binding Duration}" Classes="muted" FontFamily="Consolas" VerticalAlignment="Center"/>
-    <Button Grid.Column="6" Content="▶" Command="{Binding PlayCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放"/>
-    <Button Grid.Column="7" Content="↪" Command="{Binding NextCommand}" IsVisible="{Binding CanUsePlatform}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首"/>
-    <Button Grid.Column="8" Content="{Binding FavoriteGlyph}" Foreground="{DynamicResource R2Pink}" Command="{Binding FavoriteCommand}" ToolTip.Tip="切换收藏" AutomationProperties.Name="切换收藏" IsVisible="{Binding CanUsePlatform}"/>
-    <Button Grid.Column="7" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
   </Grid>
+  </Border>
 </UserControl>

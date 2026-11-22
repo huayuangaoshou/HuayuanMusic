@@ -12,8 +12,10 @@ public static class ProviderStreamRegistry {
  public sealed record Input(Stream Stream,long Length,IDisposable Owner);
  sealed record Registration(Func<bool> Valid,Func<CancellationToken,Task<Input>> Open,string Lyrics,bool AllowPreparation);
  static readonly object gate=new();static readonly Dictionary<string,Registration> registrations=new(StringComparer.Ordinal);
- public static string Register(Func<bool> valid,Func<CancellationToken,Task<Input>> open,string lyrics,bool allowPreparation=true){
-  lock(gate){if(registrations.Count>=32)throw new InvalidOperationException("Provider media capacity reached");if(lyrics.Length>131072)throw new InvalidDataException("Lyrics exceed limit");string id="provider-stream://"+Guid.NewGuid().ToString("N");registrations.Add(id,new(valid,open,lyrics,allowPreparation));return id;}
+ public static string Register(Func<bool> valid,Func<CancellationToken,Task<Input>> open,string lyrics,bool allowPreparation=true,bool desktopCatalog=false){
+  // A list replacement can admit a new list while the old one still owns its handles.
+  var capacity=desktopCatalog?2*PlaybackQueueManager.MaxQueueSize+2:32;
+  lock(gate){if(registrations.Count>=capacity)throw new InvalidOperationException("Provider media capacity reached");if(lyrics.Length>131072)throw new InvalidDataException("Lyrics exceed limit");string id="provider-stream://"+Guid.NewGuid().ToString("N");registrations.Add(id,new(valid,open,lyrics,allowPreparation));return id;}
  }
  public static bool IsProvider(string? source)=>source?.StartsWith("provider-stream://",StringComparison.Ordinal)==true;
  static Registration Demand(string source){lock(gate){if(!registrations.TryGetValue(source,out var r)||!r.Valid())throw new UnauthorizedAccessException("Provider media grant revoked");return r;}}

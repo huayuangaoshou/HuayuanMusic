@@ -670,11 +670,20 @@ public class LyricView : ItemsControl
         e.Handled = true;
     }
 
+    public bool SeekOnLineTap { get; set; }
+
     private FuncDataTemplate<LyricLine> CreateDefaultItemTemplate()
     {
         return new FuncDataTemplate<LyricLine>((_, _) =>
         {
             var control = new LyricLineControl();
+            control.Tapped += (_, args) =>
+            {
+                if (!SeekOnLineTap || control.Line is not { } line || SeekCommand?.CanExecute(line.Start) != true) return;
+                SeekCommand.Execute(line.Start);
+                EndUserScroll(resetManualOffset: true);
+                args.Handled = true;
+            };
 
             control.Bind(
                 LyricLineControl.LineProperty,

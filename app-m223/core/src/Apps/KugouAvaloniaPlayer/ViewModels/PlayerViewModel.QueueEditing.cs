@@ -19,6 +19,12 @@ public partial class PlayerViewModel {
    _queueManager.Remove(song);
  }
  internal string? ControlledQueueReadError=>_queueCacheService.LastReadError;
+ internal IReadOnlyList<SongItem> OriginalControlledQueue=>_queueManager.OriginalQueue;
+ internal void PrioritizeControlledQueueEntry(SongItem song)
+ {
+  _queueManager.AddToNext(song,CurrentPlayingSong);
+  ResetTransitionPipeline(true);
+ }
  readonly object _controlledCacheGate=new();long _cacheGeneration;long _queuePlaybackEpoch;long _controlledTransportEpoch;
  internal void StopControlledPlayback(){System.Threading.Interlocked.Increment(ref _controlledTransportEpoch);System.Threading.Interlocked.Increment(ref _playRequestVersion);CancelAndDisposeLoadCancellation();StopAndReset();}
  internal void SelectQueueSongWithoutAudio(SongItem? song){CurrentPlayingSong=song;DisplayedPlayingSong=song;TotalDurationSeconds=song?.DurationSeconds??0;CurrentPositionSeconds=0;IsPlayingAudio=false;}

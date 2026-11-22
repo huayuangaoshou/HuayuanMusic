@@ -76,7 +76,11 @@ public sealed class App : Application
         bool closing = false;
         bool closed = false;
 
-        window.Opened += (_, _) => initialization = InitializeAsync();
+        window.Opened += (_, _) =>
+        {
+            initialization = InitializeAsync();
+            window.R2View?.RestoreDesktopLyrics();
+        };
         window.Closing += async (_, args) =>
         {
             if (closed)
@@ -89,6 +93,7 @@ public sealed class App : Application
             try
             {
                 window.R2Model!.Concept.CancelDesktopOperations();
+                if (window.R2View != null) await window.R2View.CloseDesktopLyricsForExitAsync();
                 await window.CancelImportAndWait();
                 await initialization;
                 await window.R2Model.Concept.Pending;

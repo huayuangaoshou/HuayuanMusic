@@ -19,16 +19,19 @@ public sealed class InteractionController:ObservableObject {
  public ICommand SortTitleCommand {get;}public ICommand SortArtistCommand {get;}public ICommand SortAlbumCommand {get;}
  public static InteractionController Attach(ListBox list,WorkspaceState owner,CorePresentation player,bool queue){if(attached.TryGetValue(list,out var old))return old;var c=new InteractionController(list,owner,player,queue);attached.Add(list,c);return c;}
  public static InteractionController For(ListBox list)=>attached[list];
+ internal static InteractionController? Find(ListBox list)=>attached.GetValueOrDefault(list);
+ internal bool IsOnlineSearch {get;set;}
+ internal void PlayRow(TrackRow row)=>player.PlayFromList(row,Items(),IsOnlineSearch);
  InteractionController(ListBox l,WorkspaceState o,CorePresentation p,bool q){list=l;owner=o;player=p;queue=q;SetStatus();l.SelectionMode=SelectionMode.Multiple;original=Items();
   SortTitleCommand=new RelayCommand(()=>Sort("title"));SortArtistCommand=new RelayCommand(()=>Sort("artist"));SortAlbumCommand=new RelayCommand(()=>Sort("album"));
   l.PropertyChanged+=(_,e)=>{if(e.Property==ItemsControl.ItemsSourceProperty&&!publishing)original=Items();};
-  l.DoubleTapped+=(_,e)=>{if(DateTime.UtcNow<ignoreDouble||FromButton(e.Source))return;var row=Hit(e.Source);if(row!=null&&(queue||row.CanUsePlatform))player.Play(row);e.Handled=true;};
-  l.KeyDown+=(_,e)=>{if(e.Key==Key.Escape){Cancel();e.Handled=true;}else if(e.Key==Key.A&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){l.SelectAll();e.Handled=true;}else if(e.Key==Key.Enter&&!FromButton(e.Source)){if(l.SelectedItem is TrackRow row&&(queue||row.CanUsePlatform))player.Play(row);e.Handled=true;}else if(e.Key==Key.Delete&&(queue||Editable)){player.Remove(Selected());e.Handled=true;}else if(e.KeyModifiers.HasFlag(KeyModifiers.Control)&&e.Key is Key.Up or Key.Down&&(queue||Editable)){MoveSelected(e.Key==Key.Up?-1:1);e.Handled=true;}};
+  l.DoubleTapped+=(_,e)=>{if(DateTime.UtcNow<ignoreDouble||FromButton(e.Source))return;var row=Hit(e.Source);if(row!=null&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;};
+  l.KeyDown+=(_,e)=>{if(e.Key==Key.Escape){Cancel();e.Handled=true;}else if(e.Key==Key.A&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){l.SelectAll();e.Handled=true;}else if(e.Key==Key.Enter&&!FromButton(e.Source)){if(l.SelectedItem is TrackRow row&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;}else if(e.Key==Key.Delete&&(queue||Editable)){player.Remove(Selected());e.Handled=true;}else if(e.KeyModifiers.HasFlag(KeyModifiers.Control)&&e.Key is Key.Up or Key.Down&&(queue||Editable)){MoveSelected(e.Key==Key.Up?-1:1);e.Handled=true;}};
   l.ContextRequested+=(_,e)=>{var row=Hit(e.Source);if(row==null)return;if(!Selected().Contains(row))l.SelectedItem=row;var selected=Selected();var menu=new MenuFlyout();LastMenu=menu;
    void Add(string label,Action action,bool enabled=true)=>menu.Items.Add(new MenuItem{Header=label,Command=new RelayCommand(action),IsEnabled=enabled});
    bool local=selected.Length>0&&selected.All(r=>r.Owner.Local&&!r.IsProviderTrack);
    if(selected.Length>0&&selected.All(r=>r.CanUsePlatform)){
-    if(selected.Length==1)Add("播放所选",()=>player.Play(selected[0]));
+    if(selected.Length==1)Add("播放所选",()=>PlayRow(selected[0]));
     Add("下一首播放",()=>player.Next(selected));
     Add("追加到播放队列",()=>player.Append(selected));
    }

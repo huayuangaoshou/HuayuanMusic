@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using AvaloniaLyrics;
 using CommunityToolkit.Mvvm.Input;
 using KugouAvaloniaPlayer.Services;
@@ -12,14 +13,28 @@ public partial class R2ShellView
     private string? lyricTrack;
     private CoreLyric[]? previousLocalLyrics;
     private bool lyricOpen;
+    private DesktopLyricWindow? desktopLyrics;
+    private LyricLine[] displayedLyrics = [];
+    private string lyricMessage = "";
+    private bool closingLyricsForExit;
+    private Task lyricPreferencesWrite = Task.CompletedTask;
 
     private void InitializeLyricOverlay()
     {
         FullLyricView.SeekCommand = new RelayCommand<TimeSpan>(position =>
         {
-            if (model != null) _ = model.Player.Seek(position.TotalSeconds);
+            if (model != null)
+            {
+                Program.Log("R2_LYRIC_LINE_SEEK", new { seconds = position.TotalSeconds });
+                _ = model.Player.Seek(position.TotalSeconds);
+            }
         });
-        DetachedFromVisualTree += (_, _) => CloseLyricOverlay();
+        DetachedFromVisualTree += (_, _) =>
+        {
+            CloseLyricOverlay();
+            if (desktopLyrics != null) desktopLyrics.Close();
+            ReleaseLyricsIfHidden();
+        };
     }
 
     private void ToggleLyricOverlay()
@@ -28,6 +43,9 @@ public partial class R2ShellView
         lyricOpen = true;
         LyricsOverlay.IsVisible = true;
         LyricsOverlay.Opacity = 0;
+        FullLyricView.EnableAnimation = true;
+        FullLyricView.IsActive = true;
+        CancelSuggestions();
         Avalonia.Threading.Dispatcher.UIThread.Post(() =>
         {
             if (lyricOpen) LyricsOverlay.Opacity = 1;
@@ -40,27 +58,31 @@ public partial class R2ShellView
     {
         if (!lyricOpen) return;
         lyricOpen = false;
-        lyricRequest?.Cancel();
-        lyricRequest = null;
-        lyricTrack = null;
-        previousLocalLyrics = null;
+        ReleaseLyricsIfHidden();
         LyricsOverlay.Opacity = 0;
         Avalonia.Threading.DispatcherTimer.RunOnce(() =>
         {
-            if (!lyricOpen) LyricsOverlay.IsVisible = false;
+            if (!lyricOpen)
+            {
+                FullLyricView.IsActive = false;
+                LyricsOverlay.IsVisible = false;
+            }
         }, TimeSpan.FromMilliseconds(210));
     }
 
     private void UpdateLyricOverlay()
     {
-        if (!lyricOpen || model == null) return;
+        if ((!lyricOpen && desktopLyrics == null) || model == null) return;
         var player = model.Player;
         var row = player.DisplayedPlayingSong;
         FullLyricView.Position = TimeSpan.FromSeconds(Math.Max(0, player.State.Position));
         FullLyricView.IsPositionClockRunning = player.State.Playing;
+        desktopLyrics?.Sync(player.State);
         if (row == null)
         {
-            SetLyrics([], "播放一首歌曲后查看歌词");
+            if (lyricTrack != null || lyricMessage.Length == 0)
+                SetLyrics([], "播放一首歌曲后查看歌词");
+            lyricRequest?.Cancel();
             lyricTrack = null;
             return;
         }
@@ -92,14 +114,14 @@ public partial class R2ShellView
         {
             var result = await model.Concept.DesktopCall((gateway, ct) => gateway.ReadDesktopLyricAsync(id, ct), request.Token);
             var lines = result == null ? [] : await Task.Run(() => LyricsService.ParseDesktopRenderLines(result.Text, result.Format), request.Token);
-            if (!lyricOpen || lyricTrack != key || request.IsCancellationRequested) return;
+            if ((!lyricOpen && desktopLyrics == null) || lyricTrack != key || request.IsCancellationRequested) return;
             SetLyrics(lines, "这首歌暂无歌词");
             Program.Log("R2_DESKTOP_LYRICS", new { lines = lines.Length, wordLines = lines.Count(line => line.Words.Count > 0) });
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
         {
-            if (!request.IsCancellationRequested && lyricOpen && key == lyricTrack)
+            if (!request.IsCancellationRequested && (lyricOpen || desktopLyrics != null) && key == lyricTrack)
                 SetLyrics([], "歌词暂时无法加载");
             Program.Log("R2_DESKTOP_LYRICS_FAILED", new { type = error.GetType().Name });
         }
@@ -111,8 +133,81 @@ public partial class R2ShellView
 
     private void SetLyrics(LyricLine[] lines, string empty)
     {
+        displayedLyrics = lines;
+        lyricMessage = empty;
         FullLyricView.Lines = lines;
         LyricEmpty.Text = empty;
         LyricEmpty.IsVisible = lines.Length == 0;
+        desktopLyrics?.SetLyrics(lines, empty);
+    }
+
+    private void ReleaseLyricsIfHidden()
+    {
+        if (lyricOpen || desktopLyrics != null) return;
+        lyricRequest?.Cancel();
+        lyricRequest = null;
+        lyricTrack = null;
+        previousLocalLyrics = null;
+        displayedLyrics = [];
+        lyricMessage = "";
+    }
+
+    private void ToggleDesktopLyrics(object? sender, RoutedEventArgs args)
+    {
+        CancelSuggestions();
+        if (desktopLyrics != null) desktopLyrics.Close();
+        else OpenDesktopLyrics();
+    }
+
+    private void UnlockDesktopLyrics(object? sender, RoutedEventArgs args) => desktopLyrics?.SetLocked(false);
+
+    private void OpenDesktopLyrics()
+    {
+        if (desktopLyrics != null || model == null || Window is not { IsVisible: true } owner) return;
+        var lyrics = new DesktopLyricWindow(owner, model.Player, DesktopPreferences.DesktopLyrics);
+        desktopLyrics = lyrics;
+        lyrics.LockChanged += UpdateDesktopLyricButtons;
+        lyrics.PreferencesChanged += QueueLyricPreferences;
+        lyrics.Closed += (_, _) =>
+        {
+            QueueLyricPreferences(lyrics.Capture(closingLyricsForExit));
+            desktopLyrics = null;
+            UpdateDesktopLyricButtons();
+            ReleaseLyricsIfHidden();
+        };
+        lyrics.Show();
+        if (lyricMessage.Length > 0) lyrics.SetLyrics(displayedLyrics, lyricMessage);
+        UpdateDesktopLyricButtons();
+        UpdateLyricOverlay();
+    }
+
+    internal void RestoreDesktopLyrics()
+    {
+        if (DesktopPreferences.DesktopLyrics.Visible) OpenDesktopLyrics();
+    }
+
+    internal Task CloseDesktopLyricsForExitAsync()
+    {
+        closingLyricsForExit = true;
+        desktopLyrics?.Close();
+        return lyricPreferencesWrite;
+    }
+
+    private void QueueLyricPreferences(DesktopLyricOptions options)
+    {
+        lyricPreferencesWrite = SaveAsync(lyricPreferencesWrite, options);
+        static async Task SaveAsync(Task previous, DesktopLyricOptions options)
+        {
+            await previous;
+            try { await DesktopPreferences.SetDesktopLyricsAsync(options); }
+            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+            { Program.Log("R2_DESKTOP_LYRIC_SETTINGS_FAILED", new { type = error.GetType().Name }); }
+        }
+    }
+
+    private void UpdateDesktopLyricButtons()
+    {
+        DesktopLyricToggle.Classes.Set("selected", desktopLyrics != null);
+        DesktopLyricUnlock.IsVisible = desktopLyrics?.Locked == true;
     }
 }

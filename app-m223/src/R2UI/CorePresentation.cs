@@ -12,20 +12,18 @@ public sealed class TrackRow:ObservableObject {
  public CoreTrack Track {get;}public WorkspaceState Owner {get;}public Guid QueueId {get;}public long MemberId {get;}public long ListId {get;}
  public string Identity=>QueueId!=Guid.Empty?"q:"+QueueId:MemberId>0?$"m:{ListId}:{MemberId}":Owner.Local?$"t:{Track.Id}":Track.Key;
  public bool IsProviderTrack=>Track.Key.StartsWith("kugou-concept:",StringComparison.Ordinal);
+ internal string CatalogIdentity { get; }
  public string SourceLabel=>IsProviderTrack?"酷狗概念版":"本地音乐";
  public TrackRow Song=>this;public string Name=>Track.Title;public string Singer=>Track.Artist;public string AlbumName=>Track.Album;public string Duration=>Track.Duration<=0?"—":$"{(int)Track.Duration/60:00}:{(int)Track.Duration%60:00}";
  public int Number { get; internal set; }
  public bool IsCurrent => QueueId != Guid.Empty
      ? Owner.Host.Player.State.CurrentEntryId == QueueId
      : Owner.Host.Player.DisplayedPlayingSong is { } playing &&
-       (IsProviderTrack ? playing.IsProviderTrack &&
-           Track.Key.Split(':', 3)[1] == playing.Track.Key.Split(':', 3)[1] &&
-           Track.Key[(Track.Key.LastIndexOf(':') + 1)..] == playing.Track.Key[(playing.Track.Key.LastIndexOf(':') + 1)..]
-           : !playing.IsProviderTrack && playing.Track.Id == Track.Id);
+       CatalogIdentity==playing.CatalogIdentity;
  public bool IsPlaying => IsCurrent && Owner.Host.Player.State.Playing;
  public bool IsFavorite => IsProviderTrack ? Owner.Host.Concept.IsDesktopFavorite(Track.Key) :
      Owner.Host.Player.State.Favorites.Contains(Track.Id);
- public string FavoriteGlyph => IsFavorite ? "♥" : "♡";
+ public string FavoriteLabel => IsFavorite ? "取消收藏" : "收藏歌曲";
  public ICommand FavoriteCommand { get; }
  public ICommand NextCommand { get; }
  public ICommand RemoveCommand { get; }
@@ -44,7 +42,11 @@ public sealed class TrackRow:ObservableObject {
  public string InspectLabel=>"核验歌单第"+MemberId+"条";
  public ICommand InspectCommand {get;}
  public ICommand PlayCommand {get;}public ICommand AddCommand {get;}
- public TrackRow(CoreTrack track,WorkspaceState owner,Guid queueId=default,long memberId=0,long listId=0){Track=track;Owner=owner;QueueId=queueId;MemberId=memberId;ListId=listId;PlayCommand=new RelayCommand(()=>{if(Owner.Local||P2AWorkspace.M223Normal)Owner.Host.Player.Play(this);
+ public TrackRow(CoreTrack track,WorkspaceState owner,Guid queueId=default,long memberId=0,long listId=0){Track=track;Owner=owner;QueueId=queueId;MemberId=memberId;ListId=listId;
+  var key=track.Key;
+  var accountEnd=IsProviderTrack?key.IndexOf(':',"kugou-concept:".Length):-1;
+  CatalogIdentity=IsProviderTrack&&accountEnd>0 ? key[..accountEnd]+key[key.LastIndexOf(':')..] : "local:"+track.Id;
+  PlayCommand=new RelayCommand(()=>{if(Owner.Local||P2AWorkspace.M223Normal)Owner.Host.Player.Play(this);
   else if(P2AWorkspace.M213RowMode)Owner.Host.Concept.M213Submit(Track.Key,true);
   else Owner.Host.Concept.M209Submit(Track.Key,true);});
  AddCommand=new RelayCommand(()=>{if(Owner.Local||P2AWorkspace.M223Normal)Owner.Host.Player.Append([this]);
@@ -55,7 +57,7 @@ public sealed class TrackRow:ObservableObject {
  RemoveCommand=new RelayCommand(()=>Owner.Host.Player.Remove([this]));
  InspectCommand=new RelayCommand(()=>Owner.Host.Concept.M212InspectMember(ListId,MemberId,Track.Key));}
  public void Refresh(){OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));}
- public void RefreshFavorite(){OnPropertyChanged(nameof(IsFavorite));OnPropertyChanged(nameof(FavoriteGlyph));}
+ public void RefreshFavorite(){OnPropertyChanged(nameof(IsFavorite));OnPropertyChanged(nameof(FavoriteLabel));}
  public void RefreshAccess(){OnPropertyChanged(nameof(CanUsePlatform));RefreshFavorite();}
 }
 public sealed class CorePresentation:ObservableObject,IDisposable {
@@ -79,6 +81,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   PlayMode.RepeatOne => "单曲", PlayMode.Shuffle => "随机", PlayMode.Sequential => "顺序", _ => "循环"
  };
  public bool IsBuffering { get; private set; }
+ internal event Action<string>? Toast;
  public ICommand FavoriteCurrentCommand { get; }
  public ICommand CycleModeCommand { get; }
  public ICommand MuteCommand { get; }
@@ -98,7 +101,8 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   if(next.Revision<state.Revision)return;bool transportChanged=next.Playing!=state.Playing||next.CurrentEntryId!=state.CurrentEntryId;bool modeChanged=next.Mode!=state.Mode;bool queueChanged=!state.QueueEntries.SequenceEqual(next.QueueEntries)||!ReferenceEquals(state.Tracks,next.Tracks);state=next;
   if(host!=null&&(queueChanged||DisplayPlaybackQueue.Length!=next.QueueEntries.Length)){
    var ids=next.QueueEntries.Select(e=>e.EntryId).ToHashSet();foreach(var id in queueViews.Keys.Where(k=>!ids.Contains(k)).ToArray())queueViews.Remove(id);
-   DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){var track=next.Tracks.Single(t=>t.Id==e.TrackId);row=new TrackRow(track,host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();OnPropertyChanged(nameof(DisplayPlaybackQueue));
+   var tracks=next.Tracks.ToDictionary(track=>track.Id);
+   DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();OnPropertyChanged(nameof(DisplayPlaybackQueue));
   }
   OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
   OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged)OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
@@ -122,6 +126,11 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  {
   var playable = rows.Where(row => row.CanUsePlatform).ToArray();
   if (playable.Length == 0) return;
+  if (Program.Desktop && host != null)
+  {
+   await host.Adapter.PlayDesktopListAsync(playable, 0, host.Concept);
+   return;
+  }
   if (playable.Length + State.QueueEntries.Length > PlaybackQueueManager.MaxQueueSize)
    throw new InvalidOperationException("当前队列容纳不下整张歌单，可选中部分曲目入队");
   var first = await Admit(playable[0]);
@@ -147,8 +156,58 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   return added[0].EntryId;
  }
  public void Play(TrackRow row)=>Submit("play",async()=>{DemandPlayable(row);var id=row.QueueId;if(id==Guid.Empty)id=await Admit(row);else if(DemandEntry(id).TrackId!=row.Track.Id)throw new InvalidOperationException("条目身份不匹配");await core.QueueEntryAsync("play",id);DemandResult();if(!core.State.Playing||core.State.CurrentEntryId!=id)throw new InvalidOperationException("音频未开始");});
- public void Append(TrackRow[] rows)=>Submit("append-batch",async()=>{foreach(var r in rows){DemandPlayable(r);if(r.QueueId!=Guid.Empty)DemandEntry(r.QueueId);}foreach(var row in rows)await Admit(row);});
- public void Next(TrackRow[] rows)=>Submit("next-batch",async()=>{foreach(var r in rows){DemandPlayable(r);if(r.QueueId!=Guid.Empty)DemandEntry(r.QueueId);}foreach(var row in rows.Reverse()){var id=row.QueueId==Guid.Empty?await Admit(row):row.QueueId;await core.QueueEntryAsync("next",id);DemandResult();}});
+ internal void PlayFromList(TrackRow row, TrackRow[] visible, bool search)
+ {
+  if(!Program.Desktop||host==null||row.QueueId!=Guid.Empty){Play(row);return;}
+  if(search)
+  {
+   Submit("play",async()=>
+   {
+    var id=await InsertNextAsync(row);
+    await core.QueueEntryAsync("play",id);
+    DemandResult();
+   });
+   return;
+  }
+  var rows=visible.Where(item=>item.CanUsePlatform).ToArray();
+  var start=Array.IndexOf(rows,row);
+  Submit("play-all",()=>host.Adapter.PlayDesktopListAsync(rows,start,host.Concept));
+ }
+ private async Task<Guid> InsertNextAsync(TrackRow row)
+ {
+  DemandPlayable(row);
+  var current=state.CurrentEntryId;
+  bool Matches(TrackRow existing)=>existing.CatalogIdentity==row.CatalogIdentity;
+  var id=row.QueueId;
+  if(id==Guid.Empty)
+  {
+   var match=DisplayPlaybackQueue.FirstOrDefault(entry=>entry.QueueId!=current&&Matches(entry))
+    ?? DisplayPlaybackQueue.FirstOrDefault(entry=>entry.QueueId==current&&Matches(entry));
+   id=match?.QueueId??await Admit(row);
+  }
+  var entries=core.State.QueueEntries;
+  if(id==current)return id;
+  if(current!=Guid.Empty&&entries.Any(entry=>entry.EntryId==current))await core.QueueEntryAsync("next",id);
+  else if(entries.Length>0&&entries[0].EntryId!=id)await core.QueueEntryAsync("before",id,entries[0].EntryId);
+  DemandResult();
+  return id;
+ }
+ public void Append(TrackRow[] rows)
+ {
+  if(Program.Desktop&&rows.Length==1){Next(rows);return;}
+  Submit("append-batch",async()=>{foreach(var r in rows){DemandPlayable(r);if(r.QueueId!=Guid.Empty)DemandEntry(r.QueueId);}foreach(var row in rows)await Admit(row);});
+ }
+ public void Next(TrackRow[] rows)=>Submit("next-batch",async()=>
+ {
+  foreach(var r in rows){DemandPlayable(r);if(r.QueueId!=Guid.Empty)DemandEntry(r.QueueId);}
+  foreach(var row in rows.Reverse())
+  {
+   if(Program.Desktop){await InsertNextAsync(row);continue;}
+   var id=row.QueueId==Guid.Empty?await Admit(row):row.QueueId;
+   await core.QueueEntryAsync("next",id);DemandResult();
+  }
+  if(Program.Desktop&&rows.Length>0)Toast?.Invoke(rows.Length==1?"已安排下一首 · "+rows[0].Name:$"已安排 {rows.Length} 首接续播放");
+ });
  public void Remove(TrackRow[] rows)=>Submit("remove",async()=>{foreach(var row in rows){if(row.QueueId!=Guid.Empty){DemandEntry(row.QueueId);await core.QueueEntryAsync("remove",row.QueueId);}else{DemandTrack(row);if(row.MemberId<=0)throw new InvalidOperationException("不是本地歌单成员");await core.PlaylistEntryAsync("remove",row.ListId,row.MemberId);}DemandResult();}});
  public void Move(TrackRow row,TrackRow target)=>Submit("move",async()=>{if(row.QueueId!=Guid.Empty){DemandEntry(row.QueueId);DemandEntry(target.QueueId);await core.QueueEntryAsync("before",row.QueueId,target.QueueId);}else{DemandTrack(row);var list=state.Lists.Single(l=>l.Id==row.ListId);var index=Array.IndexOf(list.EntryIds??[],target.MemberId);if(row.MemberId<=0||index<0||row.ListId!=target.ListId)throw new InvalidOperationException("歌单条目已变化");await core.PlaylistEntryAsync("move",row.ListId,row.MemberId,index);}DemandResult();});
  public void AddMembership(long listId,TrackRow[] rows)=>Submit("local-add",async()=>{foreach(var row in rows)DemandTrack(row);foreach(var row in rows){await core.PlaylistAsync("add",listId:listId,songId:row.Track.Id);DemandResult();}});
@@ -170,8 +229,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  void Step(bool next)=>Submit(next?"next":"previous",async()=>{if(state.CurrentId!=0)DemandEntry(state.CurrentEntryId);if(next)await core.NextAsync();else await core.PreviousAsync();DemandResult();});
  public void Dispose(){core.Changed-=Refresh;Updated=null;}
 }
-public partial class SongRowView:UserControl {public SongRowView(){InitializeComponent();}}
-public partial class SongTableHeader:UserControl {public SongTableHeader(){InitializeComponent();}public SongTableHeader(bool readOnly):this(){this.FindControl<TextBlock>("ActionHeading")!.IsVisible=!readOnly;}}
+public partial class SongTableHeader:UserControl {public SongTableHeader(){InitializeComponent();}}
 public partial class PlaylistCard:UserControl {public PlaylistCard(){InitializeComponent();}}
 public sealed record PlaylistCardModel(string Title,string Description,Control Cover,ICommand OpenCommand,string AutomationId="",ICommand? PlayCommand=null)
 {

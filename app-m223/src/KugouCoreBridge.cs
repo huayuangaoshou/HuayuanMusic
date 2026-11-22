@@ -22,17 +22,20 @@ internal sealed partial class CorePlaybackAdapter {
   else if(ProviderStreamRegistry.IsProvider(root.Player.CurrentPlayingSong?.LocalFilePath)){root.Coordinator.InvalidatePendingLoads();commands.Stop();}
   foreach(var source in providerSources)ProviderStreamRegistry.Remove(source);providerSources.Clear();
  }
- internal async Task<int> AdmitKugouAsync(CatalogTrack track,string quality,CancellationToken ct=default){
+ private void PruneUnusedProviderTracks()
+ {
   var retained=root.Player.PlaybackQueue.Select(x=>x.LocalFilePath)
     .Append(root.Player.CurrentPlayingSong?.LocalFilePath).ToHashSet();
-  var unused=items.Where(x=>x.Value.LocalSourceType=="ProviderStream"&&
-    !retained.Contains(x.Value.LocalFilePath)).ToArray();
-  foreach(var stale in unused)
+  foreach(var stale in items.Where(x=>x.Value.LocalSourceType=="ProviderStream"&&
+    !retained.Contains(x.Value.LocalFilePath)).ToArray())
   {
    items.Remove(stale.Key);providerArtworkAccounts.Remove(stale.Key);providerTrackKeys.Remove(stale.Key);
    if(Kugou.IsDirectSdk&&stale.Value.LocalFilePath is { } orphan &&
       providerSources.Remove(orphan))ProviderStreamRegistry.Remove(orphan);
   }
+ }
+ internal async Task<int> AdmitKugouAsync(CatalogTrack track,string quality,CancellationToken ct=default,bool publish=true){
+  if(publish)PruneUnusedProviderTracks();
   if(!Program.Desktop&&items.Count(x=>x.Value.LocalSourceType=="ProviderStream")>=32)
     throw new InvalidOperationException("平台临时曲目上限32，请先移除不用的队列条目");
   // Live source permission is requested when BASS opens the queue entry, not
@@ -101,8 +104,8 @@ internal sealed partial class CorePlaybackAdapter {
       if(Program.Desktop||P2AWorkspace.RealSingleAudio)Program.Log("PROVIDER_SOURCE_STAGE",new{stage,errorType=ex.GetType().Name});
       throw;
      }
-    },!Program.Desktop&&P2AWorkspace.M223Normal?"[00:00.10]合成第一句\n[00:01.00]合成第二句":"",allowPreparation:false);
-   try{return AdmitProviderSong(track,lazyHandle,false);}
+    },!Program.Desktop&&P2AWorkspace.M223Normal?"[00:00.10]合成第一句\n[00:01.00]合成第二句":"",allowPreparation:false,desktopCatalog:Program.Desktop);
+   try{return AdmitProviderSong(track,lazyHandle,false,publish);}
    catch{ProviderStreamRegistry.Remove(lazyHandle);throw;}
   }
   var grant=await Kugou.ResolveAsync(track.Id,quality,ct);string lyric;
@@ -123,11 +126,13 @@ internal sealed partial class CorePlaybackAdapter {
   },lyric);
   return AdmitProviderSong(track,handle,true);
  }
- int AdmitProviderSong(CatalogTrack track,string handle,bool fixture){
+ int AdmitProviderSong(CatalogTrack track,string handle,bool fixture,bool publish=true){
   providerSources.Add(handle);int id=++providerId;
   var song=new SongItem{Cover=HuayuanMusic.Provider.Contracts.ArtworkUrl.Normalize(track.Cover),Name=track.Title+(fixture?"（Mock合成音）":""),Singer=track.Artist,AlbumName=track.Album,DurationSeconds=track.Seconds,Hash="",LocalFilePath=handle,LocalSourceType="ProviderStream",LocalTrackId=0};
   if(P2AWorkspace.M223Normal)providerTrackKeys[id]=$"kugou-concept:{Kugou.DirectAccountCacheKey}:{track.Id}";
-  providerArtworkAccounts[id]=Kugou.DirectAccountCacheKey??Kugou.Account??"none";items.Add(id,song);RebuildTrackSnapshot();collectionDirty=true;Publish();return id;
+  providerArtworkAccounts[id]=Kugou.DirectAccountCacheKey??Kugou.Account??"none";items.Add(id,song);
+  if(publish){RebuildTrackSnapshot();collectionDirty=true;Publish();}
+  return id;
  }
  void RebuildTrackSnapshot()=>trackSnapshot=items.Select(x=>new CoreTrack(x.Key,x.Value.LocalSourceType=="ProviderStream"?providerTrackKeys.GetValueOrDefault(x.Key,"kugou-concept:"+x.Key):LocalMusicRecordStore.Key(x.Value),x.Value.DisplayTitle,x.Value.Singer,x.Value.AlbumName,x.Value.DurationSeconds,x.Value.Cover)).ToArray();
  internal void EnableKugou(){Providers.Enable(KugouProvider.Identity);Kugou.Enable();}

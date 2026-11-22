@@ -3,6 +3,8 @@ using KugouAvaloniaPlayer.Services;
 
 namespace HuayuanPreview.R2;
 
+internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = 30);
+
 internal static class DesktopPreferences
 {
     private static readonly object Gate = new();
@@ -10,6 +12,9 @@ internal static class DesktopPreferences
     private static Options Current = Read();
     internal static string Quality { get { lock (Gate) return Current.Quality; } }
     internal static string[] Recent { get { lock (Gate) return Current.Recent.ToArray(); } }
+    internal static DesktopLyricOptions DesktopLyrics { get { lock (Gate) return Current.Lyrics ?? new(); } }
+    internal static Task SetDesktopLyricsAsync(DesktopLyricOptions options) =>
+        UpdateAsync(current => current with { Lyrics = options });
 
     internal static Task ChooseQualityAsync(string quality) =>
         UpdateAsync(options => options with { Quality = quality });
@@ -45,5 +50,5 @@ internal static class DesktopPreferences
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
         return new("standard", []);
     }
-    private sealed record Options(string Quality, string[] Recent);
+    private sealed record Options(string Quality, string[] Recent, DesktopLyricOptions? Lyrics = null);
 }

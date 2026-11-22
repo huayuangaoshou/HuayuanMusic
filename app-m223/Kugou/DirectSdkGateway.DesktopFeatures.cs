@@ -16,6 +16,10 @@ public enum DesktopCatalogKind { Song, Playlist, Artist, Album, Rank }
 public sealed record DesktopCatalogItem(DesktopCatalogKind Kind, string Id, string Title, string Subtitle, string? Cover);
 public sealed record DesktopAccount(string Name, string? Avatar);
 public sealed record DesktopLyric(string Text, string Format);
+public sealed record DesktopSuggestion(string Title, string Artist, string Query)
+{
+    public override string ToString() => Artist.Length > 0 ? Title + " · " + Artist : Title;
+}
 
 public sealed partial class DirectSdkGateway
 {
@@ -101,16 +105,16 @@ public sealed partial class DirectSdkGateway
             ? official[0] : null;
     }
 
-    public async Task<string[]> SuggestDesktopAsync(string query, CancellationToken ct)
+    public async Task<DesktopSuggestion[]> SuggestDesktopAsync(string query, CancellationToken ct)
     {
-        string[] terms = [];
+        DesktopSuggestion[] terms = [];
         try
         {
             terms = await DesktopRead(async sdk =>
             {
                 var raw = await sdk.Search.SearchSuggestRawAsync(query, albumTipCount: 3, correctTipCount: 3,
                     mvTipCount: 0, musicTipCount: 8).ConfigureAwait(false);
-                var result = new List<string>();
+                var result = new List<DesktopSuggestion>();
                 ReadSuggestionTerms(raw, result, 0);
                 return DistinctSuggestions(result);
             }, ct).ConfigureAwait(false);
@@ -120,36 +124,50 @@ public sealed partial class DirectSdkGateway
             // The song search can still supply suggestions if the dedicated route is unavailable.
         }
 
-        if (terms.Length > 0) return terms;
+        if (terms.Any(term => term.Artist.Length > 0)) return terms;
         var page = await SearchAsync(query, page: 1, size: 8, ct).ConfigureAwait(false);
-        return DistinctSuggestions(page.Tracks.Select(song => song.Title));
+        return DistinctSuggestions(page.Tracks.Select(song =>
+        {
+            var prefix = song.Artist + " - ";
+            var title = song.Title.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? song.Title[prefix.Length..] : song.Title;
+            return new DesktopSuggestion(title, song.Artist, song.Title);
+        }).Concat(terms));
     }
 
-    private static string[] DistinctSuggestions(IEnumerable<string> terms) =>
-        terms.Where(term => !string.IsNullOrWhiteSpace(term) && term.Length <= 120)
-            .Select(term => term.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).Take(8).ToArray();
+    private static DesktopSuggestion[] DistinctSuggestions(IEnumerable<DesktopSuggestion> terms) =>
+        terms.Where(term => !string.IsNullOrWhiteSpace(term.Title) && term.Query.Length is >0 and <=120)
+            .DistinctBy(term => term.Query, StringComparer.OrdinalIgnoreCase).Take(8).ToArray();
 
-    private static void ReadSuggestionTerms(JsonElement node, List<string> terms, int depth)
+    private static void ReadSuggestionTerms(JsonElement node, List<DesktopSuggestion> terms, int depth)
     {
         if (depth > 6 || terms.Count >= 24) return;
         if (node.ValueKind == JsonValueKind.Array)
         {
             foreach (var item in node.EnumerateArray().Take(18))
             {
-                if (item.ValueKind == JsonValueKind.String && item.GetString() is { } text) terms.Add(text);
+                if (item.ValueKind == JsonValueKind.String && item.GetString() is { } text) terms.Add(new(text, "", text));
                 else ReadSuggestionTerms(item, terms, depth + 1);
             }
         }
         else if (node.ValueKind == JsonValueKind.Object)
         {
+            string title = "", artist = "", hint = "";
             foreach (var item in node.EnumerateObject())
             {
-                if (item.Value.ValueKind == JsonValueKind.String && item.Name.ToLowerInvariant() is
-                    "keyword" or "songname" or "song_name" or "singername" or "albumname" or "name" or "title" or "word" or "tip" or "suggestion" or "hintinfo")
-                    terms.Add(item.Value.GetString()!);
-                else if (item.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
-                    ReadSuggestionTerms(item.Value, terms, depth + 1);
+                if (item.Value.ValueKind != JsonValueKind.String) continue;
+                var text = item.Value.GetString()!.Trim();
+                switch (item.Name.ToLowerInvariant())
+                {
+                    case "songname": case "song_name": case "audioname": case "title": title = text; break;
+                    case "singername": case "singer_name": case "artist": case "author_name": artist = text; break;
+                    case "keyword": case "name": case "word": case "tip": case "suggestion": case "hintinfo": hint = text; break;
+                }
             }
+            if (title.Length > 0) terms.Add(new(title, artist, title));
+            else if (hint.Length > 0) terms.Add(new(hint, artist, hint));
+            foreach (var item in node.EnumerateObject())
+                if (item.Value.ValueKind is JsonValueKind.Object or JsonValueKind.Array)
+                    ReadSuggestionTerms(item.Value, terms, depth + 1);
         }
     }
 
