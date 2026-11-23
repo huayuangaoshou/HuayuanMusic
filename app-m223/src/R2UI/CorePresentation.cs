@@ -70,7 +70,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  readonly INightflightPlayback core;readonly Dictionary<Guid,TrackRow> queueViews=[];ShellModel? host;PlaybackSnapshot state;
  public PlaybackSnapshot State=>state;public Task Pending {get;private set;}=Task.CompletedTask;
  public TrackRow[] DisplayPlaybackQueue {get;private set;}=[];public int DisplayPlaybackQueueCount=>state.QueueEntries.Length;
- public string QueueBadgeText=>DisplayPlaybackQueueCount>999?"999+":DisplayPlaybackQueueCount.ToString();
+ public string QueueBadgeText=>DisplayPlaybackQueueCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
  public string QueueCountTooltip=>$"播放队列 · {DisplayPlaybackQueueCount:N0} 首";
  public bool HasQueueTracks=>DisplayPlaybackQueueCount>0;
  public TrackRow? DisplayedPlayingSong=>DisplayPlaybackQueue.FirstOrDefault(r=>r.QueueId==state.CurrentEntryId);

@@ -17,14 +17,12 @@ namespace HuayuanPreview.R2;
 
 internal sealed class DesktopLyricWindow : Window
 {
-    private readonly LyricLineControl current = new()
-    {
-        ShowTranslation = false, ShowRomanization = false, DistinguishActiveForeground = true,
-        PrimaryForeground = Brushes.White, PrimaryPlayedForeground = new SolidColorBrush(Color.Parse("#FF9EC8")),
-        HorizontalAlignment = HorizontalAlignment.Center, MaxWidth = 710, MaxHeight = 64, ClipToBounds = true,
-        TextAlignment = TextAlignment.Center, Effect = LyricShadow()
-    };
-    private readonly TextBlock next = LyricLabel();
+    private readonly DesktopLyricLine current = CreateLine(Brushes.White);
+    private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(Color.Parse("#E7EEFF")));
+    private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(Color.Parse("#DADFFF")));
+    private readonly Button translationButton;
+    private int renderedLine = -1;
+    private bool showTranslation;
     private readonly Border tools;
     private readonly PathIcon playIcon;
     private readonly Window reference;
@@ -45,9 +43,11 @@ internal sealed class DesktopLyricWindow : Window
     internal event Action<DesktopLyricOptions>? PreferencesChanged;
     internal event Action? LockChanged;
 
-    internal DesktopLyricWindow(Window reference, CorePresentation player, DesktopLyricOptions preferences)
+    internal DesktopLyricWindow(Window reference, CorePresentation player, DesktopLyricOptions preferences,
+        bool showTranslation, Action toggleTranslation)
     {
         this.reference = reference;
+        this.showTranslation = showTranslation;
         Title = "HuayuanMusic 桌面歌词";
         Width = 760;
         Height = 178;
@@ -88,6 +88,8 @@ internal sealed class DesktopLyricWindow : Window
         Add(Icon("M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"), "桌面歌词下一首", () => player.PlayNextCommand.Execute(null));
         Add("A−", "减小歌词字号", () => AdjustFont(-2));
         Add("A+", "增大歌词字号", () => AdjustFont(2));
+        translationButton = Add("译", "显示或隐藏桌面歌词译文", toggleTranslation);
+        translationButton.IsVisible = false;
         if (passthrough.IsSupported)
             Add(Icon("M4,8 H14 V17 H4 Z M6,8 V5 C6,1 12,1 12,5 V8 H10 V5 C10,3 8,3 8,5 V8 Z"), "锁定桌面歌词并穿透鼠标", () => SetLocked(true));
         Add(Icon("M4,2 L9,7 L14,2 L16,4 L11,9 L16,14 L14,16 L9,11 L4,16 L2,14 L7,9 L2,4 Z"), "关闭桌面歌词", Close);
@@ -108,9 +110,9 @@ internal sealed class DesktopLyricWindow : Window
         var labels = new StackPanel
         {
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
-            Spacing = 4, Background = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0))
+            Spacing = 4
         };
-        labels.Children.Add(current); labels.Children.Add(next);
+        labels.Children.Add(current); labels.Children.Add(translation); labels.Children.Add(next);
         Grid.SetRow(labels, 1);
         var layout = new Grid { RowDefinitions = new RowDefinitions("38,*"), Background = null };
         layout.Children.Add(tools); layout.Children.Add(labels);
@@ -129,7 +131,7 @@ internal sealed class DesktopLyricWindow : Window
             Place(preferences.X is int x && preferences.Y is int y ? new PixelPoint(x, y) : null);
             new DesktopLyricWindowChromeService().HideFromWindowSwitcher(this);
             if (preferences.Locked) SetLocked(true);
-            current.FontFamily = FontFamily;
+            UpdateFont();
             if (running) renderClock.Start();
             Dispatcher.UIThread.Post(() =>
             {
@@ -165,20 +167,23 @@ internal sealed class DesktopLyricWindow : Window
         PositionChanged += (_, _) => ScheduleSave();
         renderClock.Tick += (_, _) => RenderLyrics();
         saveDelay.Tick += (_, _) => { saveDelay.Stop(); PreferencesChanged?.Invoke(Capture(true)); };
-        Closed += (_, _) => { renderClock.Stop(); saveDelay.Stop(); hideToolsDelay.Stop(); };
+        Closed += (_, _) =>
+        {
+            renderClock.Stop();
+            saveDelay.Stop();
+            hideToolsDelay.Stop();
+            current.SetLine(null);
+            translation.SetLine(null);
+            next.SetLine(null);
+        };
     }
 
-    private static TextBlock LyricLabel() => new()
+    private static DesktopLyricLine CreateLine(IBrush foreground) => new(foreground)
     {
-        Foreground = Brushes.White,
-        HorizontalAlignment = HorizontalAlignment.Center, MaxWidth = 710,
-        FontWeight = FontWeight.Bold, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis,
-        Effect = LyricShadow()
-    };
-
-    private static DropShadowEffect LyricShadow() => new()
-    {
-        BlurRadius = 5, OffsetX = 0, OffsetY = 1, Opacity = 1, Color = Color.Parse("#0B1020")
+        Effect = new DropShadowEffect
+        {
+            BlurRadius = 5, OffsetX = 0, OffsetY = 1, Opacity = 1, Color = Color.Parse("#0B1020")
+        }
     };
 
     private IntPtr HitTestWindow(IntPtr handle, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -186,9 +191,9 @@ internal sealed class DesktopLyricWindow : Window
         if (message != 0x0084 || Locked) return IntPtr.Zero;
         var raw = lParam.ToInt64();
         var point = this.PointToClient(new PixelPoint(unchecked((short)raw), unchecked((short)(raw >> 16))));
-        bool Hits(Control control) => control.TranslatePoint(default, this) is { } origin &&
+        bool Hits(Control control) => control.IsVisible && control.TranslatePoint(default, this) is { } origin &&
             new Rect(origin, control.Bounds.Size).Contains(point);
-        if (Hits(current) || (!string.IsNullOrEmpty(next.Text) && Hits(next)) ||
+        if (Hits(current) || Hits(translation) || Hits(next) ||
             (tools.IsHitTestVisible && Hits(tools))) return IntPtr.Zero;
         handled = true;
         return new IntPtr(-1); // HTTRANSPARENT
@@ -202,7 +207,6 @@ internal sealed class DesktopLyricWindow : Window
         anchorTimestamp = Stopwatch.GetTimestamp();
         running = snapshot.Playing;
         playIcon.Data = running ? PauseIcon : PlayIcon;
-        current.IsPositionClockRunning = running;
         if (running) renderClock.Start(); else renderClock.Stop();
         RenderLyrics();
     }
@@ -211,6 +215,8 @@ internal sealed class DesktopLyricWindow : Window
     {
         lyrics = lines;
         empty = message;
+        renderedLine = -1;
+        translationButton.IsVisible = lyrics.Any(line => !string.IsNullOrWhiteSpace(line.Translation));
         RenderLyrics();
     }
 
@@ -264,11 +270,22 @@ internal sealed class DesktopLyricWindow : Window
     private void AdjustFont(double difference)
     {
         fontSize = Math.Clamp(fontSize + difference, 18, 46);
-        current.PrimaryFontSize = fontSize;
-        current.FontFamily = FontFamily;
-        next.FontSize = Math.Max(16, fontSize * .72);
-        next.Foreground = new SolidColorBrush(Color.Parse("#DADFFF"));
+        UpdateFont();
         if (difference != 0) ScheduleSave();
+    }
+
+    private void UpdateFont()
+    {
+        current.SetFont(FontFamily, fontSize);
+        translation.SetFont(FontFamily, Math.Max(15, fontSize * .62));
+        next.SetFont(FontFamily, Math.Max(16, fontSize * .72));
+    }
+
+    internal void SetShowTranslation(bool visible)
+    {
+        showTranslation = visible;
+        renderedLine = -1;
+        RenderLyrics();
     }
 
     private void ScheduleSave()
@@ -282,9 +299,9 @@ internal sealed class DesktopLyricWindow : Window
     {
         if (lyrics.Count == 0)
         {
-            if (current.Line?.Text != empty)
-                current.Line = current.ActiveLine = new LyricLine { Text = empty };
-            next.Text = "";
+            current.SetLine(empty);
+            translation.SetLine(null);
+            next.SetLine(null);
             return;
         }
         var position = anchorPosition + (running ? Stopwatch.GetElapsedTime(anchorTimestamp).TotalSeconds : 0);
@@ -296,10 +313,19 @@ internal sealed class DesktopLyricWindow : Window
             else end = middle;
         }
         int index = Math.Max(0, first - 1);
-        var line = lyrics[index];
-        current.Position = TimeSpan.FromSeconds(Math.Max(0, position));
-        if (!ReferenceEquals(current.Line, line))
-            current.Line = current.ActiveLine = line;
-        next.Text = index + 1 < lyrics.Count ? lyrics[index + 1].Text : "";
+        if (index != renderedLine)
+        {
+            renderedLine = index;
+            var line = lyrics[index];
+            var following = index + 1 < lyrics.Count ? lyrics[index + 1] : null;
+            var duration = line.Duration.TotalSeconds;
+            if (duration <= 0) duration = following == null ? 3 : (following.Start - line.Start).TotalSeconds;
+            duration = Math.Max(.1, duration);
+            current.SetLine(line.Text, line.Start.TotalSeconds, duration, line.Words);
+            translation.SetLine(showTranslation ? line.Translation : null, line.Start.TotalSeconds, duration, line.TranslationWords);
+            next.SetLine(following?.Text);
+        }
+        current.SetPosition(position);
+        translation.SetPosition(position);
     }
 }

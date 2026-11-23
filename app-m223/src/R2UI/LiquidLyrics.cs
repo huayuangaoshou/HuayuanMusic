@@ -19,9 +19,12 @@ public partial class R2ShellView
     private int nextCommentPage;
     private readonly HashSet<long> shownComments = [];
 
-    private async void ToggleTranslation(object? sender, RoutedEventArgs args)
+    private async void ToggleTranslation(object? sender, RoutedEventArgs args) => await SetTranslationAsync(!showTranslation);
+
+    private async Task SetTranslationAsync(bool visible)
     {
-        showTranslation = !showTranslation;
+        showTranslation = visible;
+        desktopLyrics?.SetShowTranslation(visible);
         TranslationToggle.Classes.Set("selected", showTranslation);
         FullLyricView.ShowTranslation = showTranslation;
         await PersistPreferenceAsync(options => options with { Translation = showTranslation });

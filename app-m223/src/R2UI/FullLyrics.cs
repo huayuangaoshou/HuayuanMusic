@@ -198,7 +198,8 @@ public partial class R2ShellView
     private void OpenDesktopLyrics()
     {
         if (desktopLyrics != null || model == null || Window is not { } owner) return;
-        var lyrics = new DesktopLyricWindow(owner, model.Player, DesktopPreferences.DesktopLyrics);
+        var lyrics = new DesktopLyricWindow(owner, model.Player, DesktopPreferences.DesktopLyrics,
+            showTranslation, () => _ = SetTranslationAsync(!showTranslation));
         desktopLyrics = lyrics;
         lyrics.LockChanged += UpdateDesktopLyricButtons;
         lyrics.PreferencesChanged += QueueLyricPreferences;
