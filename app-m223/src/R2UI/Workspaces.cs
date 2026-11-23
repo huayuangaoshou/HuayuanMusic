@@ -106,7 +106,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   if(Local){favoritesPage=SongPage("收藏",[]);historyPage=SongPage("历史",[]);AddNav(nav,favoritesPage);AddNav(nav,historyPage);}
   var lyrics=new StackPanel{Spacing=16,Margin=new Thickness(24)};var title=new TextBlock{FontSize=22};title.DataContext=host.Player;title.Bind(TextBlock.TextProperty,new Binding("DisplayedPlayingSong.Name"));lyrics.Children.Add(title);var lines=new ItemsControl();lines.DataContext=host.Player;lines.Bind(ItemsControl.ItemsSourceProperty,new Binding("State.Lyrics"));lines.ItemTemplate=new FuncDataTemplate<CoreLyric>((l,_)=>new TextBlock{Text=l!.Text,FontSize=17,TextWrapping=TextWrapping.Wrap});lyrics.Children.Add(lines);lyricsPage=new R2Page("歌词",new ScrollViewer{Content=lyrics});if(!Program.Desktop)AddNav(nav,lyricsPage);
   QueuePage=new R2Page("混合队列",new QueuePreview{DataContext=host});if(!Program.Desktop)AddNav(nav,QueuePage);
-  if(!Local){AddNav(nav,new R2Page("账号状态",Host.Concept.AccountPage));Host.Concept.Changed+=RefreshConcept;RefreshConcept();}
+  if(!Local){AddNav(nav,new R2Page("我的账号",Host.Concept.AccountPage));Host.Concept.Changed+=RefreshConcept;RefreshConcept();}
   var playlistHeading = new StackPanel { Orientation=Orientation.Horizontal, Spacing=6, Margin=new Thickness(8,10,0,4) };
   playlistHeading.Children.Add(new TextBlock{Text="我的歌单",Classes={"muted"},FontSize=11,VerticalAlignment=VerticalAlignment.Center});
   if(Local&&Program.Desktop)playlistHeading.Children.Add(NewPlaylistButton());
@@ -114,7 +114,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   nav.Children.Add(playlistHeading);
   nav.Children.Add(playlistNav);
   if(!Local&&Program.Desktop){onlineNavigation.Add(playlistNav);UpdateOnlineNavigation();}
-  Navigate(Local?CatalogPage:Host.Concept.Snapshot!=null?galleryPage:Pages.Single(p=>p.DisplayName=="账号状态"),false);Refresh();
+  Navigate(Local?CatalogPage:Host.Concept.Snapshot!=null?galleryPage:Pages.Single(p=>p.DisplayName=="我的账号"),false);Refresh();
  }
  TrackRow Row(CoreTrack track,long member=0,long list=0){string key=member>0?$"m:{list}:{member}":"t:"+track.Id;if(!rowViews.TryGetValue(key,out var row)||row.Track!=track){row=new TrackRow(track,this,memberId:member,listId:list);rowViews[key]=row;}return row;}
  R2Page SongPage(string title,IEnumerable<TrackRow> rows){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);header.DataContext=interactions;var empty = MakeSongEmptyState(title);
@@ -126,7 +126,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   var button=new Button{Content=page.DisplayName,Classes={"nav"}};
   button.Click+=(_,_)=>Navigate(page);
   navPages.Add(button,page);
-  if(!Local&&Program.Desktop&&page.DisplayName!="账号状态")onlineNavigation.Add(button);
+  if(!Local&&Program.Desktop&&page.DisplayName!="我的账号")onlineNavigation.Add(button);
   nav.Children.Add(button);
  }
  private readonly List<Control> onlineNavigation=[];
@@ -201,7 +201,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   var filter=new TextBox{PlaceholderText="筛选歌单内曲目",Text=FilterText,MaxWidth=265,HorizontalAlignment=HorizontalAlignment.Left};
   filter.TextChanged+=(_,_)=>ApplyFilter(filter.Text??"");
   var meta=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Spacing=9,Children={
-   new SelectableTextBlock{Text=Local?"本地歌单":"酷狗概念版 · 只读歌单",Classes={"muted"},FontSize=11},
+   new SelectableTextBlock{Text=Local?"本地歌单":"在线歌单",Classes={"muted"},FontSize=11},
    new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
   var grid=new Grid{ColumnDefinitions=new ColumnDefinitions("172,*"),ColumnSpacing=24,Margin=new Thickness(0,4,0,16)};
@@ -264,7 +264,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    AddPlaylist(id,list.Name,list.Tracks.Count,Host.Concept.Connected);
   }
   galleryEmpty.IsVisible=gallery.Children.Count==0;
-  if (next!=null && accountChanged && CurrentPage?.DisplayName=="账号状态")
+  if (next!=null && accountChanged && CurrentPage?.DisplayName=="我的账号")
    Navigate(galleryPage,false);
   if (CurrentPage!=null) HighlightNavigation();
  }
@@ -375,7 +375,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   Dispatcher.UIThread.Post(()=>content.Opacity=1,DispatcherPriority.Render);
   heading.Text=page.DisplayName;
   heading.IsVisible=page!=DetailPage&&page!=onlinePage;
-  status.IsVisible=!Local&&page!=DetailPage&&page!=onlinePage&&page.DisplayName!="账号状态";
+  status.IsVisible=!Local&&page!=DetailPage&&page!=onlinePage&&page.DisplayName!="我的账号";
   status.Text=Local?"":Host.Concept.Summary;
   HighlightNavigation();
   Restore();
@@ -428,7 +428,7 @@ public sealed partial class ShellModel:ObservableObject,IDisposable {
  {
   if(!KugouEnabled)return;
   Switch(KugouConceptWorkspace);
-  KugouConceptWorkspace.Navigate(KugouConceptWorkspace.Pages.Single(page=>page.DisplayName=="账号状态"));
+  KugouConceptWorkspace.Navigate(KugouConceptWorkspace.Pages.Single(page=>page.DisplayName=="我的账号"));
  }
  public ICommand SwitchLocalCommand {get;}public ICommand SwitchKugouCommand {get;}
  internal ShellModel(CorePlaybackAdapter core){Adapter=core;Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Adapter.DesktopUnavailableChanged+=RefreshUnavailable;Switch(LocalWorkspace);Player.Attach(this);}

@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Avalonia.Controls;
-using Avalonia.Interactivity;
 using Avalonia.Platform.Storage;
 using HuayuanMusic.Provider.Kugou;
 
@@ -8,6 +7,17 @@ namespace HuayuanPreview.R2;
 
 public sealed partial class ShellModel
 {
+    internal string? DownloadingTrack { get; private set; }
+    internal int? DownloadPercent { get; private set; }
+    internal event Action? DownloadChanged;
+
+    internal void SetDownloadState(string? identity, int? percent = null)
+    {
+        DownloadingTrack = identity;
+        DownloadPercent = percent;
+        DownloadChanged?.Invoke();
+    }
+
     private HashSet<string> downloadedNames = new(StringComparer.OrdinalIgnoreCase);
     private CoreTrack[]? indexedDownloads;
     private DesktopOptions? indexedOptions;
@@ -40,11 +50,6 @@ public partial class R2ShellView
 {
     private CancellationTokenSource? downloadRequest;
 
-    private void DownloadCurrentSong(object? sender, RoutedEventArgs args)
-    {
-        if (model?.Player.DisplayedPlayingSong is { } row) _ = DownloadSongAsync(row);
-    }
-
     internal async Task DownloadSongAsync(TrackRow row)
     {
         if (model is not { } shell || !row.CanUseOnlineActions) return;
@@ -52,14 +57,11 @@ public partial class R2ShellView
         if (downloadRequest != null) { ShowToast("已有歌曲正在下载"); return; }
         using var request = new CancellationTokenSource();
         downloadRequest = request;
-        DownloadProgress.IsVisible = true;
-        DownloadProgress.IsIndeterminate = true;
-        DownloadProgress.Value = 0;
+        shell.SetDownloadState(row.CatalogIdentity);
         var progress = new Progress<int>(value =>
         {
             if (!ReferenceEquals(downloadRequest, request)) return;
-            DownloadProgress.IsIndeterminate = false;
-            DownloadProgress.Value = value;
+            shell.SetDownloadState(row.CatalogIdentity, value);
         });
         try
         {
@@ -85,7 +87,7 @@ public partial class R2ShellView
         finally
         {
             downloadRequest = null;
-            DownloadProgress.IsVisible = false;
+            shell.SetDownloadState(null);
         }
     }
 

@@ -1,0 +1,13 @@
+<UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="HuayuanPreview.R2.SongDownloadButton" Width="30" Height="30">
+  <Button Name="ActionButton" Width="30" Height="30" Padding="0" Click="Download"
+          HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
+    <Grid Width="22" Height="22">
+      <PathIcon Name="DownloadIcon" Width="16" Height="16"
+                Data="M7 1H9V8L12 5L13.5 6.5L8 12L2.5 6.5L4 5L7 8Z M1 12H3V14H13V12H15V16H1Z"/>
+      <PathIcon Name="DownloadedIcon" Width="16" Height="16" Foreground="{DynamicResource R2BrandGradient}" IsVisible="False"
+                Data="M2 7.5 L6 11.5 L14 3.5 L15.5 5 L6 14.5 L.5 9 Z"/>
+      <ProgressBar Name="InlineProgress" Height="5" Width="20" VerticalAlignment="Center" IsVisible="False"/>
+    </Grid>
+  </Button>
+</UserControl>

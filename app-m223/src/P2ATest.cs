@@ -40,7 +40,7 @@ public sealed partial class PreviewWindow
         check(workspace.Root.GetVisualDescendants().OfType<ArtworkTile>().Any(t=>t.IsArtworkLoaded),"P2A_ACTUAL_SONG_COVER");
         check(!workspace.Root.GetVisualDescendants().OfType<Button>().Any(b=>b.IsVisible&&b.Name is "PlayButton" or "AddButton"),"P2A_NO_PLATFORM_PLAY_OR_ADD_BUTTONS");
         await R2Capture("p2a-song-artwork");
-        workspace.Navigate(workspace.Pages.Single(p=>p.DisplayName=="账号状态"));
+        workspace.Navigate(workspace.Pages.Single(p=>p.DisplayName=="我的账号"));
         await Task.Delay(80);
         await ClickP2A(shell,"测试读取失败");
         check(concept.Connected&&ReferenceEquals(snapshot,concept.Snapshot)&&concept.Status.Contains("失败"),"P2A_FAILURE_KEEPS_READBACK");

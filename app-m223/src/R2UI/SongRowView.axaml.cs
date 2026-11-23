@@ -13,12 +13,6 @@ public partial class SongRowView : UserControl
         if (DataContext is TrackRow row) this.FindAncestorOfType<R2ShellView>()?.OpenSongComments(row);
     }
 
-    private async void DownloadInline(object? sender, RoutedEventArgs args)
-    {
-        if (DataContext is TrackRow row && this.FindAncestorOfType<R2ShellView>() is { } shell)
-            await shell.DownloadSongAsync(row);
-    }
-
     private void PlayInline(object? sender, RoutedEventArgs args)
     {
         if (DataContext is not TrackRow row) return;

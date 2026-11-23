@@ -124,7 +124,7 @@ internal sealed class DesktopLyricWindow : Window
         hideToolsDelay.Tick += (_, _) => { hideToolsDelay.Stop(); ShowTools(false); };
         layout.AddHandler(PointerPressedEvent, DragWindow, RoutingStrategies.Bubble);
 
-        fontSize = Math.Clamp(preferences.FontSize, 18, 46);
+        fontSize = Math.Clamp(preferences.FontSize == 30 ? DesktopLyricOptions.DefaultFontSize : preferences.FontSize, 18, 46);
         AdjustFont(0);
         Opened += (_, _) =>
         {
@@ -233,7 +233,7 @@ internal sealed class DesktopLyricWindow : Window
 
     internal void ResetAppearance()
     {
-        fontSize = 30;
+        fontSize = DesktopLyricOptions.DefaultFontSize;
         AdjustFont(0);
         Place(null);
         ScheduleSave();
@@ -277,8 +277,8 @@ internal sealed class DesktopLyricWindow : Window
     private void UpdateFont()
     {
         current.SetFont(FontFamily, fontSize);
-        translation.SetFont(FontFamily, Math.Max(15, fontSize * .62));
-        next.SetFont(FontFamily, Math.Max(16, fontSize * .72));
+        translation.SetFont(FontFamily, Math.Max(14, fontSize * .58));
+        next.SetFont(FontFamily, Math.Max(16, fontSize * .66));
     }
 
     internal void SetShowTranslation(bool visible)

@@ -3,7 +3,10 @@ using KugouAvaloniaPlayer.Services;
 
 namespace HuayuanPreview.R2;
 
-internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = 30);
+internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = DesktopLyricOptions.DefaultFontSize)
+{
+    internal const double DefaultFontSize = 25;
+}
 internal enum DesktopDlcState { Enabled, Disabled, Removed }
 internal sealed record DesktopOptions(bool TrayOnClose = true, bool RestoreQueue = true, bool Dark = false,
     bool MicroFade = true, bool Translation = true, DesktopDlcState Kugou = DesktopDlcState.Enabled,

@@ -401,9 +401,10 @@ public class LyricLineControl : UserControl
         _primaryWordPanel.HorizontalContentAlignment = horizontalAlignment;
         _translationWordPanel.HorizontalContentAlignment = horizontalAlignment;
 
+        var primarySize = DistinguishActiveForeground && !isActive ? PrimaryFontSize * .94 : PrimaryFontSize;
         var primary=DistinguishActiveForeground && isActive ? PrimaryPlayedForeground : PrimaryForeground;
         var translation=DistinguishActiveForeground && isActive ? TranslationPlayedForeground : TranslationForeground;
-        ApplyTextBlockStyle(_primaryTextBlock, PrimaryFontSize, primary, isActive, DistinguishActiveForeground ? 1 : InactivePrimaryOpacity,
+        ApplyTextBlockStyle(_primaryTextBlock, primarySize, primary, isActive, DistinguishActiveForeground ? 1 : InactivePrimaryOpacity,
             DefaultFontWeight, DistinguishActiveForeground ? FontWeight.Bold : DefaultFontWeight);
         ApplyTextBlockStyle(_translationTextBlock, TranslationFontSize, translation, DistinguishActiveForeground && isActive,
             DistinguishActiveForeground ? 1 : TranslationStaticOpacity, FontWeight.Medium, FontWeight.Medium);
@@ -418,7 +419,7 @@ public class LyricLineControl : UserControl
 
         if (rebuildWords)
         {
-            RebuildWordVisuals(_primaryWordPanel, _primaryWordVisuals, line?.Words, PrimaryFontSize, PrimaryForeground, PrimaryPlayedForeground);
+            RebuildWordVisuals(_primaryWordPanel, _primaryWordVisuals, line?.Words, primarySize, PrimaryForeground, PrimaryPlayedForeground);
             _translationWordPanel.Children.Clear();
             _translationWordVisuals.Clear();
         }
@@ -431,6 +432,11 @@ public class LyricLineControl : UserControl
         _translationTextBlock.IsVisible = ShowTranslation && !string.IsNullOrWhiteSpace(line?.Translation);
         _romanizationTextBlock.IsVisible = ShowRomanization && !string.IsNullOrWhiteSpace(line?.Romanization);
 
+        foreach (var visual in _primaryWordVisuals)
+        {
+            if (visual.Control is KaraokeTextBlock karaoke) karaoke.FontSize = primarySize;
+            else if (visual.Control is TextBlock label) label.FontSize = primarySize;
+        }
         RefreshWordProgress();
     }
 
@@ -537,6 +543,7 @@ public class LyricLineControl : UserControl
         var control = new KaraokeTextBlock
         {
             Text = word.Text,
+            TextWrapping = TextWrapping.Wrap,
             FontFamily = FontFamily,
             FontSize = fontSize,
             FontWeight = DefaultFontWeight,

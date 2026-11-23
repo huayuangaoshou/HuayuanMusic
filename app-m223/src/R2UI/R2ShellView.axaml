@@ -26,10 +26,12 @@
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
           <ContentControl Content="{Binding Workspace.Navigation}"/>
         </ScrollViewer>
-        <StackPanel Grid.Row="3" Margin="0,3">
-          <Button Classes="nav" Click="OpenSettings">设置</Button>
-          <Button Classes="nav" Click="OpenPluginCenter">平台管理</Button>
-        </StackPanel>
+        <Border Grid.Row="3" Name="SidebarFooter" BorderBrush="{DynamicResource R2Edge}" BorderThickness="0,1,0,0" Padding="0,12">
+          <StackPanel>
+            <Button Classes="nav" Click="OpenSettings">设置</Button>
+            <Button Classes="nav" Click="OpenPluginCenter">平台管理</Button>
+          </StackPanel>
+        </Border>
       </Grid>
       </Grid>
     </Border>
@@ -56,7 +58,7 @@
             </Border>
           </Popup>
           <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
-          <Button Grid.Column="4" Name="AccountButton" IsVisible="{Binding KugouEnabled}" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="酷狗账号状态">
+          <Button Grid.Column="4" Name="AccountButton" IsVisible="{Binding KugouEnabled}" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="我的账号">
             <StackPanel Orientation="Horizontal" Spacing="7">
               <ContentControl Content="{Binding AccountAvatar}" Width="24" Height="24" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding AccountLabel}" VerticalAlignment="Center"/>
@@ -101,7 +103,7 @@
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Margin="0,6,0,0">
                 <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="28" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
-                <Button Width="32" Height="32" Padding="0" IsVisible="{Binding Player.DisplayedPlayingSong.CanUseOnlineActions}" Click="DownloadCurrentSong" AutomationProperties.Name="下载歌曲" ToolTip.Tip="下载歌曲"><PathIcon Width="15" Height="15" Data="M7 1H9V8L12 5L13.5 6.5L8 12L2.5 6.5L4 5L7 8Z M1 12H3V14H13V12H15V16H1Z"/></Button>
+                <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </StackPanel>
               <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
               <Grid ColumnDefinitions="43,*,43" ColumnSpacing="7" Margin="0,3,0,0">
@@ -162,7 +164,7 @@
                 <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="28" TranslationFontSize="17"
                                   PrimaryForeground="{DynamicResource LyricIdle}" PrimaryPlayedForeground="{DynamicResource LyricActive}"
                                   TranslationForeground="{DynamicResource TranslationIdle}" TranslationPlayedForeground="{DynamicResource TranslationActive}"
-                                  DistinguishActiveForeground="True" ItemMargin="14,8" EnableAnimation="True" EnableScale="True" InactiveScale="0.93"
+                                  DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" UseLightweightScrollAnimation="True"
                                   SeekOnLineTap="True" AutomationProperties.Name="同步歌词"/>
                 <TextBlock Name="LyricEmpty" Classes="muted" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
@@ -231,7 +233,7 @@
         <r2:GlassOptics Radius="25" Frost="0.91" Margin="1" IsHitTestVisible="False"/>
         <Border Padding="20,10,20,10">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
-            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" VerticalAlignment="Center">
+            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="10" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
               <Button Padding="0" CornerRadius="9" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
                 <r2:TrackArtwork DisplaySize="40" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Button>
@@ -239,9 +241,11 @@
                 <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
                 <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="11"/>
               </StackPanel>
-              <Border Grid.Column="2" VerticalAlignment="Center" IsVisible="{Binding Player.HasCurrentSong}">
-                <r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
-              </Border>
+              <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center"
+                          DataContext="{Binding Player.DisplayedPlayingSong}" IsVisible="{Binding Player.HasCurrentSong}">
+                <r2:HeartButton/>
+                <r2:SongDownloadButton/>
+              </StackPanel>
             </Grid>
             <Grid Name="DockTransport" Grid.Column="1" RowDefinitions="38,20" MaxWidth="540" VerticalAlignment="Center">
               <StackPanel Name="DockPlayButtons" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
@@ -266,7 +270,7 @@
                 <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
               </Grid>
             </Grid>
-            <Grid Name="DockUtilities" Grid.Column="2" RowDefinitions="32,24" HorizontalAlignment="Right" VerticalAlignment="Center">
+            <Grid Name="DockUtilities" Grid.Column="2" RowDefinitions="32,28" HorizontalAlignment="Right" VerticalAlignment="Center">
               <StackPanel Name="DockUtilityButtons" Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right" VerticalAlignment="Center">
                 <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
                   <Button Width="32" Padding="0" Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量" AutomationProperties.Name="静音或恢复音量">
@@ -288,8 +292,8 @@
                 </Button>
               </StackPanel>
               <StackPanel Grid.Row="1" HorizontalAlignment="Right">
-                <ComboBox Name="QualityChoice" Width="96" MinHeight="22" Padding="8,0" Background="{DynamicResource R2Side}" Foreground="{DynamicResource R2Ink}" BorderBrush="{DynamicResource R2Edge}" AutomationProperties.Name="播放音质" ToolTip.Tip="用于下一次打开音源" SelectionChanged="ChangeQuality">
-              <ComboBoxItem Content="标准"/><ComboBoxItem Content="高品 MP3"/><ComboBoxItem Content="无损 FLAC"/>
+                <ComboBox Name="QualityChoice" MinWidth="88" MinHeight="28" Padding="10,3" Background="{DynamicResource R2Side}" Foreground="{DynamicResource R2Ink}" BorderBrush="{DynamicResource R2Edge}" AutomationProperties.Name="播放音质" ToolTip.Tip="用于下一次打开音源" SelectionChanged="ChangeQuality">
+              <ComboBoxItem>标准音质</ComboBoxItem><ComboBoxItem>高品 MP3</ComboBoxItem><ComboBoxItem>无损 FLAC</ComboBoxItem>
             </ComboBox>
               </StackPanel>
             </Grid>
@@ -328,9 +332,6 @@
         </Grid>
       </Border>
     </Grid>
-    <ProgressBar Name="DownloadProgress" Grid.ColumnSpan="2" Grid.RowSpan="2" ZIndex="6" IsVisible="False"
-                 HorizontalAlignment="Right" VerticalAlignment="Bottom" Width="144" Height="4" Margin="0,0,25,97"
-                 AutomationProperties.Name="歌曲下载进度"/>
     <Border Name="ToastPlate" Grid.ColumnSpan="2" ZIndex="6" IsVisible="False" IsHitTestVisible="False"
             Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="17,10" CornerRadius="16"
             Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Pink}" BorderThickness="1"

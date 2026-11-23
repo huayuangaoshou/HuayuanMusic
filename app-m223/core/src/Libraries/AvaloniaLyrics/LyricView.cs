@@ -677,7 +677,7 @@ public class LyricView : ItemsControl
     {
         return new FuncDataTemplate<LyricLine>((_, _) =>
         {
-            var control = new LyricLineControl { DistinguishActiveForeground = DistinguishActiveForeground };
+            var control = new LyricLineControl { DistinguishActiveForeground = DistinguishActiveForeground, ClipToBounds = true };
             control.Tapped += (_, args) =>
             {
                 if (!SeekOnLineTap || control.Line is not { } line || SeekCommand?.CanExecute(line.Start) != true) return;
@@ -858,19 +858,23 @@ public class LyricView : ItemsControl
         EnsureLayoutBuffers(ItemCount);
 
         var naturalTop = 0d;
+        var geometryChanged = false;
         for (var i = 0; i < ItemCount; i++)
         {
             if (ContainerFromIndex(i) is not Control container)
                 continue;
 
-            var height = container.Bounds.Height;
-            if (height <= 0d)
-                height = container.DesiredSize.Height;
+            // Canvas has no width constraint of its own. Measure wrapped content
+            // at the final width before deriving the position of the next lyric.
+            container.Width = Bounds.Width;
+            container.Measure(new Size(Bounds.Width, double.PositiveInfinity));
+            var height = container.DesiredSize.Height;
             if (height <= 0d)
                 height = _knownHeights.GetValueOrDefault(i, DefaultEstimatedLineHeight);
             else
                 _knownHeights[i] = height;
 
+            geometryChanged |= Math.Abs(_lineHeights[i] - height) > .5d;
             _lineHeights[i] = height;
             _lineCenters[i] = naturalTop + height / 2d;
             naturalTop += height + LineSpacing;
@@ -894,7 +898,6 @@ public class LyricView : ItemsControl
             var targetTop = centerY + (_lineCenters[i] - activeNaturalCenter) - height / 2d;
             Canvas.SetLeft(container, 0d);
             Canvas.SetTop(container, 0d);
-            container.Width = Bounds.Width;
 
             var targetCenter = targetTop + height / 2d;
             var distanceToSeekAnchor = Math.Abs(targetCenter - seekAnchorY);
@@ -921,7 +924,7 @@ public class LyricView : ItemsControl
             if (EnableScale && distance > 0)
                 targetScale = InactiveScale;
 
-            UpdateSpringState(container, targetTop, targetOpacity, targetScale, i, activeIndex);
+            UpdateSpringState(container, targetTop, targetOpacity, targetScale, i, activeIndex, geometryChanged);
         }
 
         TrimStaleStates(_activeContainers);
@@ -1092,12 +1095,12 @@ public class LyricView : ItemsControl
     }
 
     private void UpdateSpringState(Control container, double targetTop, double targetOpacity, double targetScale,
-        int index, int activeIndex)
+        int index, int activeIndex, bool geometryChanged)
     {
         if (UseLightweightScrollAnimation && !_isUserScrolling)
         {
             _springStates.Remove(container);
-            ApplyLightweightVisualState(container, targetTop, targetOpacity, !_isFirstLayoutPass);
+            ApplyLightweightVisualState(container, targetTop, targetOpacity, !_isFirstLayoutPass && !geometryChanged);
             return;
         }
 
