@@ -43,9 +43,13 @@ public sealed class InteractionController:ObservableObject {
    }
    void Copy(string label,string text) => menu.Items.Add(new MenuItem
    { Header=label, IsEnabled=!string.IsNullOrWhiteSpace(text), Command=new AsyncRelayCommand(()=>R2ShellView.CopyTextAsync(list,text)) });
-   Copy("复制歌名",row.Name);
+   string title=row.Name;
+   string artistPrefix=row.Singer+" - ";
+   if(row.IsProviderTrack&&!string.IsNullOrWhiteSpace(row.Singer)&&title.StartsWith(artistPrefix,StringComparison.OrdinalIgnoreCase))
+    title=title[artistPrefix.Length..];
+   Copy("复制歌名",title);
    Copy("复制歌手",row.Singer);
-   Copy("复制歌名 - 歌手",string.Join(" - ",new[]{row.Name,row.Singer}.Where(text=>!string.IsNullOrWhiteSpace(text))));
+   Copy("复制歌名 - 歌手",string.Join(" - ",new[]{title,row.Singer}.Where(text=>!string.IsNullOrWhiteSpace(text))));
    if(!row.IsProviderTrack)Add("打开文件所在目录",()=>RevealLocalFile(row));
    if(local){var target=new MenuItem{Header="加入本地歌单"};foreach(var pl in player.State.Lists){long id=pl.Id;target.Items.Add(new MenuItem{Header=pl.Name,Command=new RelayCommand(()=>player.AddMembership(id,selected))});}menu.Items.Add(target);}
    if(queue)Add("从播放队列移除",()=>player.Remove(selected));else if(Editable)Add("从本地歌单移除（不删除文件）",()=>player.Remove(selected));
