@@ -23,6 +23,13 @@ public sealed record DesktopSuggestion(string Title, string Artist, string Query
 
 public sealed partial class DirectSdkGateway
 {
+    public static DirectSdkGateway CreateDesktopQrSession()
+    {
+        var gateway=CreateDesktopSession();
+        gateway.session.Logout();
+        return gateway;
+    }
+
     private sealed class DesktopClients(IKgTransport transport, KgSessionManager account)
     {
         internal SearchClient Search { get; } = new(new RawSearchApi(transport), account);

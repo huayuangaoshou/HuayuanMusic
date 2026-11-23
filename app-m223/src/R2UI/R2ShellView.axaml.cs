@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.LogicalTree;
+using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Interactivity;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
@@ -154,7 +156,68 @@ public partial class R2ShellView : UserControl
     private void GoForward(object? sender, RoutedEventArgs args) { model?.Workspace.Forward(); SyncFilter(); }
     private void OpenPluginCenter(object? sender, RoutedEventArgs args) => model?.Workspace.ShowPlugins();
     private void ShowLyrics(object? sender, RoutedEventArgs args) => ToggleLyricOverlay();
-    private void ShowAccount(object? sender, RoutedEventArgs args) => model?.ShowAccount();
+    private void ShowAccount(object? sender, RoutedEventArgs args)
+    {
+        if (model is not { KugouEnabled: true } shell || sender is not Button button) return;
+        if (!shell.Concept.Connected) { _ = ShowQrLoginAsync(shell); return; }
+        var menu = new MenuFlyout();
+        var details = new MenuItem { Header = "账号信息" };
+        details.Click += (_, _) => shell.ShowAccount();
+        var change = new MenuItem { Header = "切换账号" };
+        change.Click += async (_, _) =>
+        {
+            await shell.Concept.CloseDesktopConnectionAsync();
+            await ShowQrLoginAsync(shell);
+        };
+        var logout = new MenuItem { Header = "退出当前会话" };
+        logout.Click += async (_, _) => await shell.Concept.CloseDesktopConnectionAsync();
+        menu.Items.Add(details); menu.Items.Add(change); menu.Items.Add(logout);
+        menu.ShowAt(button);
+    }
+    private async Task ShowQrLoginAsync(ShellModel shell)
+    {
+        if (Window is not { } owner || loginDialog != null) return;
+        var account = shell.Concept.AccountPage;
+        var oldParent = account.GetLogicalParent() as ContentControl;
+        if(oldParent?.Content == account) oldParent.Content = null;
+        var holder = new ContentControl { Content = account };
+        var refresh = new Button { Content = "刷新二维码", Classes = { "glass-pill" } };
+        var dialog = new Window
+        {
+            Title = "登录酷狗", Width = 460, Height = 440, CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            RequestedThemeVariant = ActualThemeVariant,
+            Content = new Border { Classes = { "glass" }, Margin = new Avalonia.Thickness(12),
+                Child = new StackPanel { Children = { holder, refresh } } }
+        };
+        dialog.Styles.Add(new StyleInclude(new Uri("avares://HuayuanMusic.P17.Nightflight/"))
+        { Source = new Uri("avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml") });
+        loginDialog = dialog;
+        dialog.Closed += (_, _) =>
+        {
+            loginDialog = null;
+            if (!shell.Concept.Connected) shell.Concept.CancelDesktopOperations();
+            holder.Content = null;
+            if(oldParent != null) oldParent.Content = account;
+        };
+        refresh.Click += async (_, _) =>
+        {
+            refresh.IsEnabled = false;
+            try
+            {
+                shell.Concept.CancelDesktopOperations();
+                await shell.Concept.Pending;
+                if(dialog.IsVisible&&!shell.Concept.Connected)await shell.Concept.StartDesktopQrAsync();
+                if(dialog.IsVisible&&shell.Concept.Connected)dialog.Close();
+            }
+            finally { refresh.IsEnabled = true; }
+        };
+        var shown = dialog.ShowDialog(owner);
+        await shell.Concept.StartDesktopQrAsync();
+        if (shell.Concept.Connected && dialog.IsVisible) dialog.Close();
+        await shown;
+    }
+    private Window? loginDialog;
     private async void ToggleTheme(object? sender, RoutedEventArgs args) => await SetDesktopThemeAsync(ActualThemeVariant!=ThemeVariant.Dark);
 
     private async Task SetDesktopThemeAsync(bool dark)

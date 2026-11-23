@@ -33,6 +33,10 @@ public sealed partial class WorkspaceState
         recommend.Click += async (_, _) => await OpenRecommendationsAsync();
         var ranks = new Button { Classes = { "nav" }, Content = "排行榜" };
         ranks.Click += async (_, _) => await OpenRanksAsync();
+        discoveryNavigation.Add(recommend,"每日推荐");
+        discoveryNavigation.Add(ranks,"排行榜");
+        onlineNavigation.Add(recommend);
+        onlineNavigation.Add(ranks);
         nav.Children.Add(recommend);
         nav.Children.Add(ranks);
     }
@@ -168,7 +172,7 @@ public sealed partial class WorkspaceState
         var page = detail ? onlineDetailPage! : onlineSongsPage!;
         InteractionController.For(Lists[page]).IsOnlineSearch = search;
         Fill(page, rows);
-        onlineStatus!.Text = rows.Length == 0 ? "暂无可播放曲目" :
+        onlineStatus!.Text = rows.Length == 0 ? "" :
             detail && !string.IsNullOrWhiteSpace(detailSubtitle) ? $"{detailSubtitle}  ·  {rows.Length} 首曲目" : $"{rows.Length} 首曲目";
         onlineResults!.Content = page.View;
     }

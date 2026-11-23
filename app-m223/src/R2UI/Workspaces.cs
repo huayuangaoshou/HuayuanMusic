@@ -34,12 +34,13 @@ public sealed partial class WorkspaceState:ObservableObject {
  private R2Page? lyricsPage, pluginPage;
  private R2Page? filterPage;
  public string FilterText { get; private set; } = "";
- readonly ContentControl content=new();readonly TextBlock heading=new(){FontSize=23,Margin=new Thickness(0,8)};readonly TextBlock status=new(){TextWrapping=TextWrapping.Wrap};readonly WrapPanel gallery=new(){ItemWidth=188};
+ readonly ContentControl content=new();readonly TextBlock heading=new(){FontSize=23,Margin=new Thickness(0,0,0,4)};readonly TextBlock status=new(){TextWrapping=TextWrapping.Wrap};readonly WrapPanel gallery=new(){ItemWidth=188};
  readonly Dictionary<string,TrackRow> rowViews=[];PlaybackSnapshot? previous;readonly R2Page? favoritesPage,historyPage;TrackRow[] CatalogRows=>Local?Host.Player.State.Tracks.Where(t=>!t.Key.StartsWith("kugou-concept:",StringComparison.Ordinal)).Select(t=>Row(t)).ToArray():conceptRows;
  TrackRow[] conceptRows=[];
  PlatformPlaylistSnapshot? displayedSnapshot;
  string? providerPlaylistId;
  readonly R2Page galleryPage;
+ readonly TextBlock galleryEmpty=new(){Text="还没有歌单",Classes={"muted"},Margin=new Thickness(6,12)};
  readonly Button prevPage=new(){Content="上一页"}, nextPage=new(){Content="下一页"};
  readonly StackPanel searchPanelHost;
  public WorkspaceState(ShellModel host,bool local){Host=host;Local=local;
@@ -48,9 +49,9 @@ public sealed partial class WorkspaceState:ObservableObject {
   heading.FontSize = 27;
   heading.FontWeight = FontWeight.SemiBold;
   status.Classes.Add("muted");
-  status.Margin = new Thickness(0,0,0,12);
+  status.Margin = new Thickness(0,0,0,4);
   content.Transitions = new() { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) } };
-  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(25,15,25,12)};
+  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(25,8,25,12)};
   area.Children.Add(heading);Grid.SetRow(status,1);area.Children.Add(status);Grid.SetRow(content,2);area.Children.Add(content);
   Root=area;
   if(Program.Desktop) AddDesktopNavigation(nav);
@@ -74,8 +75,10 @@ public sealed partial class WorkspaceState:ObservableObject {
    nav.Children.Add(import);
   }
   CatalogPage=SongPage(Local?"本地曲库":"已同步曲目",CatalogRows);AddNav(nav,CatalogPage);
-  var cardBody=new StackPanel{Spacing=10};
+  var cardBody=new StackPanel{Spacing=8};
+  if(Local&&Program.Desktop)cardBody.Children.Add(NewPlaylistButton());
   cardBody.Children.Add(gallery);
+  cardBody.Children.Add(galleryEmpty);
   galleryPage=new R2Page("歌单",new ScrollViewer{Content=cardBody});AddNav(nav,galleryPage);
   DetailPage=SongPage("歌单详情",[]);Pages.Add(DetailPage);var panel=(Grid)DetailPage.View;panel.RowDefinitions.Insert(0,new RowDefinition(GridLength.Auto));foreach(var child in panel.Children)Grid.SetRow(child,Grid.GetRow(child)+1);panel.Children.Add(hero);panel.RowDefinitions.Add(new RowDefinition(GridLength.Auto));var paging=new StackPanel{Orientation=Orientation.Horizontal,Spacing=8};prevPage.Click+=(_,_)=>SetPage(PageNumber-1);nextPage.Click+=(_,_)=>SetPage(PageNumber+1);paging.Children.Add(prevPage);paging.Children.Add(nextPage);
   if(P2AWorkspace.M212SnapshotPreview&&!Local){
@@ -100,28 +103,48 @@ public sealed partial class WorkspaceState:ObservableObject {
   SearchPage=SongPage("搜索结果",CatalogRows);Pages.Add(SearchPage);
   searchPanelHost=new StackPanel();
   if(Local){favoritesPage=SongPage("收藏",[]);historyPage=SongPage("历史",[]);AddNav(nav,favoritesPage);AddNav(nav,historyPage);}
-  var lyrics=new StackPanel{Spacing=16,Margin=new Thickness(24)};var title=new TextBlock{FontSize=22};title.DataContext=host.Player;title.Bind(TextBlock.TextProperty,new Binding("DisplayedPlayingSong.Name"));lyrics.Children.Add(title);var lines=new ItemsControl();lines.DataContext=host.Player;lines.Bind(ItemsControl.ItemsSourceProperty,new Binding("State.Lyrics"));lines.ItemTemplate=new FuncDataTemplate<CoreLyric>((l,_)=>new TextBlock{Text=l!.Text,FontSize=17,TextWrapping=TextWrapping.Wrap});lyrics.Children.Add(lines);lyricsPage=new R2Page("歌词",new ScrollViewer{Content=lyrics});AddNav(nav,lyricsPage);
-  QueuePage=new R2Page("混合队列",new QueuePreview{DataContext=host});AddNav(nav,QueuePage);
+  var lyrics=new StackPanel{Spacing=16,Margin=new Thickness(24)};var title=new TextBlock{FontSize=22};title.DataContext=host.Player;title.Bind(TextBlock.TextProperty,new Binding("DisplayedPlayingSong.Name"));lyrics.Children.Add(title);var lines=new ItemsControl();lines.DataContext=host.Player;lines.Bind(ItemsControl.ItemsSourceProperty,new Binding("State.Lyrics"));lines.ItemTemplate=new FuncDataTemplate<CoreLyric>((l,_)=>new TextBlock{Text=l!.Text,FontSize=17,TextWrapping=TextWrapping.Wrap});lyrics.Children.Add(lines);lyricsPage=new R2Page("歌词",new ScrollViewer{Content=lyrics});if(!Program.Desktop)AddNav(nav,lyricsPage);
+  QueuePage=new R2Page("混合队列",new QueuePreview{DataContext=host});if(!Program.Desktop)AddNav(nav,QueuePage);
   if(!Local){AddNav(nav,new R2Page("账号状态",Host.Concept.AccountPage));Host.Concept.Changed+=RefreshConcept;RefreshConcept();}
-  nav.Children.Add(new TextBlock{Text="我的歌单",Classes={"muted"},FontSize=11,Margin=new Thickness(10,14,0,4)});
+  var playlistHeading = new StackPanel { Orientation=Orientation.Horizontal, Spacing=6, Margin=new Thickness(8,10,0,4) };
+  playlistHeading.Children.Add(new TextBlock{Text="我的歌单",Classes={"muted"},FontSize=11,VerticalAlignment=VerticalAlignment.Center});
+  if(Local&&Program.Desktop)playlistHeading.Children.Add(NewPlaylistButton());
+  if(!Local&&Program.Desktop)onlineNavigation.Add(playlistHeading);
+  nav.Children.Add(playlistHeading);
   nav.Children.Add(playlistNav);
+  if(!Local&&Program.Desktop){onlineNavigation.Add(playlistNav);UpdateOnlineNavigation();}
   Navigate(Local?CatalogPage:Host.Concept.Snapshot!=null?galleryPage:Pages.Single(p=>p.DisplayName=="账号状态"),false);Refresh();
  }
  TrackRow Row(CoreTrack track,long member=0,long list=0){string key=member>0?$"m:{list}:{member}":"t:"+track.Id;if(!rowViews.TryGetValue(key,out var row)||row.Track!=track){row=new TrackRow(track,this,memberId:member,listId:list);rowViews[key]=row;}return row;}
- R2Page SongPage(string title,IEnumerable<TrackRow> rows){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);header.DataContext=interactions;interactions.SetRows(rows.ToArray());return page;}
+ R2Page SongPage(string title,IEnumerable<TrackRow> rows){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);header.DataContext=interactions;var empty = MakeSongEmptyState(title);
+ grid.Children.Add(empty); Grid.SetRow(empty,1); emptySongPages.Add(page,(header,empty));
+ Fill(page,rows);return page;}
  void AddNav(StackPanel nav,R2Page page)
  {
   Pages.Add(page);
   var button=new Button{Content=page.DisplayName,Classes={"nav"}};
   button.Click+=(_,_)=>Navigate(page);
   navPages.Add(button,page);
+  if(!Local&&Program.Desktop&&page.DisplayName!="账号状态")onlineNavigation.Add(button);
   nav.Children.Add(button);
  }
+ private readonly List<Control> onlineNavigation=[];
+ private readonly Dictionary<Button,string> discoveryNavigation=[];
+ public bool IsWorkspaceFallbackSelected { get; private set; }
+ public bool IsLocalFallbackSelected=>Local&&IsWorkspaceFallbackSelected;
+ public bool IsKugouFallbackSelected=>IsKugou&&IsWorkspaceFallbackSelected;
+ private void UpdateOnlineNavigation()
+ {
+  foreach(var item in onlineNavigation)item.IsVisible=Host.Concept.Connected;
+  if(CurrentPage!=null)HighlightNavigation();
+ }
+ private readonly Dictionary<R2Page,(Control Header,Control Empty)> emptySongPages=[];
  void Fill(R2Page page,IEnumerable<TrackRow> rows)
  {
   var items=rows.ToArray();
   for(int index=0;index<items.Length;index++) items[index].Number=index+1;
   InteractionController.For(Lists[page]).SetRows(items);
+  if(emptySongPages.TryGetValue(page,out var view)){view.Empty.IsVisible=items.Length==0;view.Header.IsVisible=items.Length>0;}
  }
  private string? PlaylistCover(ProviderPlaylist list) =>
   list.CoverUrl ?? list.Tracks.Select(track=>track.CoverUrl).FirstOrDefault(cover=>cover!=null);
@@ -142,6 +165,14 @@ public sealed partial class WorkspaceState:ObservableObject {
   layout.Children.Add(CoverFor(id,28));Grid.SetColumn(label,1);layout.Children.Add(label);
   var button=new Button{Classes={"nav"},Content=layout,Command=open,HorizontalContentAlignment=HorizontalAlignment.Stretch};
   Avalonia.Automation.AutomationProperties.SetName(button,title);
+  if(Local&&Program.Desktop&&Host.Player.State.Lists.Any(playlist=>playlist.Id==id&&playlist.IsCustom))
+  {
+   var rename=new MenuItem{Header="重命名"};
+   rename.Click+=async (_,_)=>await EditLocalPlaylistAsync(button,id);
+   var delete=new MenuItem{Header="删除歌单"};
+   delete.Click+=async (_,_)=>await EditLocalPlaylistAsync(button,id,true);
+   button.ContextMenu=new ContextMenu{Items={rename,delete}};
+  }
   navPlaylists.Add(button,id);
   playlistNav.Children.Add(button);
  }
@@ -200,6 +231,7 @@ public sealed partial class WorkspaceState:ObservableObject {
  TrackRow ConceptRow(ProviderTrackRef track,string key)=>new(
   new CoreTrack(-1,key,track.Title,track.Artist,track.Album,Host.Concept.CatalogDuration(track.ProviderTrackId),track.CoverUrl),this);
  void RefreshConcept(){
+  UpdateOnlineNavigation();
   status.Text=Host.Concept.Summary;searchPanelHost.IsVisible=Host.Concept.Connected&&!P2AWorkspace.RealReadOnly&&!M219RStartup.Active;
   if(!Host.Concept.Connected)Fill(SearchPage,[]);
   var next=Host.Concept.Snapshot;
@@ -230,6 +262,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    var list=playlists[i];var id=i+1;
    AddPlaylist(id,list.Name,list.Tracks.Count,Host.Concept.Connected);
   }
+  galleryEmpty.IsVisible=gallery.Children.Count==0;
   if (next!=null && accountChanged && CurrentPage?.DisplayName=="账号状态")
    Navigate(galleryPage,false);
   if (CurrentPage!=null) HighlightNavigation();
@@ -244,6 +277,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    Fill(CatalogPage,CatalogRows);Fill(SearchPage,CatalogRows.Where(Filter));SetPage(PageNumber);
    gallery.Children.Clear();playlistNav.Children.Clear();navPlaylists.Clear();
    foreach(var list in state.Lists) AddPlaylist(list.Id,list.Name,list.SongIds.Length,true);
+   galleryEmpty.IsVisible=gallery.Children.Count==0;
    if(CurrentPage!=null) HighlightNavigation();
   }
   if(favoritesPage!=null&&(changed||previous==null||!previous.Favorites.SequenceEqual(state.Favorites)))Fill(favoritesPage,CatalogRows.Where(r=>state.Favorites.Contains(r.Track.Id)));
@@ -271,6 +305,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    prevPage.IsVisible=nextPage.IsVisible=rows.Length>50;
   }
  }
+ internal void ShowLocalPlaylists()=>Navigate(galleryPage);
  public void OpenPlaylist(long id)
  {
   if(!Local)
@@ -338,16 +373,21 @@ public sealed partial class WorkspaceState:ObservableObject {
   content.Content=page.View;
   Dispatcher.UIThread.Post(()=>content.Opacity=1,DispatcherPriority.Render);
   heading.Text=page.DisplayName;
-  heading.IsVisible=page!=DetailPage;
-  status.IsVisible=page!=DetailPage&&page.DisplayName!="账号状态";
+  heading.IsVisible=page!=DetailPage&&page!=onlinePage;
+  status.IsVisible=!Local&&page!=DetailPage&&page!=onlinePage&&page.DisplayName!="账号状态";
   status.Text=Local?"":Host.Concept.Summary;
   HighlightNavigation();
   Restore();
  }
  private void HighlightNavigation()
  {
-  foreach(var (button,page) in navPages)button.Classes.Set("selected",page==CurrentPage);
-  foreach(var (button,id) in navPlaylists)button.Classes.Set("selected",CurrentPage==DetailPage&&id==SelectedPlaylistId);
+  foreach(var (button,page) in navPages)button.Classes.Set("selected",button.IsVisible&&page==CurrentPage);
+  foreach(var (button,id) in navPlaylists)button.Classes.Set("selected",button.IsVisible&&CurrentPage==DetailPage&&id==SelectedPlaylistId);
+  foreach(var (button,title) in discoveryNavigation)
+   button.Classes.Set("selected",button.IsVisible&&CurrentPage==onlinePage&&onlineHeading?.Text==title);
+  IsWorkspaceFallbackSelected=!navPages.Keys.Concat(navPlaylists.Keys).Concat(discoveryNavigation.Keys)
+      .Any(button=>button.IsVisible&&button.Classes.Contains("selected"));
+  OnPropertyChanged(nameof(IsLocalFallbackSelected));OnPropertyChanged(nameof(IsKugouFallbackSelected));
  }
  private BrowsePoint Here()=>new(CurrentPage,SelectedPlaylistId,FilterText);
  private void RestorePoint(BrowsePoint point)
@@ -392,7 +432,7 @@ public sealed partial class ShellModel:ObservableObject,IDisposable {
  public ICommand SwitchLocalCommand {get;}public ICommand SwitchKugouCommand {get;}
  internal ShellModel(CorePlaybackAdapter core){Adapter=core;Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Adapter.DesktopUnavailableChanged+=RefreshUnavailable;Switch(LocalWorkspace);Player.Attach(this);}
  void AccountChanged(){OnPropertyChanged(nameof(AccountLabel));OnPropertyChanged(nameof(AccountAvatar));}
- void RefreshUnavailable(){ LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();foreach(var row in Player.DisplayPlaybackQueue)row.Refresh();Player.NotifyUnavailable(); }
+ void RefreshUnavailable(string reason){ LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();foreach(var row in Player.DisplayPlaybackQueue)row.Refresh();if(reason.Length>0)Player.NotifyUnavailable(reason); }
  void OnSnapshot()
  {
   LocalWorkspace.Refresh();KugouConceptWorkspace.Refresh();

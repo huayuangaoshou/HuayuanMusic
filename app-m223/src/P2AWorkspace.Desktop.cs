@@ -54,6 +54,8 @@ internal sealed partial class P2AWorkspace
 
     internal Task RestoreDesktopConnectionAsync() => Pending = ConnectDesktopAsync(false);
 
+    internal Task StartDesktopQrAsync() => Pending = ConnectDesktopAsync(true);
+
     private async Task ConnectDesktopAsync(bool allowQr)
     {
         if (R2.DesktopPreferences.Behavior.Kugou != R2.DesktopDlcState.Enabled || transitioning || Connected)
@@ -65,7 +67,7 @@ internal sealed partial class P2AWorkspace
         Bitmap? image = null;
         try
         {
-            gateway = DirectSdkGateway.CreateDesktopSession();
+            gateway = allowQr ? DirectSdkGateway.CreateDesktopQrSession() : DirectSdkGateway.CreateDesktopSession();
             gateway.OneSongDiagnostic += phase => Program.Log("DESKTOP_SDK_AUDIO", new { phase });
             if (!allowQr && !gateway.LoggedIn)
                 return;

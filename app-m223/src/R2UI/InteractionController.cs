@@ -50,19 +50,26 @@ public sealed class InteractionController:ObservableObject {
    Copy("复制歌名",title);
    Copy("复制歌手",row.Singer);
    Copy("复制歌名 - 歌手",string.Join(" - ",new[]{title,row.Singer}.Where(text=>!string.IsNullOrWhiteSpace(text))));
-   if(!row.IsProviderTrack)Add("打开文件所在目录",()=>RevealLocalFile(row));
-   if(local){var target=new MenuItem{Header="加入本地歌单"};foreach(var pl in player.State.Lists){long id=pl.Id;target.Items.Add(new MenuItem{Header=pl.Name,Command=new RelayCommand(()=>player.AddMembership(id,selected))});}menu.Items.Add(target);}
+   if(!row.IsProviderTrack)Add("打开文件所在位置",()=>RevealLocalFile(row));
+   if(local){var target=new MenuItem{Header="添加到歌单"};foreach(var pl in player.State.Lists.Where(pl=>pl.IsCustom)){long id=pl.Id;target.Items.Add(new MenuItem{Header=pl.Name,Command=new RelayCommand(()=>player.AddMembership(id,selected))});}if(target.Items.Count==0){var create=new MenuItem{Header="+ 新建歌单"};create.Click+=async(_,_)=>await owner.Host.LocalWorkspace.EditLocalPlaylistAsync(list,0);target.Items.Add(create);}menu.Items.Add(target);
+    if(!queue)Add("从曲库移除",()=>_=RemoveLocalRecordsAsync(selected));
+   }
    if(queue)Add("从播放队列移除",()=>player.Remove(selected));else if(Editable)Add("从本地歌单移除（不删除文件）",()=>player.Remove(selected));
-   if(queue||Editable){Add("上移",()=>MoveSelected(-1),sort==0);Add("下移",()=>MoveSelected(1),sort==0);}if(!queue)Add("恢复默认顺序",()=>{sort=0;field="";Display(original);SetStatus();});menu.ShowAt(list,true);e.Handled=true;};
+   if(queue||Editable){Add("上移",()=>MoveSelected(-1),sort==0);Add("下移",()=>MoveSelected(1),sort==0);}menu.ShowAt(list,true);e.Handled=true;};
   l.AddHandler(InputElement.PointerPressedEvent,(_,e)=>{if(!(queue||Editable)||sort!=0||FromButton(e.Source)||!e.GetCurrentPoint(l).Properties.IsLeftButtonPressed)return;var row=Hit(e.Source);if(row==null)return;Cancel();dragging=row;origin=e.GetPosition(l);snapshot=Items().Select(r=>r.Identity).ToArray();pointer=e.Pointer;},Avalonia.Interactivity.RoutingStrategies.Bubble,handledEventsToo:true);
   l.PointerMoved+=(_,e)=>DragMove(e);l.PointerReleased+=(_,_)=>Commit();l.PointerCaptureLost+=(_,_)=>Cancel();l.DetachedFromVisualTree+=(_,_)=>Cancel();
   l.AttachedToVisualTree+=(_,_)=>{if(line.Parent==null&&l.Parent is Grid grid){Grid.SetRow(line,Grid.GetRow(l));grid.Children.Add(line);}};
  }
+ async Task RemoveLocalRecordsAsync(TrackRow[] rows)
+ {
+  await owner.Host.Adapter.RemoveLocalTracksAsync(rows.Select(row=>row.Track.Id).ToArray());
+  player.Notify(owner.Host.Adapter.State.Error.Length==0?"已从曲库移除，音乐文件已保留":"暂时无法从曲库移除");
+ }
  static void RevealLocalFile(TrackRow row)
  {
   var path=row.Track.Key;
-  if(!Path.IsPathFullyQualified(path)||!File.Exists(path)||Path.GetDirectoryName(path) is not { } directory)return;
-  try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(directory) { UseShellExecute=true }); }
+  if(!Path.IsPathFullyQualified(path)||!File.Exists(path))return;
+  try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe", "/select,\""+path+"\"") { UseShellExecute=false }); }
   catch(System.ComponentModel.Win32Exception error) { Program.Log("R2_REVEAL_LOCAL_FAILED",new { type=error.GetType().Name }); }
  }
  TrackRow[] Items()=>list.Items.OfType<TrackRow>().ToArray();public TrackRow[] Selected(){var set=list.SelectedItems?.OfType<TrackRow>().ToHashSet()??[];return Items().Where(set.Contains).ToArray();}

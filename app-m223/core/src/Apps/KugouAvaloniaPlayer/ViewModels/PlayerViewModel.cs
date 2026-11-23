@@ -303,11 +303,14 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
             _loadCancellation = currentLoadCts;
 
             var sourceInfo = await ResolvePlaybackSourceAsync(song, currentLoadCts.Token);
+            if (UseDesktopUnavailableHandling && contextList is { Count: > 0 } &&
+                (sourceInfo.Success || !_player.IsPlaying))
+                _queueManager.SetupQueue(song, contextList);
             if (!sourceInfo.Success || string.IsNullOrWhiteSpace(sourceInfo.Source))
             {
                 ShowPlaybackSourceFailure(sourceInfo.FailureReason);
                 CancelAndDisposeLoadCancellation();
-                if (sourceInfo.FailureReason == PlaybackSourceFailureReason.LoginRequired)
+                if (!UseDesktopUnavailableHandling && sourceInfo.FailureReason == PlaybackSourceFailureReason.LoginRequired)
                     return;
 
                 HandlePlayError(
@@ -318,7 +321,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
                 return;
             }
 
-            _queueManager.SetupQueue(song, contextList);
+            _queueManager.SetupQueue(song, UseDesktopUnavailableHandling ? null : contextList);
             ResetTransitionPipeline(true);
             ResetTailTelemetry();
 
@@ -365,7 +368,13 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
                         throw new InvalidOperationException("Bounded playback did not start");
                 }
                 else _player.Play();
+                if (UseDesktopUnavailableHandling && !_player.IsPlaying)
+                {
+                    HandlePlayError(song, requestVersion, "无法启动输出", "OutputDevice");
+                    return;
+                }
                 IsPlayingAudio = true;
+                if (UseDesktopUnavailableHandling) DesktopPlaybackStarted?.Invoke(song);
                 TotalDurationSeconds =
                     song.DurationSeconds > 0 ? song.DurationSeconds : _player.GetDuration().TotalSeconds;
                 _playbackTimer.Start();
@@ -383,8 +392,10 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "播放出错");
-            StopAndReset();
+            _logger.LogError("播放出错：{Type}", ex.GetType().Name);
+            if (UseDesktopUnavailableHandling)
+                HandlePlayError(song, requestVersion, "播放失败", ex.GetType().Name);
+            else StopAndReset();
         }
         finally
         {
@@ -447,8 +458,10 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
     {
         if(UseDesktopUnavailableHandling)
         {
-            DesktopSourceUnavailable?.Invoke(song);
-            if(!_player.IsPlaying)StopAndReset();
+            var deviceFailure = detail.Contains("device", StringComparison.OrdinalIgnoreCase) ||
+                detail.Contains("声卡", StringComparison.Ordinal) || detail.Contains("InitError",StringComparison.OrdinalIgnoreCase);
+            if (!_player.IsPlaying) ClearDesktopPlaybackSelection();
+            DesktopSourceUnavailable?.Invoke(song,deviceFailure);
             return;
         }
         if(KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active)

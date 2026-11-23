@@ -7,7 +7,7 @@ using KugouAvaloniaPlayer.ViewModels;
 namespace HuayuanPreview;
 public sealed record CoreTrack(int Id,string Key,string Title,string Artist,string Album,double Duration,string? Cover);
 public sealed record CoreLyric(string Text,double StartMilliseconds,string? Translation=null);
-public sealed record CoreList(string Name,int[] SongIds,long Id=0,long[]? EntryIds=null);
+public sealed record CoreList(string Name,int[] SongIds,long Id=0,long[]? EntryIds=null,bool IsCustom=false);
 public sealed record CoreQueueEntry(Guid EntryId,int TrackId);
 public sealed record PlaybackSnapshot {
  public CoreTrack[] Tracks {get;init;}=[]; public CoreLyric[] Lyrics {get;init;}=[];
@@ -43,7 +43,7 @@ internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
  }
  int Id(SongItem? s)=>s==null?0:items.FirstOrDefault(x=>string.Equals(x.Value.LocalFilePath,s.LocalFilePath,StringComparison.OrdinalIgnoreCase)).Key;
  SongItem Song(int id){if(!items.TryGetValue(id,out var s))throw new InvalidOperationException("仅允许当前隔离测试曲目");if(s.LocalSourceType=="ProviderStream"){if(!ProviderStreamRegistry.Allows(s.LocalFilePath))throw new UnauthorizedAccessException("平台许可失效");return s;}if(s.LocalSourceType!="LocalFile"||s.LocalTrackId<=0||!string.IsNullOrEmpty(s.RemoteUrl))throw new IOException("曲目来源不属于受控本地媒体");if(OfflineStartupProfile.Active)OfflineStartupProfile.Current.DemandMedia(s.LocalFilePath!);return s;}
- internal async Task ReloadAllAsync(){var all=await Task.Run(()=>Store.GetAllLocalTracksAsync());var ephemeral=items.Where(x=>x.Value.LocalSourceType=="ProviderStream").ToArray();items.Clear();foreach(var t in all)items[checked((int)t.Id)]=LocalMusicLibraryViewModel.ToSongItem(t);foreach(var row in ephemeral)items.Add(row.Key,row.Value);RebuildTrackSnapshot();var loaded=new List<CoreList>();foreach(var list in await root.Library.GetPlaylistsAsync()){var entries=await Store.GetPlaylistEntriesAsync(list.Id);loaded.Add(new(list.Name,entries.Select(t=>(int)t.Track.Id).ToArray(),list.Id,entries.Select(t=>t.EntryId).ToArray()));}lists=loaded.ToArray();}
+ internal async Task ReloadAllAsync(){var all=await Task.Run(()=>Store.GetAllLocalTracksAsync());var ephemeral=items.Where(x=>x.Value.LocalSourceType=="ProviderStream").ToArray();items.Clear();foreach(var t in all)items[checked((int)t.Id)]=LocalMusicLibraryViewModel.ToSongItem(t);foreach(var row in ephemeral)items.Add(row.Key,row.Value);RebuildTrackSnapshot();var loaded=new List<CoreList>();var custom=await ReadEditablePlaylistIdsAsync();foreach(var list in await root.Library.GetPlaylistsAsync()){var entries=await Store.GetPlaylistEntriesAsync(list.Id);loaded.Add(new(list.Name,entries.Select(t=>(int)t.Track.Id).ToArray(),list.Id,entries.Select(t=>t.EntryId).ToArray(),custom.Contains(list.Id)));}lists=loaded.ToArray();}
  public async Task ImportFilesAsync(string[] files,CancellationToken cancel){if(OfflineStartupProfile.Active&&!OfflineStartupProfile.Current.Import)throw new IOException("Import capability required");foreach(var chunk in files.Chunk(20)){cancel.ThrowIfCancellationRequested();await root.ViewModel.ImportSelectedAsync(chunk,cancel);}await ReloadAllAsync();RefreshRecords();Publish();}
  internal string ImportStatus=>root.ViewModel.Status;
  void RefreshRecords(){favorites=LocalMusicRecordStore.LoadFavorites().Select(Id).Where(i=>i>0).ToArray();history=LocalMusicRecordStore.LoadHistory().Select(Id).Where(i=>i>0).ToArray();}

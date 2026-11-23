@@ -437,12 +437,13 @@ public partial class PlayerViewModel
             Dispatcher.UIThread.Post(async () =>
             {
                 if(version!=_playRequestVersion||_playSongLock.CurrentCount==0||!IsPlayingAudio)return;
-                if(IsRepeatOneMode&&CurrentPlayingSong is { } current && DesktopCanPlayAutomatically?.Invoke(current)!=false)
+                var ended=CurrentPlayingSong;
+                if(IsRepeatOneMode&&ended is { } current && DesktopCanPlayAutomatically?.Invoke(current)!=false)
                 {
                     await PlaySongAsync(current);
                     if(_player.IsPlaying)return;
                 }
-                await PlayDesktopNextAvailableAsync();
+                await PlayDesktopNextAvailableAsync(ended);
             });
             return;
         }

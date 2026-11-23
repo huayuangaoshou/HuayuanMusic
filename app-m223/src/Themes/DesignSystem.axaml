@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:r2="using:HuayuanPreview.R2">
   <Styles.Resources>
     <ResourceDictionary>
       <SolidColorBrush x:Key="Primary" Color="#4A9BFF"/>
@@ -145,7 +145,11 @@
   <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/></Style>
   <Style Selector="Button.heart:pressed Path"><Setter Property="RenderTransform" Value="scale(1.24)"/></Style>
   <Style Selector="Border.song-current"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>
-  <Style Selector="Border.unavailable"><Setter Property="Opacity" Value="0.52"/></Style>
+  <Style Selector="Border.unavailable TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
+  <Style Selector="Border.unavailable r2|TrackArtwork"><Setter Property="Opacity" Value="0.55"/></Style>
+  <Style Selector="Path.empty-heart"><Setter Property="Data" Value="{DynamicResource R2Heart}"/><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="StrokeThickness" Value="1.8"/></Style>
+  <Style Selector="MenuFlyoutPresenter MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
+  <Style Selector="ContextMenu MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="StackPanel.row-actions"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15"/></Transitions></Setter></Style>
   <Style Selector="ListBoxItem:pointerover StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="ListBoxItem:focus-within StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>

@@ -96,6 +96,7 @@ public partial class R2ShellView
 
     private void UpdateCommentTrack(TrackRow? row)
     {
+        if (row?.IsProviderTrack != true && commentsOpen) SelectCommentTab(false);
         var key = row?.IsProviderTrack == true ? row.CatalogIdentity : null;
         if (commentTrack == key && nextCommentPage != 0) return;
         commentRequest?.Cancel();

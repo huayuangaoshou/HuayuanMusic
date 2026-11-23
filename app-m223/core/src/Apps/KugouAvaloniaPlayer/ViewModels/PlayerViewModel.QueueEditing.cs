@@ -21,16 +21,25 @@ public partial class PlayerViewModel {
  internal string? ControlledQueueReadError=>_queueCacheService.LastReadError;
  internal IReadOnlyList<SongItem> OriginalControlledQueue=>_queueManager.OriginalQueue;
  internal bool UseDesktopUnavailableHandling { get; set; }
- internal event Action<SongItem>? DesktopSourceUnavailable;
+ internal event Action<SongItem,bool>? DesktopSourceUnavailable;
+ internal event Action<SongItem>? DesktopPlaybackStarted;
  private bool desktopAutomaticStep;
  internal Func<SongItem,bool>? DesktopCanPlayAutomatically { get; set; }
- internal async Task PlayDesktopNextAvailableAsync()
+ internal void ClearDesktopPlaybackSelection()
+ {
+  StopAndReset();
+  if(CurrentPlayingSong!=null)CurrentPlayingSong.IsPlaying=false;
+  CurrentPlayingSong=null;
+  DisplayedPlayingSong=null;
+  TotalDurationSeconds=0;
+ }
+ internal async Task PlayDesktopNextAvailableAsync(SongItem? from=null)
  {
   if(desktopAutomaticStep)return;
   desktopAutomaticStep=true;
   try
   {
-   var candidate=CurrentPlayingSong;
+   var candidate=from??CurrentPlayingSong;
    var seen=new HashSet<Guid>();
    int attempts=0;
    while(_queueManager.GetNext(candidate) is { } next && seen.Add(next.QueueEntryId) && attempts<32)
@@ -41,7 +50,7 @@ public partial class PlayerViewModel {
     await PlayControlledQueueEntryAsync(next);
     if(_player.IsPlaying&&Equals(CurrentPlayingSong,next))return;
    }
-   StopAndReset();
+   ClearDesktopPlaybackSelection();
   }
   finally{desktopAutomaticStep=false;}
  }

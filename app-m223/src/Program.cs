@@ -73,7 +73,13 @@ public sealed class App : Application
 
         SettingsManager.Load();
         SimpleAudioPlayer.DesktopMicroFade = DesktopPreferences.Behavior.MicroFade;
-        SimpleAudioPlayer.Initialize(SettingsManager.Settings.AudioOutputDeviceId);
+        var outputFailed=false;
+        try { SimpleAudioPlayer.Initialize(SettingsManager.Settings.AudioOutputDeviceId); }
+        catch(Exception error) when (error is not OutOfMemoryException)
+        {
+            outputFailed=true;
+            Program.Log("DESKTOP_OUTPUT_INIT_FAILED",new {type=error.GetType().Name});
+        }
         var composition = new AvaloniaAppServiceProvider();
         var owned = composition.CreateOfflineWindowRoot(NullLoggerFactory.Instance, Dispatcher.UIThread);
         var root = owned.Value;
@@ -125,6 +131,7 @@ public sealed class App : Application
             if (root.SystemMediaSessionService is KugouAvaloniaPlayer.Services.SystemMediaSession.SystemMediaSessionService media)
                 Program.Log("DESKTOP_SMTC", new { active = media.HasTransportControls });
             initialization = InitializeAsync();
+            if(outputFailed)shell.Player.Notify("无法播放，请检查音频输出设备");
             window.R2View?.RestoreDesktopLyrics();
         };
         window.Closing += async (_, args) =>
