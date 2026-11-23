@@ -165,11 +165,23 @@
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
   </Style>
+  <Style Selector="Button.heart"><Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.heart /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+  <Style Selector="Button.heart:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+  <Style Selector="Button.heart:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
   <Style Selector="Button.heart Path"><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="Fill" Value="Transparent"/>
     <Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
   </Style>
-  <Style Selector="Button.heart:pointerover Path"><Setter Property="Stroke" Value="{DynamicResource R2Pink}"/></Style>
+  <Style Selector="Button.heart:pointerover Path"><Setter Property="Stroke" Value="{DynamicResource R2Pink}"/><Setter Property="RenderTransform" Value="scale(1.1)"/></Style>
   <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/></Style>
   <Style Selector="Button.heart:pressed Path"><Setter Property="RenderTransform" Value="scale(1.24)"/></Style>
   <Style Selector="Border.song-current"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>

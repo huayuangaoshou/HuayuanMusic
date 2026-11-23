@@ -78,7 +78,7 @@ public sealed partial class PreviewWindow:Window {
    ])
   };
   foreach(var p in platforms.Values) if(p.Accounts.Count>0)chosenAccount[p.Key]=p.Accounts[0].Key;
-  Title="HuayuanMusic · 花苑音乐";
+  Title="HuayuanMusic";
   Width=1440;Height=960;MinWidth=980;MinHeight=720;
   Icon=new WindowIcon(Avalonia.Platform.AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/app.ico")));
   WindowStartupLocation=WindowStartupLocation.CenterScreen;

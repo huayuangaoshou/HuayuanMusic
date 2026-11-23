@@ -14,7 +14,7 @@
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="7,0">
           <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
-          <TextBlock Text="HuayuanMusic · 花苑音乐" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Text="HuayuanMusic" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
           <TextBlock Text="工作空间" Classes="muted" FontSize="11" Margin="10,2,0,4"/>
@@ -98,7 +98,7 @@
               <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="19" Padding="1" BoxShadow="{DynamicResource GlassLift}">
                 <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Margin="0,6,0,0">
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9" Margin="0,6,0,0">
                 <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="28" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
                 <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
