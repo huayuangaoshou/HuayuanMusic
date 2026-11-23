@@ -162,8 +162,8 @@
                   </LinearGradientBrush>
                 </Grid.OpacityMask>
                 <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="28" TranslationFontSize="17" ActiveAnchorRatio="0.44"
-                                  PrimaryForeground="{DynamicResource LyricIdle}" PrimaryPlayedForeground="{DynamicResource LyricActive}"
-                                  TranslationForeground="{DynamicResource TranslationIdle}" TranslationPlayedForeground="{DynamicResource TranslationActive}"
+                                  PrimaryForeground="{DynamicResource FullLyricIdle}" PrimaryPlayedForeground="{DynamicResource FullLyricSung}"
+                                  TranslationForeground="{DynamicResource FullLyricTranslation}" TranslationPlayedForeground="{DynamicResource FullLyricSung}"
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" UseLightweightScrollAnimation="True"
                                   SeekOnLineTap="True" AutomationProperties.Name="同步歌词"/>
                 <TextBlock Name="LyricEmpty" Classes="muted" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>

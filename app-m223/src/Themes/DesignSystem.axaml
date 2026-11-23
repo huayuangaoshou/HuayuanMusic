@@ -17,6 +17,13 @@
       <LinearGradientBrush x:Key="R2BrandGradient" StartPoint="0%,0%" EndPoint="100%,0%">
         <GradientStop Color="#FF6FA5" Offset="0"/><GradientStop Color="#4A9BFF" Offset="1"/>
       </LinearGradientBrush>
+      <SolidColorBrush x:Key="FullLyricIdle" Color="#DADFFF"/>
+      <SolidColorBrush x:Key="FullLyricTranslation" Color="#E7EEFF"/>
+      <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
+        <GradientStop Color="#FFE7F2" Offset="0"/>
+        <GradientStop Color="#FF9EC8" Offset="0.55"/>
+        <GradientStop Color="#A5CDFF" Offset="1"/>
+      </LinearGradientBrush>
       <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
@@ -54,7 +61,7 @@
           <SolidColorBrush x:Key="R2Tint" Color="#FCECF5"/>
           <SolidColorBrush x:Key="R2RedInk" Color="#AD3373"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#BDFEF2FB" Offset="0"/><GradientStop Color="#C5EDF7FF" Offset="0.61"/><GradientStop Color="#EBFFFFFF" Offset="1"/>
+            <GradientStop Color="#70101C32" Offset="0"/><GradientStop Color="#9C101C32" Offset="0.61"/><GradientStop Color="#C00B1224" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
@@ -92,7 +99,7 @@
           <SolidColorBrush x:Key="R2Tint" Color="#382942"/>
           <SolidColorBrush x:Key="R2RedInk" Color="#FFA0C2"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#9F271C37" Offset="0"/><GradientStop Color="#A115243C" Offset="0.55"/><GradientStop Color="#DE111622" Offset="1"/>
+            <GradientStop Color="#72080D18" Offset="0"/><GradientStop Color="#A0080D18" Offset="0.55"/><GradientStop Color="#D90A101C" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
