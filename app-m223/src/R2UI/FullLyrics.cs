@@ -164,15 +164,26 @@ public partial class R2ShellView
     }
 
     private void ToggleDesktopLyrics(object? sender, RoutedEventArgs args)
+        => ToggleDesktopLyricsFromHost();
+
+    internal void ToggleDesktopLyricsFromHost()
     {
         CancelSuggestions();
         if (desktopLyrics != null) desktopLyrics.Close();
         else OpenDesktopLyrics();
     }
 
+    internal void UnlockDesktopLyricsFromHost() => desktopLyrics?.SetLocked(false);
+
+    internal void ResetDesktopLyricsFromHost()
+    {
+        if(desktopLyrics!=null)desktopLyrics.ResetAppearance();
+        else QueueLyricPreferences(new DesktopLyricOptions());
+    }
+
     private void OpenDesktopLyrics()
     {
-        if (desktopLyrics != null || model == null || Window is not { IsVisible: true } owner) return;
+        if (desktopLyrics != null || model == null || Window is not { } owner) return;
         var lyrics = new DesktopLyricWindow(owner, model.Player, DesktopPreferences.DesktopLyrics);
         desktopLyrics = lyrics;
         lyrics.LockChanged += UpdateDesktopLyricButtons;

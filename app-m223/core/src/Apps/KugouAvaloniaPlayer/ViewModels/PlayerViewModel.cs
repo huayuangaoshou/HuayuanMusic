@@ -329,6 +329,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
 
             IsLiked = _favoriteService.IsLiked(song);
 
+            await _player.FadeOutAsync();
             StopAndReset();
 
             StartLyricsLoad(song, sourceInfo.IsLocal);
@@ -444,6 +445,12 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
 
     private void HandlePlayError(SongItem song, int requestVersion, string failureStage, string detail)
     {
+        if(UseDesktopUnavailableHandling)
+        {
+            DesktopSourceUnavailable?.Invoke(song);
+            if(!_player.IsPlaying)StopAndReset();
+            return;
+        }
         if(KugouAvaloniaPlayer.Services.Startup.OfflineStartupProfile.Active)
         {
             _logger.LogWarning("受控本地播放失败，保留队列: {FailureStage}. Detail={Detail}",failureStage,detail);
@@ -525,7 +532,7 @@ public partial class PlayerViewModel : ViewModelBase, IPlaybackCommands, IDispos
         await PlaySongAsync(song, contextList);
     }
 
-    void IPlaybackCommands.TogglePlayPause() => TogglePlayPause();
+    void IPlaybackCommands.TogglePlayPause() => _ = TogglePlayPause();
 
     async Task IPlaybackCommands.PlayPreviousAsync(
         bool preservePlaybackState,

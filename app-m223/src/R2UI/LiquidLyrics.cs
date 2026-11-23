@@ -12,18 +12,19 @@ namespace HuayuanPreview.R2;
 
 public partial class R2ShellView
 {
-    private bool showTranslation = true;
+    private bool showTranslation = DesktopPreferences.Behavior.Translation;
     private bool commentsOpen;
     private string? commentTrack;
     private CancellationTokenSource? commentRequest;
     private int nextCommentPage;
     private readonly HashSet<long> shownComments = [];
 
-    private void ToggleTranslation(object? sender, RoutedEventArgs args)
+    private async void ToggleTranslation(object? sender, RoutedEventArgs args)
     {
         showTranslation = !showTranslation;
         TranslationToggle.Classes.Set("selected", showTranslation);
         FullLyricView.ShowTranslation = showTranslation;
+        await PersistPreferenceAsync(options => options with { Translation = showTranslation });
     }
 
     private void InstallLyricsMenu()
@@ -163,7 +164,7 @@ public partial class R2ShellView
             MoreComments.Content = "加载更多评论";
             MoreComments.IsVisible = data.More;
             nextCommentPage = data.More ? page + 1 : -1;
-            Program.Log("R2_DESKTOP_COMMENTS", new { page, total = data.Total, hot = data.Hot.Length, latest = data.Latest.Length, data.PlatformHot });
+            Program.Log("R2_DESKTOP_COMMENTS", new { page, total = data.Total, hot = data.Hot.Length, latest = data.Latest.Length, data.PlatformHot, data.Source });
         }
         catch (OperationCanceledException) { }
         catch (Exception error)

@@ -34,7 +34,7 @@ public sealed partial class PreviewWindow {
  {
   R2Model = new ShellModel(adapter);
   R2View = new R2ShellView { DataContext = R2Model };
-  RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Light;
+  RequestedThemeVariant = R2.DesktopPreferences.Behavior.Dark ? Avalonia.Styling.ThemeVariant.Dark : Avalonia.Styling.ThemeVariant.Light;
   ExtendClientAreaToDecorationsHint = true;
   ExtendClientAreaTitleBarHeightHint = 0;
   WindowDecorations = WindowDecorations.None;

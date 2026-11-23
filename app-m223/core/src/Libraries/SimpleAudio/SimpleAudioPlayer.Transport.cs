@@ -126,11 +126,14 @@ public partial class SimpleAudioPlayer : IDisposable
         lock (BassDeviceGate)
         {
             if (Stream == 0 || _cutoff != null) return;
+            var fade = DesktopMicroFade && !IsPlaying;
+            if (fade) Bass.ChannelSetAttribute(Stream,ChannelAttribute.Volume,0);
             if (!Bass.ChannelPlay(Stream))
             {
                 LastErrorDetail = $"BASS ChannelPlay 失败: error={Bass.LastError}";
                 Console.WriteLine($"[Play Error] {Bass.LastError}");
             }
+            else if (fade) Bass.ChannelSlideAttribute(Stream,ChannelAttribute.Volume,EffectiveVolume(),65);
         }
     }
 
@@ -140,6 +143,20 @@ public partial class SimpleAudioPlayer : IDisposable
         {
             Bass.ChannelPause(Stream);
         }
+    }
+
+    public static bool DesktopMicroFade { get; set; }
+
+    internal async Task FadeOutAsync()
+    {
+        int stream;
+        lock(BassDeviceGate)
+        {
+            stream=Stream;
+            if(!DesktopMicroFade || stream==0 || !IsPlaying ||
+               !Bass.ChannelSlideAttribute(stream,ChannelAttribute.Volume,0,65))return;
+        }
+        await Task.Delay(65);
     }
 
     public void Stop()
@@ -325,8 +342,11 @@ public partial class SimpleAudioPlayer : IDisposable
 
     private void UpdateActualVolume()
     {
-        if (Stream != 0)
-        {
+        if (Stream != 0) Bass.ChannelSetAttribute(Stream, ChannelAttribute.Volume, EffectiveVolume());
+    }
+
+    private float EffectiveVolume()
+    {
             var hasSpatialFx = StereoWidth > 0.001f || ReverbAmount > 0.001f || ChorusMix > 0.001f || EchoMix > 0.001f;
             var toneHeadroom = TransitionToneDepth > 0.001f ? 0.9f : 1.0f;
             var headroom = hasSpatialFx || CurrentEq.Any(g => g > 3f) ? 0.8f : 1.0f;
@@ -335,8 +355,7 @@ public partial class SimpleAudioPlayer : IDisposable
             // The composite gain can exceed 1.0 (normalization x transition x user volume). Digital
             // amplification past full scale clips at the DAC, and the volume attribute applies after
             // the output limiter, so clamp it to 1.0 to keep the limiter effective.
-            Bass.ChannelSetAttribute(Stream, ChannelAttribute.Volume, Math.Clamp(actualVolume, 0f, 1f));
-        }
+            return Math.Clamp(actualVolume, 0f, 1f);
     }
 
     private void ApplyPlaybackSpeed()

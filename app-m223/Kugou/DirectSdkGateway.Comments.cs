@@ -1,3 +1,8 @@
+using System.Net;
+using KuGou.Net.Infrastructure.Http;
+using KuGou.Net.Infrastructure.Http.Handlers;
+using KuGou.Net.Protocol.Raw;
+using KuGou.Net.Protocol.Session;
 using System.Text.Json;
 using KuGou.Net.Abstractions.Models;
 using KuGou.Net.Clients;
@@ -5,7 +10,7 @@ using KuGou.Net.Clients;
 namespace HuayuanMusic.Provider.Kugou;
 
 public sealed record DesktopComment(long Id, string Author, string Time, string Body, string? Avatar, int Likes);
-public sealed record DesktopCommentPage(DesktopComment[] Hot, DesktopComment[] Latest, int Total, bool More, bool PlatformHot);
+public sealed record DesktopCommentPage(DesktopComment[] Hot, DesktopComment[] Latest, int Total, bool More, bool PlatformHot, string Source);
 
 public sealed partial class DirectSdkGateway
 {
@@ -24,39 +29,58 @@ public sealed partial class DirectSdkGateway
                 catalog[trackId] = track with { AlbumAudioId = mixId };
             }
 
-            const int pageSize = 20;
-            var raw = await sdk.Comments.GetMusicCommentsRawAsync(Number(mixId), page, pageSize).ConfigureAwait(false);
-            var response = CommentClient.ParseMusicComments(raw);
-            if (response == null) return null;
-            if (response.Status.HasValue && response.Status != 1)
-                throw new InvalidDataException("酷狗评论查询未成功");
-            var latest = ConvertComments(response.Comments ?? []);
-            DesktopComment[] hot = [];
-            if (page == 1)
+            using var publicHttp = new HttpClient(new KgSignatureHandler(new KgSessionManager(new CookieContainer()))
             {
-                hot = ReadHot(raw);
-                var categories = response.ClassifyList ?? [];
-                var category = categories.FirstOrDefault(item => item.Label.Contains("热评") || item.Label.Contains("精彩"))
-                    ?? categories.FirstOrDefault();
-                if (hot.Length == 0 && latest.Length > 0 && category != null)
-                {
-                    try
-                    {
-                        var sorted = await sdk.Comments.GetMusicCommentClassifyAsync(Number(mixId), Number(category.Id), pageSize: 8, sort: 2)
-                            .ConfigureAwait(false);
-                        var popular = CommentClient.ParseMusicComments(sorted);
-                        if (popular?.Status == 1) hot = ConvertComments(popular.Comments ?? []);
-                    }
-                    catch (Exception error) when (error is HttpRequestException or JsonException && !ct.IsCancellationRequested) { }
-                }
+                InnerHandler = new DesktopSdkWire(ct)
+            }) { Timeout = TimeSpan.FromSeconds(5) };
+            var main = new CommentClient(new RawCommentApi(new KgHttpTransport(publicHttp, 1)));
+            try
+            {
+                return await PullCommentsAsync(main, mixId, page, mainApp: true, ct).ConfigureAwait(false);
             }
-            bool official = hot.Length > 0;
-            if (page == 1 && !official)
-                hot = latest.Where(item => item.Likes > 0).OrderByDescending(item => item.Likes).Take(4).ToArray();
-            var total = Math.Max(response.Count, response.CombineCount);
-            var more = latest.Length > 0 && (response.MaxPage > page || total > page * pageSize);
-            return new(hot.Take(8).ToArray(), latest, total, more, official);
+            catch (Exception error) when (!ct.IsCancellationRequested &&
+                error is HttpRequestException or JsonException or InvalidDataException or TaskCanceledException)
+            {
+                return await PullCommentsAsync(sdk.Comments, mixId, page, mainApp: false, ct).ConfigureAwait(false);
+            }
         }, ct);
+
+    private static async Task<DesktopCommentPage?> PullCommentsAsync(CommentClient client, long mixId, int page, bool mainApp, CancellationToken ct)
+    {
+        const int pageSize = 20;
+        var raw = await client.GetMusicCommentsRawAsync(Number(mixId), page, pageSize, mainApp).ConfigureAwait(false);
+        var response = CommentClient.ParseMusicComments(raw);
+        if (response == null) throw new InvalidDataException("酷狗评论响应为空");
+        if (response.Status.HasValue && response.Status != 1)
+            throw new InvalidDataException("酷狗评论查询未成功");
+        var latest = ConvertComments(response.Comments ?? []);
+        DesktopComment[] hot = [];
+        if (page == 1)
+        {
+            hot = ReadHot(raw);
+            var categories = response.ClassifyList ?? [];
+            var category = categories.FirstOrDefault(item => item.Label.Contains("热评") || item.Label.Contains("精彩"))
+                ?? categories.FirstOrDefault();
+            if (hot.Length == 0 && latest.Length > 0 && category != null)
+            {
+                try
+                {
+                    var sorted = await client.GetMusicCommentClassifyAsync(Number(mixId), Number(category.Id), pageSize: 8, sort: 2, mainApp: mainApp)
+                        .ConfigureAwait(false);
+                    var popular = CommentClient.ParseMusicComments(sorted);
+                    if (popular?.Status == 1) hot = ConvertComments(popular.Comments ?? []);
+                }
+                catch (Exception error) when (error is HttpRequestException or JsonException && !ct.IsCancellationRequested) { }
+            }
+        }
+        bool official = hot.Length > 0;
+        if (page == 1 && !official)
+            hot = latest.Where(item => item.Likes > 0).OrderByDescending(item => item.Likes).Take(4).ToArray();
+        var total = Math.Max(response.Count, response.CombineCount);
+        var more = latest.Length > 0 && (response.MaxPage > page || total > page * pageSize);
+        return new(hot.Take(8).ToArray(), latest, total, more, official, mainApp ? "main" : "concept");
+    }
+
 
     private static DesktopComment[] ReadHot(JsonElement raw)
     {

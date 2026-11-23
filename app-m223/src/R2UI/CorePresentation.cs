@@ -21,6 +21,7 @@ public sealed class TrackRow:ObservableObject {
      : Owner.Host.Player.DisplayedPlayingSong is { } playing &&
        CatalogIdentity==playing.CatalogIdentity;
  public bool IsPlaying => IsCurrent && Owner.Host.Player.State.Playing;
+ public bool IsUnavailable => Owner.Host.Adapter.IsUnavailable(this);
  public bool IsFavorite => IsProviderTrack ? Owner.Host.Concept.IsDesktopFavorite(Track.Key) :
      Owner.Host.Player.State.Favorites.Contains(Track.Id);
  public string FavoriteLabel => IsFavorite ? "取消收藏" : "收藏歌曲";
@@ -56,7 +57,7 @@ public sealed class TrackRow:ObservableObject {
  NextCommand=new RelayCommand(()=>Owner.Host.Player.Next([this]));
  RemoveCommand=new RelayCommand(()=>Owner.Host.Player.Remove([this]));
  InspectCommand=new RelayCommand(()=>Owner.Host.Concept.M212InspectMember(ListId,MemberId,Track.Key));}
- public void Refresh(){OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));}
+ public void Refresh(){OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));OnPropertyChanged(nameof(IsUnavailable));}
  public void RefreshFavorite(){OnPropertyChanged(nameof(IsFavorite));OnPropertyChanged(nameof(FavoriteLabel));}
  public void RefreshAccess(){OnPropertyChanged(nameof(CanUsePlatform));RefreshFavorite();}
 }
@@ -86,6 +87,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  };
  public bool IsBuffering { get; private set; }
  internal event Action<string>? Toast;
+ internal void NotifyUnavailable() => Toast?.Invoke("当前曲目暂时没有可用音源或权限");
  public ICommand FavoriteCurrentCommand { get; }
  public ICommand CycleModeCommand { get; }
  public ICommand MuteCommand { get; }
@@ -159,9 +161,10 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   if(added.Length!=1||added[0].TrackId!=trackId)throw new InvalidOperationException("队列追加回读不符");
   return added[0].EntryId;
  }
- public void Play(TrackRow row)=>Submit("play",async()=>{DemandPlayable(row);var id=row.QueueId;if(id==Guid.Empty)id=await Admit(row);else if(DemandEntry(id).TrackId!=row.Track.Id)throw new InvalidOperationException("条目身份不匹配");await core.QueueEntryAsync("play",id);DemandResult();if(!core.State.Playing||core.State.CurrentEntryId!=id)throw new InvalidOperationException("音频未开始");});
+ public void Play(TrackRow row)=>Submit("play",async()=>{if(row.IsUnavailable){NotifyUnavailable();return;}DemandPlayable(row);var id=row.QueueId;if(id==Guid.Empty)id=await Admit(row);else if(DemandEntry(id).TrackId!=row.Track.Id)throw new InvalidOperationException("条目身份不匹配");await core.QueueEntryAsync("play",id);DemandResult();if(!core.State.Playing||core.State.CurrentEntryId!=id)throw new InvalidOperationException("音频未开始");});
  internal void PlayFromList(TrackRow row, TrackRow[] visible, bool search)
  {
+  if(row.IsUnavailable){NotifyUnavailable();return;}
   if(!Program.Desktop||host==null||row.QueueId!=Guid.Empty){Play(row);return;}
   if(search)
   {

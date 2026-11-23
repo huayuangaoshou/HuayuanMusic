@@ -303,6 +303,15 @@ public sealed partial class DirectSdkGateway
         return valid;
     }
 
+    public Task RestoreDesktopCatalogAsync(IEnumerable<CatalogTrack> entries, CancellationToken ct) => Serial(() =>
+    {
+        if (!desktop) throw new InvalidOperationException("Desktop session required");
+        DemandLogin();
+        Remember(entries.Where(entry => !catalog.ContainsKey(entry.Id)).Select(entry =>
+            Track(entry.Id, entry.Title, entry.Artist, entry.Album, entry.Seconds, entry.AlbumId, entry.AlbumAudioId, entry.Cover)));
+        return Task.FromResult(true);
+    }, ct);
+
     private static CatalogTrack Track(string? hash, string title, string artist, string album, int seconds, long albumId, long audioId, string? cover) =>
         new((hash ?? "").ToLowerInvariant(), title, artist, album, Math.Max(0, seconds), albumId, audioId, ArtworkUrl.Normalize(cover));
     private static DesktopCatalogItem Item(DesktopCatalogKind kind, string id, string title, string subtitle, string? cover) =>

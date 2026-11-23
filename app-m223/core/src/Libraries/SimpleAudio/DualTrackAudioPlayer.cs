@@ -173,6 +173,9 @@ public sealed class DualTrackAudioPlayer : IDisposable
         _fadingDeck?.Pause();
     }
 
+    public Task FadeOutAsync() => _fadingDeck is { } fading
+        ? Task.WhenAll(_activeDeck.FadeOutAsync(), fading.FadeOutAsync()) : _activeDeck.FadeOutAsync();
+
     public void Stop()
     {
         AbortCrossfade();

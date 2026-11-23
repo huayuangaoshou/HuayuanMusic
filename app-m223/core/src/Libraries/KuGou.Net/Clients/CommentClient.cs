@@ -8,8 +8,8 @@ namespace KuGou.Net.Clients;
 
 public class CommentClient(RawCommentApi rawApi)
 {
-    public Task<JsonElement> GetMusicCommentsRawAsync(string mixSongId, int page, int pageSize) =>
-        rawApi.GetMusicCommentsAsync(mixSongId, page, pageSize);
+    public Task<JsonElement> GetMusicCommentsRawAsync(string mixSongId, int page, int pageSize, bool mainApp = true) =>
+        rawApi.GetMusicCommentsAsync(mixSongId, page, pageSize, mainApp: mainApp);
 
     public static MusicCommentResponse? ParseMusicComments(JsonElement json) =>
         KgApiResponseParser.Parse<MusicCommentResponse>(json, AppJsonContext.Default.MusicCommentResponse);
@@ -69,9 +69,9 @@ public class CommentClient(RawCommentApi rawApi)
     }
 
     public Task<JsonElement> GetMusicCommentClassifyAsync(string mixSongId, string typeId, int page = 1,
-        int pageSize = 30, int sort = 1)
+        int pageSize = 30, int sort = 1, bool mainApp = true)
     {
-        return rawApi.GetMusicCommentClassifyAsync(mixSongId, typeId, page, pageSize, sort);
+        return rawApi.GetMusicCommentClassifyAsync(mixSongId, typeId, page, pageSize, sort, mainApp);
     }
 
     public Task<JsonElement> GetMusicCommentHotwordAsync(string mixSongId, string hotWord, int page = 1,

@@ -3,7 +3,9 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Platform;
 using Avalonia.Threading;
+using HuayuanPreview.R2;
 using KugouAvaloniaPlayer.Services;
 using Microsoft.Extensions.Logging.Abstractions;
 using SimpleAudio;
@@ -17,13 +19,19 @@ internal static class Program
     public static string Session = "";
     public static string[] Args = [];
     public static int Result;
+    internal static EventWaitHandle? Activation { get; private set; }
 
     [STAThread]
     public static int Main(string[] args)
     {
         using var instance = new Mutex(true, "Local\\HuayuanMusic.M223.Desktop", out bool primary);
+        using var activation = new EventWaitHandle(false, EventResetMode.AutoReset, "Local\\HuayuanMusic.M223.Wake");
         if (!primary)
+        {
+            activation.Set();
             return 0;
+        }
+        Activation = activation;
 
         Args = args;
         Session = Path.Combine(AppDataPaths.LocalRoot, "logs", Guid.NewGuid().ToString("N"));
@@ -64,6 +72,7 @@ public sealed class App : Application
             throw new InvalidOperationException("Desktop lifetime required");
 
         SettingsManager.Load();
+        SimpleAudioPlayer.DesktopMicroFade = DesktopPreferences.Behavior.MicroFade;
         SimpleAudioPlayer.Initialize(SettingsManager.Settings.AudioOutputDeviceId);
         var composition = new AvaloniaAppServiceProvider();
         var owned = composition.CreateOfflineWindowRoot(NullLoggerFactory.Instance, Dispatcher.UIThread);
@@ -75,9 +84,46 @@ public sealed class App : Application
         Task initialization = Task.CompletedTask;
         bool closing = false;
         bool closed = false;
+        bool exitRequested = false;
+        var shell = window.R2Model!;
+        var view = window.R2View!;
+        using var icon = AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/Huayuan-C31.ico"));
+        var trayMenu = new NativeMenu();
+        NativeMenuItem AddTray(string label, Action action)
+        {
+            var item = new NativeMenuItem(label);
+            item.Click += (_, _) => action();
+            trayMenu.Add(item);
+            return item;
+        }
+        var playPause = AddTray("播放", () => shell.Player.TogglePlayPauseCommand.Execute(null));
+        AddTray("上一首", () => shell.Player.PlayPreviousCommand.Execute(null));
+        AddTray("下一首", () => shell.Player.PlayNextCommand.Execute(null));
+        AddTray("显示 / 隐藏桌面歌词", view.ToggleDesktopLyricsFromHost);
+        AddTray("解锁桌面歌词", view.UnlockDesktopLyricsFromHost);
+        AddTray("打开主窗口", Reveal);
+        AddTray("彻底退出", () => { exitRequested = true; window.Close(); });
+        var tray = new TrayIcon { Icon = new WindowIcon(icon), ToolTipText = "Huayuan Music", Menu = trayMenu, IsVisible = true };
+        tray.Clicked += (_, _) => Reveal();
+        shell.Player.Updated += UpdateTray;
+        var activationRegistration = Program.Activation == null ? null :
+            ThreadPool.RegisterWaitForSingleObject(Program.Activation, (_, _) =>
+                Dispatcher.UIThread.Post(() => { if (!closing) { Reveal(); Program.Log("DESKTOP_SINGLE_INSTANCE_WAKE", new { raised = true }); } }),
+                null, Timeout.Infinite, false);
+
+        void UpdateTray() => playPause.Header = shell.Player.IsPlayingAudio ? "暂停" : "播放";
+        void Reveal()
+        {
+            if (!window.IsVisible) window.Show();
+            if (window.WindowState == WindowState.Minimized) window.WindowState = WindowState.Normal;
+            window.Activate();
+        }
 
         window.Opened += (_, _) =>
         {
+            root.SystemMediaSessionService.Initialize(window, root.Player);
+            if (root.SystemMediaSessionService is KugouAvaloniaPlayer.Services.SystemMediaSession.SystemMediaSessionService media)
+                Program.Log("DESKTOP_SMTC", new { active = media.HasTransportControls });
             initialization = InitializeAsync();
             window.R2View?.RestoreDesktopLyrics();
         };
@@ -88,6 +134,12 @@ public sealed class App : Application
             args.Cancel = true;
             if (closing)
                 return;
+            if (!exitRequested && args.CloseReason == WindowCloseReason.WindowClosing && DesktopPreferences.Behavior.TrayOnClose)
+            {
+                window.Hide();
+                Program.Log("DESKTOP_TRAY_HIDE", new { playing = shell.Player.IsPlayingAudio });
+                return;
+            }
             closing = true;
             window.IsEnabled = false;
             try
@@ -99,6 +151,9 @@ public sealed class App : Application
                 await window.R2Model.Concept.Pending;
                 await window.R2Model.Player.Pending;
                 await window.R2Model.LocalWorkspace.PendingFolderWork;
+                await shell.DlcPending;
+                adapter.DesktopQueueTracking=false;
+                await adapter.SaveDesktopQueueAsync();
                 await window.R2Model.Concept.CloseDesktopConnectionAsync();
             }
             catch (Exception error)
@@ -114,6 +169,9 @@ public sealed class App : Application
         };
         desktop.Exit += (_, _) =>
         {
+            activationRegistration?.Unregister(null);
+            shell.Player.Updated -= UpdateTray;
+            tray.Dispose();
             try
             {
                 adapter.Dispose();
@@ -134,8 +192,13 @@ public sealed class App : Application
             {
                 await adapter.InitializeAsync();
                 Program.Log("DESKTOP_R2_READY", new { singleCore = true, tracks = adapter.State.Tracks.Length });
-                if (!closing)
+                if (!closing && shell.KugouEnabled)
                     await window.R2Model!.Concept.RestoreDesktopConnectionAsync();
+                if (!closing)
+                {
+                    await adapter.RestoreDesktopQueueAsync(shell.Concept);
+                    adapter.StartDesktopQueueTracking();
+                }
             }
             catch (Exception error)
             {

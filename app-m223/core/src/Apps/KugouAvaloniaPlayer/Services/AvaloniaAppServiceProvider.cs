@@ -149,7 +149,8 @@ internal readonly record struct OfflineInfrastructureRoot(
     LyricsService Lyrics, PlaybackQueueCacheService QueueCache, KuGou.Net.Clients.UserClient UserClient, IKgTransport Transport);
 
 internal readonly record struct OfflineWindowRoot(OfflinePlayerViewModel ViewModel, PlayerViewModel Player,
-    IPlaybackCoordinator Coordinator, PlaybackQueueManager Queue, ILocalMusicLibraryService Library);
+    IPlaybackCoordinator Coordinator, PlaybackQueueManager Queue, ILocalMusicLibraryService Library,
+    ISystemMediaSessionService SystemMediaSessionService);
 
 internal readonly record struct DesktopAppRoot(
     MainWindowViewModel MainWindowViewModel,

@@ -6,12 +6,14 @@ using KugouAvaloniaPlayer.ViewModels;
 namespace HuayuanPreview;
 
 internal sealed partial class CorePlaybackAdapter {
- internal readonly KugouProvider Kugou=Program.Desktop ? new() : new(_=>new FixtureSdkGateway(new FixtureKgTransport()));
+ internal KugouProvider Kugou {get;private set;}=Program.Desktop ? new() : new(_=>new FixtureSdkGateway(new FixtureKgTransport()));
+ private bool kugouMounted;
  readonly Dictionary<int,string> providerArtworkAccounts=new();
  internal string ProviderArtworkAccount(int id)=>providerArtworkAccounts.GetValueOrDefault(id,"none");
  readonly Dictionary<int,string> providerTrackKeys=new();
  readonly List<string> providerSources=new();int providerId=1_000_000;
- internal void InitializeKugou(){TrustedModuleDescriptor.Current.Validate(1);Providers.Mount(Kugou);Kugou.Revoked+=ProviderRevoked;}
+ internal void InitializeKugou(){if(!Program.Desktop||R2.DesktopPreferences.Behavior.Kugou!=R2.DesktopDlcState.Removed)MountKugou();}
+ private void MountKugou(){TrustedModuleDescriptor.Current.Validate(1);Providers.Mount(Kugou);Kugou.Revoked+=ProviderRevoked;kugouMounted=true;}
  void ProviderRevoked(){
   // Called by UI-thread lifecycle operations. Local playback is never stopped by provider disable.
   if(P2AWorkspace.M223Normal){
@@ -135,8 +137,14 @@ internal sealed partial class CorePlaybackAdapter {
   return id;
  }
  void RebuildTrackSnapshot()=>trackSnapshot=items.Select(x=>new CoreTrack(x.Key,x.Value.LocalSourceType=="ProviderStream"?providerTrackKeys.GetValueOrDefault(x.Key,"kugou-concept:"+x.Key):LocalMusicRecordStore.Key(x.Value),x.Value.DisplayTitle,x.Value.Singer,x.Value.AlbumName,x.Value.DurationSeconds,x.Value.Cover)).ToArray();
- internal void EnableKugou(){Providers.Enable(KugouProvider.Identity);Kugou.Enable();}
- internal void RemoveKugou(){Providers.Unmount(KugouProvider.Identity);}
+ internal void EnableKugou(){if(!kugouMounted)MountKugou();Providers.Enable(KugouProvider.Identity);Kugou.Enable();}
+ internal void RemoveKugou()
+ {
+  if(!kugouMounted)return;
+  Providers.Unmount(KugouProvider.Identity);
+  kugouMounted=false;
+  if(Program.Desktop){Kugou.Revoked-=ProviderRevoked;Kugou=new();}
+ }
  internal void EnableProviderLoadTrace(bool enableSeamless){
   root.Player.IsSeamlessTransitionEnabled=enableSeamless;
   if(root.Coordinator is PlaybackCoordinator coordinator)

@@ -8,7 +8,7 @@ namespace KuGou.Net.Protocol.Raw;
 public class RawCommentApi(IKgTransport transport)
 {
     public Task<JsonElement> GetMusicCommentsAsync(string mixSongId, int page = 1, int pageSize = 30,
-        int showClassify = 1, int showHotwordList = 1)
+        int showClassify = 1, int showHotwordList = 1, bool mainApp = true)
     {
         return SendCommentListAsync("/mcomment/v1/cmtlist", new Dictionary<string, string>
         {
@@ -20,7 +20,7 @@ public class RawCommentApi(IKgTransport transport)
             ["show_hotword_list"] = showHotwordList.ToString(),
             ["extdata"] = "0",
             ["code"] = "fc4be23b4e972707f36b8a828a93ba8a"
-        });
+        }, mainApp);
     }
 
     public Task<JsonElement> GetPlaylistCommentsAsync(string id, int page = 1, int pageSize = 30,
@@ -133,13 +133,13 @@ public class RawCommentApi(IKgTransport transport)
     }
 
     public Task<JsonElement> GetMusicCommentClassifyAsync(string mixSongId, string typeId, int page = 1,
-        int pageSize = 30, int sort = 1)
+        int pageSize = 30, int sort = 1, bool mainApp = true)
     {
         return transport.SendAsync(new KgRequest
         {
             Method = HttpMethod.Post,
             Path = "/mcomment/v1/cmt_classify_list",
-            Params = UseOfficialApp(new Dictionary<string, string>
+            Params = ClientParameters(new Dictionary<string, string>
             {
                 ["mixsongid"] = mixSongId,
                 ["need_show_image"] = "1",
@@ -149,8 +149,8 @@ public class RawCommentApi(IKgTransport transport)
                 ["extdata"] = "0",
                 ["code"] = "fc4be23b4e972707f36b8a828a93ba8a",
                 ["sort_method"] = sort == 2 ? "2" : "1"
-            }),
-            SignatureType = SignatureType.OfficialAndroid
+            }, mainApp),
+            SignatureType = mainApp ? SignatureType.OfficialAndroid : SignatureType.Default
         });
     }
 
@@ -175,16 +175,19 @@ public class RawCommentApi(IKgTransport transport)
         });
     }
 
-    private Task<JsonElement> SendCommentListAsync(string path, Dictionary<string, string> parameters)
+    private Task<JsonElement> SendCommentListAsync(string path, Dictionary<string, string> parameters, bool mainApp = true)
     {
         return transport.SendAsync(new KgRequest
         {
             Method = HttpMethod.Post,
             Path = path,
-            Params = UseOfficialApp(parameters),
-            SignatureType = SignatureType.OfficialAndroid
+            Params = ClientParameters(parameters, mainApp),
+            SignatureType = mainApp ? SignatureType.OfficialAndroid : SignatureType.Default
         });
     }
+
+    private static Dictionary<string, string> ClientParameters(Dictionary<string, string> parameters, bool mainApp) =>
+        mainApp ? UseOfficialApp(parameters) : parameters;
 
     private static Dictionary<string, string> UseOfficialApp(Dictionary<string, string> parameters)
     {

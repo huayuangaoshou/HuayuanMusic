@@ -23,6 +23,10 @@ public sealed class SystemMediaSessionService(
     IHttpClientFactory httpClientFactory,
     ILogger<SystemMediaSessionService> logger) : ISystemMediaSessionService
 {
+    private static readonly HttpClient PublicArtwork = new(new SocketsHttpHandler
+    {
+        UseCookies = false, AllowAutoRedirect = false
+    }) { Timeout = TimeSpan.FromSeconds(8) };
     private const string DefaultWindowTitle = "Huayuan Music (P1)";
     private static readonly TimeSpan TimelineUpdateInterval = TimeSpan.FromMilliseconds(750);
     private readonly string _artworkCacheDirectory = Path.Combine(
@@ -37,6 +41,7 @@ public sealed class SystemMediaSessionService(
     private bool _isInitialized;
 
     public bool IsSupported => true;
+    public bool HasTransportControls => _transportControls != null;
 
     public void Initialize(Window mainWindow, PlayerViewModel playerViewModel)
     {
@@ -202,7 +207,7 @@ public sealed class SystemMediaSessionService(
     private void UpdateWindowTitle(SongItem? song)
     {
         var window = _mainWindow;
-        if (window == null)
+        if (window == null || window.Title?.StartsWith("HuayuanMusic · M2-23",StringComparison.Ordinal)==true)
             return;
 
         var title = BuildWindowTitle(song);
@@ -260,11 +265,16 @@ public sealed class SystemMediaSessionService(
 
         try
         {
-            using var response = await httpClientFactory.CreateClient().GetAsync(
+            var desktop = _mainWindow?.Title?.StartsWith("HuayuanMusic · M2-23",StringComparison.Ordinal)==true;
+            if (desktop && (!uri.IsDefaultPort || uri.UserInfo.Length!=0 || !(uri.IdnHost.EndsWith(".kugou.com",StringComparison.OrdinalIgnoreCase) ||
+                uri.IdnHost.EndsWith(".kugoucdn.com",StringComparison.OrdinalIgnoreCase))))
+                return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
+            using var response = await (desktop ? PublicArtwork : httpClientFactory.CreateClient()).GetAsync(
                 uri,
                 HttpCompletionOption.ResponseHeadersRead);
             if (!response.IsSuccessStatusCode)
                 return await CopyAssetArtworkAsync("avares://HuayuanMusic.P1/Assets/default_song.webp");
+            if (desktop) await response.Content.LoadIntoBufferAsync(4*1024*1024);
 
             var contentExtension = GetArtworkExtension(response.Content.Headers.ContentType?.MediaType);
             if (!string.Equals(contentExtension, Path.GetExtension(cachePath), StringComparison.OrdinalIgnoreCase))

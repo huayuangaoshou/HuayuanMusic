@@ -20,6 +20,36 @@ public partial class PlayerViewModel {
  }
  internal string? ControlledQueueReadError=>_queueCacheService.LastReadError;
  internal IReadOnlyList<SongItem> OriginalControlledQueue=>_queueManager.OriginalQueue;
+ internal bool UseDesktopUnavailableHandling { get; set; }
+ internal event Action<SongItem>? DesktopSourceUnavailable;
+ private bool desktopAutomaticStep;
+ internal Func<SongItem,bool>? DesktopCanPlayAutomatically { get; set; }
+ internal async Task PlayDesktopNextAvailableAsync()
+ {
+  if(desktopAutomaticStep)return;
+  desktopAutomaticStep=true;
+  try
+  {
+   var candidate=CurrentPlayingSong;
+   var seen=new HashSet<Guid>();
+   int attempts=0;
+   while(_queueManager.GetNext(candidate) is { } next && seen.Add(next.QueueEntryId) && attempts<32)
+   {
+    candidate=next;
+    if(DesktopCanPlayAutomatically?.Invoke(next)==false)continue;
+    attempts++;
+    await PlayControlledQueueEntryAsync(next);
+    if(_player.IsPlaying&&Equals(CurrentPlayingSong,next))return;
+   }
+   StopAndReset();
+  }
+  finally{desktopAutomaticStep=false;}
+ }
+ internal void RestoreDesktopQueue(IReadOnlyList<SongItem> visible,IReadOnlyList<SongItem> original,Guid selection,Models.PlayMode mode)
+ {
+  _queueManager.RestoreExact(visible,original,mode);
+  SelectQueueSongWithoutAudio(visible.FirstOrDefault(song=>song.QueueEntryId==selection)??visible.FirstOrDefault());
+ }
  internal void PrioritizeControlledQueueEntry(SongItem song)
  {
   _queueManager.AddToNext(song,CurrentPlayingSong);

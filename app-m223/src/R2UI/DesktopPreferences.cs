@@ -4,6 +4,10 @@ using KugouAvaloniaPlayer.Services;
 namespace HuayuanPreview.R2;
 
 internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = 30);
+internal enum DesktopDlcState { Enabled, Disabled, Removed }
+internal sealed record DesktopOptions(bool TrayOnClose = true, bool RestoreQueue = true, bool Dark = false,
+    bool MicroFade = true, bool Translation = true, DesktopDlcState Kugou = DesktopDlcState.Enabled,
+    float PreMuteVolume = 0.8f);
 
 internal static class DesktopPreferences
 {
@@ -13,6 +17,9 @@ internal static class DesktopPreferences
     internal static string Quality { get { lock (Gate) return Current.Quality; } }
     internal static string[] Recent { get { lock (Gate) return Current.Recent.ToArray(); } }
     internal static DesktopLyricOptions DesktopLyrics { get { lock (Gate) return Current.Lyrics ?? new(); } }
+    internal static DesktopOptions Behavior { get { lock (Gate) return Current.Behavior ?? new(); } }
+    internal static Task SetBehaviorAsync(Func<DesktopOptions, DesktopOptions> change) =>
+        UpdateAsync(options => options with { Behavior = change(options.Behavior ?? new()) });
     internal static Task SetDesktopLyricsAsync(DesktopLyricOptions options) =>
         UpdateAsync(current => current with { Lyrics = options });
 
@@ -50,5 +57,5 @@ internal static class DesktopPreferences
         catch (Exception e) when (e is IOException or UnauthorizedAccessException or JsonException) { }
         return new("standard", []);
     }
-    private sealed record Options(string Quality, string[] Recent, DesktopLyricOptions? Lyrics = null);
+    private sealed record Options(string Quality, string[] Recent, DesktopLyricOptions? Lyrics = null, DesktopOptions? Behavior = null);
 }

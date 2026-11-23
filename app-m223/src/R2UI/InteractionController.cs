@@ -36,6 +36,11 @@ public sealed class InteractionController:ObservableObject {
     Add(selected.Length==1&&row.IsFavorite?"取消红心":"收藏 / 红心",()=>player.Favorite(selected));
     Add("追加到播放队列",()=>player.Append(selected));
    }
+   if (row.IsProviderTrack && owner.Host.KugouEnabled)
+   {
+    Add("查看歌手",()=>_ = owner.Host.ShowTrackCollectionAsync(row,true),!string.IsNullOrWhiteSpace(row.Singer));
+    Add("查看专辑",()=>_ = owner.Host.ShowTrackCollectionAsync(row,false),!string.IsNullOrWhiteSpace(row.AlbumName));
+   }
    void Copy(string label,string text) => menu.Items.Add(new MenuItem
    { Header=label, IsEnabled=!string.IsNullOrWhiteSpace(text), Command=new AsyncRelayCommand(()=>R2ShellView.CopyTextAsync(list,text)) });
    Copy("复制歌名",row.Name);

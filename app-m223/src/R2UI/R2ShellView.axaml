@@ -19,12 +19,15 @@
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
           <TextBlock Text="工作空间" Classes="muted" FontSize="11" Margin="10,2,0,4"/>
           <Button Classes="nav" Classes.selected="{Binding Workspace.Local}" Command="{Binding SwitchLocalCommand}" AutomationProperties.Name="切换本地工作空间">本地音乐</Button>
-          <Button Classes="nav" Classes.selected="{Binding Workspace.IsKugou}" Command="{Binding SwitchKugouCommand}" AutomationProperties.Name="切换概念版工作空间">酷狗概念版</Button>
+          <Button Classes="nav" Classes.selected="{Binding Workspace.IsKugou}" IsVisible="{Binding KugouEnabled}" Command="{Binding SwitchKugouCommand}" AutomationProperties.Name="切换概念版工作空间">酷狗概念版</Button>
         </StackPanel>
         <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled">
           <ContentControl Content="{Binding Workspace.Navigation}"/>
         </ScrollViewer>
-        <Button Grid.Row="3" Classes="nav" Margin="0,7" Click="OpenPluginCenter">DLC 插件中心</Button>
+        <StackPanel Grid.Row="3" Margin="0,3">
+          <Button Classes="nav" Click="OpenSettings">设置</Button>
+          <Button Classes="nav" Click="OpenPluginCenter">DLC 插件中心</Button>
+        </StackPanel>
       </Grid>
     </Border>
     <Grid Grid.Column="1" RowDefinitions="58,*">
@@ -47,7 +50,7 @@
             </Border>
           </Popup>
           <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
-          <Button Grid.Column="4" Name="AccountButton" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="酷狗账号状态">
+          <Button Grid.Column="4" Name="AccountButton" IsVisible="{Binding KugouEnabled}" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="酷狗账号状态">
             <StackPanel Orientation="Horizontal" Spacing="7">
               <ContentControl Content="{Binding AccountAvatar}" Width="24" Height="24" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding AccountLabel}" VerticalAlignment="Center"/>
@@ -93,7 +96,7 @@
                 <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Margin="0,6,0,0">
-                <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="28" FontWeight="Bold" MaxWidth="320" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+                <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="28" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center"/>
                 <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
               </StackPanel>
               <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
@@ -105,12 +108,16 @@
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9">
                 <Button Classes="glass-pill" Content="{Binding Player.ModeLabel}" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="播放模式"/>
                 <Button Command="{Binding Player.PlayPreviousCommand}" AutomationProperties.Name="上一首"><PathIcon Width="14" Height="14" Data="M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"/></Button>
-                <Button Classes="primary" Width="53" Height="53" Command="{Binding Player.TogglePlayPauseCommand}" AutomationProperties.Name="播放或暂停">
+                <Grid Width="53" Height="53">
+                  <Button Classes="primary" Width="53" Height="53" Command="{Binding Player.TogglePlayPauseCommand}" AutomationProperties.Name="播放或暂停">
                   <Grid Width="18" Height="18">
                     <PathIcon Foreground="#142540" Data="M4,2 L16,9 L4,16 Z" IsVisible="{Binding !Player.IsPlayingAudio}"/>
                     <PathIcon Foreground="#142540" Data="M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z" IsVisible="{Binding Player.IsPlayingAudio}"/>
                   </Grid>
                 </Button>
+                  <Border Classes="buffer-ring" IsVisible="{Binding Player.IsBuffering}" IsHitTestVisible="False" Margin="-3" BorderThickness="1.5"
+                          CornerRadius="40" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
+                </Grid>
                 <Button Command="{Binding Player.PlayNextCommand}" AutomationProperties.Name="下一首"><PathIcon Width="14" Height="14" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
               </StackPanel>
               <Border Classes="glass" CornerRadius="25" HorizontalAlignment="Center" Padding="7,3">
@@ -199,26 +206,30 @@
     <Border Name="MainDock" Grid.Row="1" Grid.ColumnSpan="2" Classes="glass dock" Margin="11,3,11,11">
       <Grid RowDefinitions="16,*">
         <local:CommitSlider Name="DesktopProgress" Classes="progress" Margin="19,-7,19,0" AutomationProperties.Name="播放进度"/>
-        <Grid Grid.Row="1" ColumnDefinitions="*,Auto,*" ColumnSpacing="14" Margin="18,0,18,8">
-          <Grid ColumnDefinitions="48,*" ColumnSpacing="10" VerticalAlignment="Center">
+        <Grid Grid.Row="1" ColumnDefinitions="*,276,332" ColumnSpacing="10" Margin="18,0,18,8" ClipToBounds="True">
+          <Grid ColumnDefinitions="48,*" ColumnSpacing="10" VerticalAlignment="Center" ClipToBounds="True" MaxWidth="390" HorizontalAlignment="Stretch">
             <Button Padding="0" CornerRadius="9" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
               <r2:TrackArtwork DisplaySize="48" DataContext="{Binding Player.DisplayedPlayingSong}"/>
             </Button>
             <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-              <TextBlock Text="{Binding Player.NowPlayingTitle}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
-              <TextBlock Text="{Binding Player.DisplayedPlayingSong.Singer}" Classes="muted" FontSize="11" TextTrimming="CharacterEllipsis"/>
+              <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
+              <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="11"/>
               <TextBlock Text="{Binding Player.ProgressText}" Classes="muted" FontFamily="Consolas" FontSize="11" AutomationProperties.AutomationId="M223.Progress"/>
             </StackPanel>
           </Grid>
-          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center" HorizontalAlignment="Center">
             <Button Content="{Binding Player.ModeLabel}" Command="{Binding Player.CycleModeCommand}" ToolTip.Tip="切换播放模式"/>
             <Button Command="{Binding Player.PlayPreviousCommand}" AutomationProperties.Name="上一首"><PathIcon Width="14" Height="14" Data="M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"/></Button>
-            <Button Classes="primary" Width="43" Height="43" Command="{Binding Player.TogglePlayPauseCommand}" AutomationProperties.Name="播放或暂停">
+            <Grid Width="43" Height="43">
+                  <Button Classes="primary" Width="43" Height="43" Command="{Binding Player.TogglePlayPauseCommand}" AutomationProperties.Name="播放或暂停">
               <Grid Width="16" Height="16">
                 <PathIcon Width="15" Height="15" Foreground="White" Data="M4,2 L16,9 L4,16 Z" IsVisible="{Binding !Player.IsPlayingAudio}"/>
                 <PathIcon Width="14" Height="14" Foreground="White" Data="M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z" IsVisible="{Binding Player.IsPlayingAudio}"/>
               </Grid>
             </Button>
+                  <Border Classes="buffer-ring" IsVisible="{Binding Player.IsBuffering}" IsHitTestVisible="False" Margin="-3" BorderThickness="1.5"
+                          CornerRadius="40" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
+                </Grid>
             <Button Command="{Binding Player.PlayNextCommand}" AutomationProperties.Name="下一首"><PathIcon Width="14" Height="14" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
             <Button Content="展开歌词" Click="ShowLyrics" ToolTip.Tip="展开全屏歌词" AutomationProperties.Name="展开全屏歌词"/>
           </StackPanel>
@@ -227,7 +238,6 @@
             <ComboBox Name="QualityChoice" Width="80" Background="{DynamicResource R2Side}" Foreground="{DynamicResource R2Ink}" BorderBrush="{DynamicResource R2Edge}" AutomationProperties.Name="播放音质" ToolTip.Tip="用于下一次打开音源" SelectionChanged="ChangeQuality">
               <ComboBoxItem Content="标准"/><ComboBoxItem Content="高音质"/><ComboBoxItem Content="无损"/>
             </ComboBox>
-            <ProgressBar IsVisible="{Binding Player.IsBuffering}" IsIndeterminate="True" Width="35" Height="3" AutomationProperties.Name="正在缓冲"/>
             <Button Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量" AutomationProperties.Name="静音或恢复音量">
               <Grid Width="16" Height="16">
                 <PathIcon Data="M2,6 H6 L11,2 V18 L6,14 H2 Z M13,5 Q19,10 13,15 L12,14 Q16,10 12,6 Z" IsVisible="{Binding !Player.IsMuted}"/>

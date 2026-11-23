@@ -114,11 +114,16 @@ public partial class PlayerViewModel
         await PlaySongAsync(song);
     }
 
+    internal Task ToggleDesktopTransportAsync() => TogglePlayPause();
+
     [RelayCommand]
-    private void TogglePlayPause()
+    private async Task TogglePlayPause()
     {
         if (_player.IsPlaying)
         {
+            var request = _playRequestVersion;
+            await _player.FadeOutAsync();
+            if (request != _playRequestVersion) return;
             _player.Pause();
             IsPlayingAudio = false;
             _playbackTimer.Stop();
@@ -178,7 +183,7 @@ public partial class PlayerViewModel
         if (wasStopped)
             StopAndReset();
         else
-            TogglePlayPause();
+            await TogglePlayPause();
     }
 
     [RelayCommand]
@@ -426,6 +431,21 @@ public partial class PlayerViewModel
     private void OnPlaybackEnded()
     {
         if (_controlledAudition) return;
+        if(UseDesktopUnavailableHandling)
+        {
+            var version=_playRequestVersion;
+            Dispatcher.UIThread.Post(async () =>
+            {
+                if(version!=_playRequestVersion||_playSongLock.CurrentCount==0||!IsPlayingAudio)return;
+                if(IsRepeatOneMode&&CurrentPlayingSong is { } current && DesktopCanPlayAutomatically?.Invoke(current)!=false)
+                {
+                    await PlaySongAsync(current);
+                    if(_player.IsPlaying)return;
+                }
+                await PlayDesktopNextAvailableAsync();
+            });
+            return;
+        }
         // Offline local UI: a native EOF can be posted while an explicit load/stop owns transport.
         // Reject that stale notification; do not let it enqueue a new load into a replacement queue.
         if (StartupProfileIsControlled())

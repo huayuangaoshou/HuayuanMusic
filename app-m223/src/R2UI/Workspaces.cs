@@ -361,11 +361,7 @@ public sealed partial class WorkspaceState:ObservableObject {
  public void ShowLyrics(){if(lyricsPage!=null)Navigate(lyricsPage);}
  public void ShowPlugins()
  {
-  pluginPage??=new R2Page("DLC 插件中心",new StackPanel{Spacing=12,Children={
-   new TextBlock{Text="酷狗概念版",FontSize=20,FontWeight=FontWeight.SemiBold},
-   new TextBlock{Text="已内置 · 歌单、曲目及账号工作空间",Classes={"muted"}},
-   new Button{Content="打开酷狗概念版账号",Command=new RelayCommand(Host.ShowAccount)}
-  }});
+  pluginPage??=new R2Page("DLC 插件中心",new PluginManager(Host));
   Navigate(pluginPage);
  }
 
@@ -389,12 +385,14 @@ public sealed partial class ShellModel:ObservableObject,IDisposable {
  private bool lastPlaying;
  public void ShowAccount()
  {
+  if(!KugouEnabled)return;
   Switch(KugouConceptWorkspace);
   KugouConceptWorkspace.Navigate(KugouConceptWorkspace.Pages.Single(page=>page.DisplayName=="账号状态"));
  }
  public ICommand SwitchLocalCommand {get;}public ICommand SwitchKugouCommand {get;}
- internal ShellModel(CorePlaybackAdapter core){Adapter=core;Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Switch(LocalWorkspace);Player.Attach(this);}
+ internal ShellModel(CorePlaybackAdapter core){Adapter=core;Concept=new P2AWorkspace(core);Player=new CorePresentation(core);LocalWorkspace=new(this,true);KugouConceptWorkspace=new(this,false);SwitchLocalCommand=new RelayCommand(()=>Switch(LocalWorkspace));SwitchKugouCommand=new RelayCommand(()=>Switch(KugouConceptWorkspace));Concept.Changed+=AccountChanged;Player.Updated+=OnSnapshot;Adapter.DesktopUnavailableChanged+=RefreshUnavailable;Switch(LocalWorkspace);Player.Attach(this);}
  void AccountChanged(){OnPropertyChanged(nameof(AccountLabel));OnPropertyChanged(nameof(AccountAvatar));}
+ void RefreshUnavailable(){ LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();foreach(var row in Player.DisplayPlaybackQueue)row.Refresh();Player.NotifyUnavailable(); }
  void OnSnapshot()
  {
   LocalWorkspace.Refresh();KugouConceptWorkspace.Refresh();
@@ -403,6 +401,6 @@ public sealed partial class ShellModel:ObservableObject,IDisposable {
   LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();
   OnPropertyChanged(nameof(SourceLabel));
  }
- public void Switch(WorkspaceState next){workspace?.Save();workspace?.PauseOnlineWork();workspace=next;OnPropertyChanged(nameof(Workspace));OnPropertyChanged(nameof(WorkspaceRoot));next.Restore();}
- public void Dispose(){Concept.Changed-=AccountChanged;Player.Updated-=OnSnapshot;Player.Dispose();Concept.Dispose();PreviewAssets.Dispose();}
+ public void Switch(WorkspaceState next){if(next.IsKugou&&!KugouEnabled)return;workspace?.Save();workspace?.PauseOnlineWork();workspace=next;OnPropertyChanged(nameof(Workspace));OnPropertyChanged(nameof(WorkspaceRoot));next.Restore();}
+ public void Dispose(){Concept.Changed-=AccountChanged;Player.Updated-=OnSnapshot;Adapter.DesktopUnavailableChanged-=RefreshUnavailable;Player.Dispose();Concept.Dispose();PreviewAssets.Dispose();}
 }

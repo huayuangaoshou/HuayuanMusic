@@ -56,7 +56,7 @@ internal sealed partial class P2AWorkspace
 
     private async Task ConnectDesktopAsync(bool allowQr)
     {
-        if (transitioning || Connected)
+        if (R2.DesktopPreferences.Behavior.Kugou != R2.DesktopDlcState.Enabled || transitioning || Connected)
             return;
         transitioning = true;
         using var login = new CancellationTokenSource(TimeSpan.FromMinutes(3));

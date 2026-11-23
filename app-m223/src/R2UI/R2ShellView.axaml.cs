@@ -79,6 +79,12 @@ public partial class R2ShellView : UserControl
     private void WorkspaceChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
     {
         if (args.PropertyName == nameof(ShellModel.Workspace)){UpdateSearchContext();SyncFilter();}
+        if (args.PropertyName == nameof(ShellModel.KugouEnabled) && model?.KugouEnabled == false)
+        {
+            CancelSuggestions();
+            CancelComments();
+            lyricRequest?.Cancel();
+        }
     }
 
     private void SyncFilter()
@@ -149,10 +155,13 @@ public partial class R2ShellView : UserControl
     private void OpenPluginCenter(object? sender, RoutedEventArgs args) => model?.Workspace.ShowPlugins();
     private void ShowLyrics(object? sender, RoutedEventArgs args) => ToggleLyricOverlay();
     private void ShowAccount(object? sender, RoutedEventArgs args) => model?.ShowAccount();
-    private void ToggleTheme(object? sender, RoutedEventArgs args)
+    private async void ToggleTheme(object? sender, RoutedEventArgs args) => await SetDesktopThemeAsync(ActualThemeVariant!=ThemeVariant.Dark);
+
+    private async Task SetDesktopThemeAsync(bool dark)
     {
         if (Window is { } window)
-            window.RequestedThemeVariant = ActualThemeVariant == ThemeVariant.Dark ? ThemeVariant.Light : ThemeVariant.Dark;
+            window.RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light;
+        await PersistPreferenceAsync(options=>options with {Dark=dark});
     }
     private void MinimizeWindow(object? sender, RoutedEventArgs args)
     {
