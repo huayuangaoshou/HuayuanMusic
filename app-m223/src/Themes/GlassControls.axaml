@@ -70,7 +70,7 @@
       <BrushTransition Property="Background" Duration="0:0:0.14" Easing="CubicEaseOut"/>
     </Transitions></Setter>
   </Style>
-  <Style Selector="TextBox.search-capsule"><Setter Property="CornerRadius" Value="20"/><Setter Property="MinHeight" Value="38"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/></Style>
+  <Style Selector="TextBox.search-capsule"><Setter Property="CornerRadius" Value="24"/><Setter Property="MinHeight" Value="38"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/></Style>
   <Style Selector="TextBox.search-capsule:focus-within /template/ Border#PART_BorderElement">
     <Setter Property="BorderBrush" Value="{DynamicResource R2Focus}"/>
     <Setter Property="BoxShadow" Value="0 0 0 3 #384A9BFF, 0 4 14 0 #1B5276C8"/>

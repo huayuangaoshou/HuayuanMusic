@@ -41,6 +41,11 @@ public sealed class InteractionController:ObservableObject {
     Add("查看歌手",()=>_ = owner.Host.ShowTrackCollectionAsync(row,true),!string.IsNullOrWhiteSpace(row.Singer));
     Add("查看专辑",()=>_ = owner.Host.ShowTrackCollectionAsync(row,false),!string.IsNullOrWhiteSpace(row.AlbumName));
    }
+   if (row.CanUseOnlineActions && list.FindAncestorOfType<R2ShellView>() is { } shell)
+   {
+    Add("查看评论",()=>shell.OpenSongComments(row));
+    if(selected.Length==1)Add(row.IsDownloaded?"已下载":"下载歌曲",()=>_=shell.DownloadSongAsync(row),!row.IsDownloaded);
+   }
    void Copy(string label,string text) => menu.Items.Add(new MenuItem
    { Header=label, IsEnabled=!string.IsNullOrWhiteSpace(text), Command=new AsyncRelayCommand(()=>R2ShellView.CopyTextAsync(list,text)) });
    string title=row.Name;

@@ -2,30 +2,33 @@
              x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
   <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}" CornerRadius="7">
   <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,56" ColumnSpacing="7" Margin="7,0">
-    <TextBlock Text="{Binding Number}" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
-    <StackPanel Orientation="Horizontal" Spacing="2" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsCurrent}">
-      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="8" VerticalAlignment="Bottom"/>
-      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="14" VerticalAlignment="Bottom"/>
-      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="10.5" VerticalAlignment="Bottom"/>
-      <Border Classes.wave-bar="{Binding IsPlaying}" Background="{DynamicResource R2Pink}" CornerRadius="1" Width="2.5" Height="6" VerticalAlignment="Bottom"/>
-    </StackPanel>
+    <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
+    <vm:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
     <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="5">
-      <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+      <Grid ColumnDefinitions="*,Auto" ColumnSpacing="3">
+        <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
+          <TextBlock Text="无损 FLAC" FontSize="10" Classes="muted" IsVisible="{Binding IsLosslessFile}" VerticalAlignment="Center"/>
+          <PathIcon Width="12" Height="12" IsVisible="{Binding IsDownloaded}" ToolTip.Tip="已下载" Foreground="{DynamicResource R2Muted}" Data="M2 8L6 12L14 4L15.5 5.5L6 15L.5 9.5Z"/>
+        </StackPanel>
+      </Grid>
       <StackPanel Grid.Column="1" Classes="row-actions" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center" IsVisible="{Binding CanUsePlatform}">
-        <Button Padding="0" Width="34" Height="34" Click="PlayInline" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放">
+        <Button Padding="0" Width="28" Height="30" Click="PlayInline" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放">
           <PathIcon Width="13" Height="13" Data="M4,2 L16,9 L4,16 Z"/>
         </Button>
         <vm:HeartButton/>
-        <Button Padding="0" Width="34" Height="34" Command="{Binding NextCommand}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首">
+        <Button Padding="0" Width="28" Height="30" Command="{Binding NextCommand}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首">
           <PathIcon Width="15" Height="15" Data="M2,4 H13 V6 H2 Z M2,9 H9 V11 H2 Z M2,14 H9 V16 H2 Z M11,9 L18,13 L11,17 Z"/>
         </Button>
+        <Button Width="28" Height="28" Padding="0" IsVisible="{Binding CanUseOnlineActions}" Click="DownloadInline" AutomationProperties.Name="下载歌曲" ToolTip.Tip="下载歌曲"><PathIcon Width="15" Height="15" Data="M7 1H9V8L12 5L13.5 6.5L8 12L2.5 6.5L4 5L7 8Z M1 12H3V14H13V12H15V16H1Z"/></Button>
+        <Button Width="28" Height="28" Padding="0" IsVisible="{Binding CanUseOnlineActions}" Click="CommentInline" AutomationProperties.Name="查看评论" ToolTip.Tip="查看评论"><PathIcon Width="15" Height="15" Data="M1 2H15V12H8L4 16V12H1Z M3 4V10H6V12L8 10H13V4Z M5 6H11V8H5Z"/></Button>
       </StackPanel>
-      <Button Grid.Column="1" Content="核验" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
+      <Button Grid.Column="1" Content="查看" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
     </Grid>
     <TextBlock Grid.Column="3" Text="{Binding Singer}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
     <TextBlock Grid.Column="4" Text="{Binding AlbumName}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-    <TextBlock Grid.Column="5" Text="{Binding Duration}" Classes="muted" FontFamily="Consolas" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="5" Text="{Binding Duration}" Classes="muted" FontFeatures="tnum" VerticalAlignment="Center"/>
   </Grid>
   </Border>
 </UserControl>

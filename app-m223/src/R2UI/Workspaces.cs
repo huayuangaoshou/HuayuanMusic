@@ -49,6 +49,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   heading.FontSize = 27;
   heading.FontWeight = FontWeight.SemiBold;
   status.Classes.Add("muted");
+  status.IsVisible = !Program.Desktop;
   status.Margin = new Thickness(0,0,0,4);
   content.Transitions = new() { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new Avalonia.Animation.Easings.CubicEaseOut() } };
   var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(24,8,24,16)};

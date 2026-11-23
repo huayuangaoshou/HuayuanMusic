@@ -39,7 +39,7 @@ public partial class R2ShellView : UserControl
             DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, TimeSpan.FromMilliseconds(160));
         };
         DataContextChanged += (_, _) => BindModel();
-        DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); toastDelay.Stop(); };
+        DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); toastDelay.Stop(); downloadRequest?.Cancel(); CloseSongComments(); };
         AddHandler(KeyDownEvent, TransportKeyDown, RoutingStrategies.Tunnel);
     }
 
@@ -50,6 +50,7 @@ public partial class R2ShellView : UserControl
             model.PropertyChanged -= WorkspaceChanged;
             model.Player.Updated -= UpdateVolume;
             model.Player.Toast -= ShowToast;
+            model.Concept.Changed -= OnlineActionsChanged;
         }
         model = DataContext as ShellModel;
         if (model == null)
@@ -57,6 +58,7 @@ public partial class R2ShellView : UserControl
         model.PropertyChanged += WorkspaceChanged;
         model.Player.Updated += UpdateVolume;
         model.Player.Toast += ShowToast;
+        model.Concept.Changed += OnlineActionsChanged;
         VolumeSlider.Submit = model.Player.SetVolume;
         FullVolume.Submit = model.Player.SetVolume;
         FullProgress.Submit = model.Player.Seek;
@@ -64,6 +66,16 @@ public partial class R2ShellView : UserControl
         UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
+    }
+
+    private void OnlineActionsChanged()
+    {
+        if (model?.Concept.Connected != true)
+        {
+            CloseSongComments();
+            downloadRequest?.Cancel();
+        }
+        foreach (var row in model?.Player.DisplayPlaybackQueue ?? []) row.RefreshAccess();
     }
 
     private void ShowToast(string text)
@@ -82,6 +94,8 @@ public partial class R2ShellView : UserControl
         {
             CancelSuggestions();
             CancelComments();
+            CloseSongComments();
+            downloadRequest?.Cancel();
             lyricRequest?.Cancel();
         }
     }
@@ -257,6 +271,12 @@ public partial class R2ShellView : UserControl
     {
         if (model == null)
             return;
+        if (args.Key == Key.Escape && drawerCommentTrack != null)
+        {
+            CloseSongComments();
+            args.Handled = true;
+            return;
+        }
         if (args.Key == Key.Escape && queueOpen)
         {
             SetQueueOpen(false);

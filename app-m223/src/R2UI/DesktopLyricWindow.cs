@@ -8,6 +8,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using Avalonia.Styling;
 using Avalonia.VisualTree;
 using AvaloniaLyrics;
 using KugouAvaloniaPlayer.Services.DesktopLyric;
@@ -16,7 +17,13 @@ namespace HuayuanPreview.R2;
 
 internal sealed class DesktopLyricWindow : Window
 {
-    private readonly TextBlock current = LyricLabel();
+    private readonly LyricLineControl current = new()
+    {
+        ShowTranslation = false, ShowRomanization = false, DistinguishActiveForeground = true,
+        PrimaryForeground = Brushes.White, PrimaryPlayedForeground = new SolidColorBrush(Color.Parse("#FF9EC8")),
+        HorizontalAlignment = HorizontalAlignment.Center, MaxWidth = 710, MaxHeight = 64, ClipToBounds = true,
+        TextAlignment = TextAlignment.Center, Effect = LyricShadow()
+    };
     private readonly TextBlock next = LyricLabel();
     private readonly Border tools;
     private readonly PathIcon playIcon;
@@ -25,6 +32,7 @@ internal sealed class DesktopLyricWindow : Window
     private static readonly Geometry PauseIcon = Geometry.Parse("M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z");
     private readonly DesktopLyricMousePassthroughService passthrough = new();
     private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
+    private readonly DispatcherTimer hideToolsDelay = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
     private IReadOnlyList<LyricLine> lyrics = [];
     private string empty = "播放一首歌曲后显示歌词";
@@ -88,23 +96,30 @@ internal sealed class DesktopLyricWindow : Window
         {
             Child = commands, Padding = new Thickness(7, 4), CornerRadius = new CornerRadius(22),
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Center,
-            Background = new SolidColorBrush(Color.Parse("#EAF5FAFF")),
+            Background = new SolidColorBrush(Color.Parse("#F7FFFFFF")),
             BorderBrush = new LinearGradientBrush
             {
-                GradientStops = [new(Colors.White,0), new(Color.Parse("#CF9ECBFF"),1)]
+                GradientStops = [new(Color.Parse("#E6EEF8"),0), new(Color.Parse("#CFEEF5FF"),1)]
             },
-            BorderThickness = new Thickness(1), BoxShadow = BoxShadows.Parse("0 3 12 0 #2C4A78A8"),
+            BorderThickness = new Thickness(1), BoxShadow = BoxShadows.Parse("0 8 24 0 #140F172A"),
             Opacity = 0, IsHitTestVisible = false
         };
         tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170) }];
-        var labels = new StackPanel { VerticalAlignment = VerticalAlignment.Center, Spacing = 4, IsHitTestVisible = false };
+        var labels = new StackPanel
+        {
+            HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,
+            Spacing = 4, Background = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0))
+        };
         labels.Children.Add(current); labels.Children.Add(next);
         Grid.SetRow(labels, 1);
-        var layout = new Grid { RowDefinitions = new RowDefinitions("38,*"), Background = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0)) };
+        var layout = new Grid { RowDefinitions = new RowDefinitions("38,*"), Background = null };
         layout.Children.Add(tools); layout.Children.Add(labels);
         Content = layout;
-        layout.PointerEntered += (_, _) => ShowTools(true);
-        layout.PointerExited += (_, _) => ShowTools(false);
+        if (OperatingSystem.IsWindows())
+            Win32Properties.AddWndProcHookCallback(this, HitTestWindow);
+        layout.PointerEntered += (_, _) => { hideToolsDelay.Stop(); ShowTools(true); };
+        layout.PointerExited += (_, _) => hideToolsDelay.Start();
+        hideToolsDelay.Tick += (_, _) => { hideToolsDelay.Stop(); ShowTools(false); };
         layout.AddHandler(PointerPressedEvent, DragWindow, RoutingStrategies.Bubble);
 
         fontSize = Math.Clamp(preferences.FontSize, 18, 46);
@@ -114,7 +129,8 @@ internal sealed class DesktopLyricWindow : Window
             Place(preferences.X is int x && preferences.Y is int y ? new PixelPoint(x, y) : null);
             new DesktopLyricWindowChromeService().HideFromWindowSwitcher(this);
             if (preferences.Locked) SetLocked(true);
-            renderClock.Start();
+            current.FontFamily = FontFamily;
+            if (running) renderClock.Start();
             Dispatcher.UIThread.Post(() =>
             {
                 if (!IsVisible) return;
@@ -126,21 +142,57 @@ internal sealed class DesktopLyricWindow : Window
                 });
             }, DispatcherPriority.Loaded);
         };
+        void RefreshToolbarTheme()
+        {
+            var dark = ActualThemeVariant == ThemeVariant.Dark;
+            tools.Background = new SolidColorBrush(Color.Parse(dark ? "#EF1B263B" : "#F7FFFFFF"));
+            tools.BorderBrush = new LinearGradientBrush
+            {
+                GradientStops = dark ? [new(Color.Parse("#ADC4E0FF"), 0), new(Color.Parse("#5B7A9ECC"), 1)] :
+                    [new(Color.Parse("#E6EEF8"), 0), new(Color.Parse("#CFEEF5FF"), 1)]
+            };
+            tools.BoxShadow = BoxShadows.Parse(dark ? "0 8 24 0 #50101726" : "0 8 24 0 #140F172A");
+            var foreground = new SolidColorBrush(Color.Parse(dark ? "#E6F0FF" : "#1F2329"));
+            foreach (var button in commands.Children.OfType<Button>())
+            {
+                button.Foreground = foreground;
+                if (button.Content is PathIcon icon) icon.Foreground = foreground;
+            }
+            grip.Foreground = foreground;
+        }
+        RefreshToolbarTheme();
+        ActualThemeVariantChanged += (_, _) => RefreshToolbarTheme();
         PositionChanged += (_, _) => ScheduleSave();
         renderClock.Tick += (_, _) => RenderLyrics();
         saveDelay.Tick += (_, _) => { saveDelay.Stop(); PreferencesChanged?.Invoke(Capture(true)); };
-        Closed += (_, _) => { renderClock.Stop(); saveDelay.Stop(); };
+        Closed += (_, _) => { renderClock.Stop(); saveDelay.Stop(); hideToolsDelay.Stop(); };
     }
 
     private static TextBlock LyricLabel() => new()
     {
-        Foreground = Brushes.White, FontFamily = new FontFamily("Microsoft YaHei UI, Segoe UI"),
+        Foreground = Brushes.White,
+        HorizontalAlignment = HorizontalAlignment.Center, MaxWidth = 710,
         FontWeight = FontWeight.Bold, TextAlignment = TextAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis,
-        Margin = new Thickness(24, 0), Effect = new DropShadowEffect
-        {
-            BlurRadius = 5, OffsetX = 0, OffsetY = 1, Opacity = 1, Color = Color.Parse("#0B1020")
-        }
+        Effect = LyricShadow()
     };
+
+    private static DropShadowEffect LyricShadow() => new()
+    {
+        BlurRadius = 5, OffsetX = 0, OffsetY = 1, Opacity = 1, Color = Color.Parse("#0B1020")
+    };
+
+    private IntPtr HitTestWindow(IntPtr handle, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        if (message != 0x0084 || Locked) return IntPtr.Zero;
+        var raw = lParam.ToInt64();
+        var point = this.PointToClient(new PixelPoint(unchecked((short)raw), unchecked((short)(raw >> 16))));
+        bool Hits(Control control) => control.TranslatePoint(default, this) is { } origin &&
+            new Rect(origin, control.Bounds.Size).Contains(point);
+        if (Hits(current) || (!string.IsNullOrEmpty(next.Text) && Hits(next)) ||
+            (tools.IsHitTestVisible && Hits(tools))) return IntPtr.Zero;
+        handled = true;
+        return new IntPtr(-1); // HTTRANSPARENT
+    }
 
     internal DesktopLyricOptions Capture(bool visible) => new(visible, Locked, Position.X, Position.Y, fontSize);
 
@@ -150,6 +202,8 @@ internal sealed class DesktopLyricWindow : Window
         anchorTimestamp = Stopwatch.GetTimestamp();
         running = snapshot.Playing;
         playIcon.Data = running ? PauseIcon : PlayIcon;
+        current.IsPositionClockRunning = running;
+        if (running) renderClock.Start(); else renderClock.Stop();
         RenderLyrics();
     }
 
@@ -210,7 +264,8 @@ internal sealed class DesktopLyricWindow : Window
     private void AdjustFont(double difference)
     {
         fontSize = Math.Clamp(fontSize + difference, 18, 46);
-        current.FontSize = fontSize;
+        current.PrimaryFontSize = fontSize;
+        current.FontFamily = FontFamily;
         next.FontSize = Math.Max(16, fontSize * .72);
         next.Foreground = new SolidColorBrush(Color.Parse("#DADFFF"));
         if (difference != 0) ScheduleSave();
@@ -227,7 +282,8 @@ internal sealed class DesktopLyricWindow : Window
     {
         if (lyrics.Count == 0)
         {
-            current.Text = empty;
+            if (current.Line?.Text != empty)
+                current.Line = current.ActiveLine = new LyricLine { Text = empty };
             next.Text = "";
             return;
         }
@@ -240,7 +296,10 @@ internal sealed class DesktopLyricWindow : Window
             else end = middle;
         }
         int index = Math.Max(0, first - 1);
-        current.Text = lyrics[index].Text;
+        var line = lyrics[index];
+        current.Position = TimeSpan.FromSeconds(Math.Max(0, position));
+        if (!ReferenceEquals(current.Line, line))
+            current.Line = current.ActiveLine = line;
         next.Text = index + 1 < lyrics.Count ? lyrics[index + 1].Text : "";
     }
 }

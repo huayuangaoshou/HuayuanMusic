@@ -141,6 +141,20 @@ public partial class R2ShellView
 
     private void SetLyrics(LyricLine[] lines, string empty)
     {
+        // The same timed lines feed both renderers. A line without word timing is a single sweep.
+        lines = lines.Select((line, index) =>
+        {
+            if (line.Words.Count > 0 || string.IsNullOrWhiteSpace(line.Text)) return line;
+            var duration = line.Duration > TimeSpan.Zero ? line.Duration :
+                index + 1 < lines.Length ? lines[index + 1].Start - line.Start : TimeSpan.FromSeconds(3);
+            if (duration <= TimeSpan.Zero) duration = TimeSpan.FromSeconds(3);
+            return new LyricLine
+            {
+                Start = line.Start, Duration = duration, Text = line.Text, Translation = line.Translation,
+                Romanization = line.Romanization, TranslationWords = line.TranslationWords,
+                Words = [new LyricWord { Start = line.Start, Duration = duration, Text = line.Text }]
+            };
+        }).ToArray();
         displayedLyrics = lines;
         lyricMessage = empty;
         FullLyricView.Lines = lines;

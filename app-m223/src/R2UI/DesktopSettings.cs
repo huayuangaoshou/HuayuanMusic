@@ -1,3 +1,4 @@
+using Avalonia.Platform.Storage;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -72,16 +73,37 @@ public partial class R2ShellView
         theme.SelectionChanged += async (_,_) => await SetDesktopThemeAsync(theme.SelectedIndex==1);
         Section("常规与窗口", Row("关闭主窗口",close), Row("界面主题",theme),
             Check("启动后恢复上次队列，保持就绪", behavior.RestoreQueue,(value,current)=>current with {RestoreQueue=value}));
-        var quality=Options(["标准","高品","无损"],QualityChoice.SelectedIndex);
+        var quality=Options(["标准","高品 MP3","无损 FLAC"],QualityChoice.SelectedIndex);
         quality.SelectionChanged += (_,_) => QualityChoice.SelectedIndex=quality.SelectedIndex;
         var fade=Check("暂停、恢复与切歌微淡入淡出",behavior.MicroFade,(value,current)=>
         { return current with {MicroFade=value}; });
         fade.IsCheckedChanged+=(_,_)=> SimpleAudioPlayer.DesktopMicroFade=fade.IsChecked==true;
-        Section("音频与播放",Row("默认音质",quality), Row("BASS 输出设备",devices),fade);
+        Section("音频与播放",Row("默认音质",quality), Row("音频输出设备",devices),fade);
         Section("歌词设置", new WrapPanel { ItemSpacing=6, LineSpacing=6, Children={
             ButtonFor("显示 / 隐藏桌面歌词",ToggleDesktopLyricsFromHost),
             ButtonFor("解锁鼠标穿透",UnlockDesktopLyricsFromHost),
             ButtonFor("重置位置和字号",ResetDesktopLyricsFromHost) } });
+        var downloadPath = new TextBlock { Text = DesktopPreferences.DownloadFolder,
+            Classes = { "muted" }, TextWrapping = TextWrapping.Wrap };
+        var changeDownloadPath = new Button { Content = "更改下载位置", Classes = { "glass-pill" } };
+        changeDownloadPath.Click += async (_, _) =>
+        {
+            if (TopLevel.GetTopLevel(this) is not { } window) return;
+            var choices = await window.StorageProvider.OpenFolderPickerAsync(
+                new FolderPickerOpenOptions { Title = "选择下载位置" });
+            if (choices.FirstOrDefault()?.TryGetLocalPath() is not { } folder) return;
+            await PersistPreferenceAsync(options => options with
+            {
+                DownloadFolder = folder,
+                PreviousDownloadFolders = new[] { DesktopPreferences.DownloadFolderFor(options) }
+                    .Concat(options.PreviousDownloadFolders ?? [])
+                    .Where(path => !string.Equals(path, folder, StringComparison.OrdinalIgnoreCase))
+                    .Distinct(StringComparer.OrdinalIgnoreCase).Take(8).ToArray()
+            });
+            downloadPath.Text = DesktopPreferences.DownloadFolder;
+        };
+        Section("歌曲下载", downloadPath, new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children =
+            { changeDownloadPath, ButtonFor("打开下载目录", OpenDownloadFolder) } });
         var clear=new Button { Classes={"glass-pill"},Content="一键清理缓存" };
         clear.Click += async (_,_) => await RefreshCacheAsync(true);
         Section("缓存与存储", stats, new WrapPanel { ItemSpacing=7, LineSpacing=7, Children={

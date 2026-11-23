@@ -58,7 +58,7 @@ internal sealed class PluginManager : ScrollViewer
         var enable = new Button { Classes = { "glass-pill" } };
         var remove = new Button { Content = "卸载平台挂载", Classes = { "glass-pill" } };
         var account = new Button { Content = "打开酷狗工作空间", Classes = { "glass-pill" } };
-        var inspect = new Button { Content = "检查本地 Contracts 包目录", Classes = { "glass-pill" } };
+        var inspect = new Button { Content = "检查本地插件目录", Classes = { "glass-pill" } };
         async Task ChangeAsync(DesktopDlcState next)
         {
             enable.IsEnabled = remove.IsEnabled = false;
@@ -74,7 +74,7 @@ internal sealed class PluginManager : ScrollViewer
         void Refresh()
         {
             status.Text = shell.DlcState switch { DesktopDlcState.Enabled => "已启用", DesktopDlcState.Disabled => "已停用", _ => "未安装" };
-            enable.Content = shell.DlcState switch { DesktopDlcState.Enabled => "停用", DesktopDlcState.Disabled => "启用", _ => "恢复内置 DLC" };
+            enable.Content = shell.DlcState switch { DesktopDlcState.Enabled => "停用", DesktopDlcState.Disabled => "启用", _ => "恢复内置插件" };
             enable.IsEnabled = true;
             remove.IsEnabled = shell.DlcState != DesktopDlcState.Removed;
             account.IsVisible = shell.KugouEnabled;
@@ -85,10 +85,10 @@ internal sealed class PluginManager : ScrollViewer
         inspect.Click += async (_, _) =>
         {
             if (TopLevel.GetTopLevel(this) is not { } window) return;
-            var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "选择 Contracts 包目录" });
+            var folders = await window.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions { Title = "选择插件目录" });
             if (folders.FirstOrDefault()?.TryGetLocalPath() is not { } path) return;
             activity.Text = File.Exists(Path.Combine(path, "manifest.json"))
-                ? "已找到清单。当前版本只加载随应用验证的内置插件。" : "所选目录未包含 manifest.json。";
+                ? "已找到清单。当前版本只加载随应用验证的内置插件。" : "所选目录未找到插件清单。";
         };
         var tags = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
         foreach (var text in new[] { "在线搜索", "歌单同步", "逐字歌词", "主版评论", "音质切换", "每日推荐" })
@@ -99,7 +99,7 @@ internal sealed class PluginManager : ScrollViewer
         {
             Classes = { "glass" }, Padding = new Thickness(18),
             Child = new StackPanel { Spacing = 11, Children = {
-                new TextBlock { Text = "酷狗概念版 DLC", FontSize = 21, FontWeight = FontWeight.SemiBold },
+                new TextBlock { Text = "酷狗概念版", FontSize = 21, FontWeight = FontWeight.SemiBold },
                 new TextBlock { Text = $"版本 {TrustedModuleDescriptor.Current.Version}", Classes = { "muted" } }, status, tags, actions } }
         });
         body.Children.Add(inspect);

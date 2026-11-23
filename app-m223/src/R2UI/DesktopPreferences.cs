@@ -7,7 +7,7 @@ internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = f
 internal enum DesktopDlcState { Enabled, Disabled, Removed }
 internal sealed record DesktopOptions(bool TrayOnClose = true, bool RestoreQueue = true, bool Dark = false,
     bool MicroFade = true, bool Translation = true, DesktopDlcState Kugou = DesktopDlcState.Enabled,
-    float PreMuteVolume = 0.8f);
+    float PreMuteVolume = 0.8f, string? DownloadFolder = null, string[]? PreviousDownloadFolders = null);
 
 internal static class DesktopPreferences
 {
@@ -18,6 +18,15 @@ internal static class DesktopPreferences
     internal static string[] Recent { get { lock (Gate) return Current.Recent.ToArray(); } }
     internal static DesktopLyricOptions DesktopLyrics { get { lock (Gate) return Current.Lyrics ?? new(); } }
     internal static DesktopOptions Behavior { get { lock (Gate) return Current.Behavior ?? new(); } }
+    internal static string DownloadFolder => DownloadFolderFor(Behavior);
+    internal static string DownloadFolderFor(DesktopOptions options)
+    {
+        if (options.DownloadFolder is { Length: > 0 } folder) return folder;
+        var music = Environment.GetFolderPath(Environment.SpecialFolder.MyMusic, Environment.SpecialFolderOption.DoNotVerify);
+        if (music.Length == 0)
+            music = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "Music");
+        return Path.Combine(music, "HuayuanMusic", "Downloads");
+    }
     internal static Task SetBehaviorAsync(Func<DesktopOptions, DesktopOptions> change) =>
         UpdateAsync(options => options with { Behavior = change(options.Behavior ?? new()) });
     internal static Task SetDesktopLyricsAsync(DesktopLyricOptions options) =>

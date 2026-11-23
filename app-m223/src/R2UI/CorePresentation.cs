@@ -13,7 +13,11 @@ public sealed class TrackRow:ObservableObject {
  public string Identity=>QueueId!=Guid.Empty?"q:"+QueueId:MemberId>0?$"m:{ListId}:{MemberId}":Owner.Local?$"t:{Track.Id}":Track.Key;
  public bool IsProviderTrack=>Track.Key.StartsWith("kugou-concept:",StringComparison.Ordinal);
  internal string CatalogIdentity { get; }
- public string SourceLabel=>IsProviderTrack?"酷狗概念版":"本地音乐";
+ public string SourceLabel=>IsProviderTrack?"在线":"本地";
+ public bool CanUseOnlineActions => Program.Desktop && IsProviderTrack && Owner.Host.KugouEnabled &&
+     Owner.Host.Concept.M223CanQueue(Track.Key);
+ public bool IsLosslessFile => !IsProviderTrack && Track.Key.EndsWith(".flac", StringComparison.OrdinalIgnoreCase);
+ public bool IsDownloaded => Program.Desktop && Owner.Host.IsDownloaded(this);
  public TrackRow Song=>this;public string Name=>Track.Title;public string Singer=>Track.Artist;public string AlbumName=>Track.Album;public string Duration=>Track.Duration<=0?"—":$"{(int)Track.Duration/60:00}:{(int)Track.Duration%60:00}";
  public int Number { get; internal set; }
  public bool IsCurrent => QueueId != Guid.Empty
@@ -29,7 +33,7 @@ public sealed class TrackRow:ObservableObject {
  public ICommand FavoriteCommand { get; }
  public ICommand NextCommand { get; }
  public ICommand RemoveCommand { get; }
- public string RemoveLabel=>"移除队列条目 "+QueueId.ToString("N")[..8];public string QueuePlayLabel=>"播放队列条目 "+QueueId.ToString("N")[..8];
+ public string RemoveLabel=>"移除 "+Name;public string QueuePlayLabel=>"播放 "+Name;
  public string TrialPlayId=>!Owner.Local&&ListId==2&&MemberId==1&&P2AWorkspace.M218BTarget&&CanUsePlatform?"M222.Target.Play":"";
  public string TrialAddId=>!Owner.Local&&ListId==2&&MemberId==1&&P2AWorkspace.M218BTarget&&CanUsePlatform?"M222.Target.Add":"";
  public string PlayLabel=>P2AWorkspace.M211StrictMemberIntent&&!Owner.Local?
@@ -58,14 +62,16 @@ public sealed class TrackRow:ObservableObject {
  NextCommand=new RelayCommand(()=>Owner.Host.Player.Next([this]));
  RemoveCommand=new RelayCommand(()=>Owner.Host.Player.Remove([this]));
  InspectCommand=new RelayCommand(()=>Owner.Host.Concept.M212InspectMember(ListId,MemberId,Track.Key));}
- public void Refresh(){OnPropertyChanged(nameof(Number));OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));OnPropertyChanged(nameof(IsUnavailable));OnPropertyChanged(nameof(UnavailableReason));}
+ public void Refresh(){OnPropertyChanged(nameof(IsDownloaded));OnPropertyChanged(nameof(Number));OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));OnPropertyChanged(nameof(IsUnavailable));OnPropertyChanged(nameof(UnavailableReason));}
  public void RefreshFavorite(){OnPropertyChanged(nameof(IsFavorite));OnPropertyChanged(nameof(FavoriteLabel));}
- public void RefreshAccess(){OnPropertyChanged(nameof(CanUsePlatform));RefreshFavorite();}
+ public void RefreshAccess(){OnPropertyChanged(nameof(CanUsePlatform));OnPropertyChanged(nameof(CanUseOnlineActions));RefreshFavorite();}
 }
 public sealed class CorePresentation:ObservableObject,IDisposable {
  readonly INightflightPlayback core;readonly Dictionary<Guid,TrackRow> queueViews=[];ShellModel? host;PlaybackSnapshot state;
  public PlaybackSnapshot State=>state;public Task Pending {get;private set;}=Task.CompletedTask;
  public TrackRow[] DisplayPlaybackQueue {get;private set;}=[];public int DisplayPlaybackQueueCount=>state.QueueEntries.Length;
+ public string QueueBadgeText=>DisplayPlaybackQueueCount>999?"999+":DisplayPlaybackQueueCount.ToString();
+ public string QueueCountTooltip=>$"播放队列 · {DisplayPlaybackQueueCount:N0} 首";
  public bool HasQueueTracks=>DisplayPlaybackQueueCount>0;
  public TrackRow? DisplayedPlayingSong=>DisplayPlaybackQueue.FirstOrDefault(r=>r.QueueId==state.CurrentEntryId);
  public string ActiveLyric=>state.LyricIndex>=0&&state.LyricIndex<state.Lyrics.Length
@@ -119,7 +125,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
    DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();for(int i=0;i<DisplayPlaybackQueue.Length;i++){DisplayPlaybackQueue[i].Number=i+1;DisplayPlaybackQueue[i].Refresh();}OnPropertyChanged(nameof(DisplayPlaybackQueue));
   }
   OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(PositionText));OnPropertyChanged(nameof(DurationText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
-  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
  }
  void DemandResult(){if(core.State.Error.Length>0)throw new InvalidOperationException(core.State.Error);}
  void DemandTrack(TrackRow row){if(!row.Owner.Local||!state.Tracks.Any(t=>t.Id==row.Track.Id&&t.Key==row.Track.Key))throw new InvalidOperationException("P2A 平台曲目只读 · 播放仅限隔离本地曲目");}
