@@ -1,9 +1,0 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:themes="using:KugouAvaloniaPlayer.Views.NowPlayingThemes"
-             xmlns:vm="using:KugouAvaloniaPlayer.ViewModels"
-             x:Class="KugouAvaloniaPlayer.Views.NowPlayingThemes.TemperaNowPlayingThemeView"
-             x:DataType="vm:NowPlayingViewModel"
-             ClipToBounds="True">
-    <themes:SilkNowPlayingThemeShell x:Name="ThemeShell" Preset="Tempera" />
-</UserControl>

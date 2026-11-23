@@ -1,6 +1,6 @@
 param(
     [string]$Dotnet = 'D:\AI\Tools\dotnet10\dotnet.exe',
-    [string]$InnoCompiler = 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
+    [string]$InnoCompiler = '',
     [switch]$SkipInstaller
 )
 $ErrorActionPreference = 'Stop'
@@ -59,11 +59,25 @@ try {
 Step '3/3 compile Inno Setup installer'
 if ($SkipInstaller) {
     Write-Host 'Skipped installer build (-SkipInstaller)' -ForegroundColor Yellow
-} elseif (-not (Test-Path -LiteralPath $InnoCompiler -PathType Leaf)) {
-    Write-Host "Inno Setup 6 not found, skipping installer. Expected output:`n  $release\HuayuanMusic-Setup-v1.0.0.exe" -ForegroundColor Yellow
 } else {
-    & $InnoCompiler installer.iss
-    if ($LASTEXITCODE -ne 0) { throw "Inno Setup compile failed ($LASTEXITCODE)" }
+    $isccCandidates = @()
+    if ($InnoCompiler) { $isccCandidates += $InnoCompiler }
+    $isccCandidates += 'C:\Program Files (x86)\Inno Setup 6\ISCC.exe'
+    $isccCandidates += 'C:\Program Files\Inno Setup 6\ISCC.exe'
+    $isccCandidates += "$env:LOCALAPPDATA\Programs\Inno Setup 6\ISCC.exe"
+    $iscc = $isccCandidates | Where-Object { $_ -and (Test-Path -LiteralPath $_ -PathType Leaf) } | Select-Object -First 1
+    if (-not $iscc) {
+        Write-Host "Inno Setup 6 not found, skipping installer. Expected output:`n  $release\HuayuanMusic-Setup-v1.0.0.exe" -ForegroundColor Yellow
+    } else {
+        Write-Host "Using ISCC: $iscc"
+        Push-Location $PSScriptRoot
+        try {
+            & $iscc installer.iss
+            if ($LASTEXITCODE -ne 0) { throw "Inno Setup compile failed ($LASTEXITCODE)" }
+        } finally {
+            Pop-Location
+        }
+    }
 }
 
 Write-Host "`nDone. Output directory: $release" -ForegroundColor Green

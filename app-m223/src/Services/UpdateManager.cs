@@ -16,7 +16,7 @@ public static class UpdateManager
     /// Repository owner/name. Replace "Owner" with the real GitHub account before
     /// publishing. Keeping it as a single constant makes that swap trivial.
     /// </summary>
-    public const string GitHubRepo = "Owner/HuayuanMusic";
+    public const string GitHubRepo = "huayuangaoshou/HuayuanMusic";
 
     /// <summary>The local application version, matching the csproj version.</summary>
     public static readonly Version CurrentVersion = new(1, 0, 0);
