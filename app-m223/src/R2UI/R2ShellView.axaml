@@ -140,7 +140,7 @@
                 </StackPanel>
               </Border>
             </StackPanel>
-            <Grid Grid.Column="1" RowDefinitions="62,*">
+            <Grid Grid.Column="1" RowDefinitions="42,*">
               <Border Classes="glass" CornerRadius="22" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Name="LyricsTab" Classes="glass-pill selected" Content="歌词" Click="ShowLyricsTab"/>
@@ -161,7 +161,7 @@
                     <GradientStop Color="Black" Offset=".89"/><GradientStop Color="Transparent" Offset="1"/>
                   </LinearGradientBrush>
                 </Grid.OpacityMask>
-                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="28" TranslationFontSize="17"
+                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="28" TranslationFontSize="17" ActiveAnchorRatio="0.44"
                                   PrimaryForeground="{DynamicResource LyricIdle}" PrimaryPlayedForeground="{DynamicResource LyricActive}"
                                   TranslationForeground="{DynamicResource TranslationIdle}" TranslationPlayedForeground="{DynamicResource TranslationActive}"
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" UseLightweightScrollAnimation="True"
