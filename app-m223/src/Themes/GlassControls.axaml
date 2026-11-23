@@ -1,0 +1,183 @@
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Styles.Resources>
+    <ControlTheme x:Key="GlassSliderSegment" TargetType="RepeatButton">
+      <Setter Property="Focusable" Value="False"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent">
+            <Border Name="Rail" Height="4" CornerRadius="3" VerticalAlignment="Center"
+                    Background="{TemplateBinding Background}" IsHitTestVisible="False">
+              <Border.Transitions>
+                <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+              </Border.Transitions>
+            </Border>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+    <ControlTheme x:Key="GlassSliderThumb" TargetType="Thumb">
+      <Setter Property="Width" Value="14"/>
+      <Setter Property="Height" Value="14"/>
+      <Setter Property="MinWidth" Value="14"/>
+      <Setter Property="MinHeight" Value="14"/>
+      <Setter Property="Template">
+        <ControlTemplate>
+          <Border Background="Transparent">
+            <Border Name="Lens" Width="14" Height="14" CornerRadius="8" HorizontalAlignment="Center"
+                    VerticalAlignment="Center" Background="{DynamicResource GlassKnob}"
+                    BorderBrush="{DynamicResource GlassRim}" BorderThickness="1"
+                    BoxShadow="0 2 6 0 #594D83BA" IsHitTestVisible="False"/>
+          </Border>
+        </ControlTemplate>
+      </Setter>
+    </ControlTheme>
+  </Styles.Resources>
+
+  <Style Selector="Button">
+    <Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+    </Setter>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <ContentPresenter Name="PART_ContentPresenter" Background="{TemplateBinding Background}"
+                          BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}"
+                          CornerRadius="{TemplateBinding CornerRadius}" Padding="{TemplateBinding Padding}"
+                          Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}"
+                          HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                          VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+          <ContentPresenter.Transitions>
+            <Transitions><BrushTransition Property="Background" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions>
+          </ContentPresenter.Transitions>
+        </ContentPresenter>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Button:pressed"><Setter Property="RenderTransform" Value="scale(0.96)"/></Style>
+  <Style Selector="Button:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Focus}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+  </Style>
+
+  <Style Selector="TextBox /template/ TextBlock#PART_Placeholder">
+    <Setter Property="Foreground" Value="{DynamicResource R2Muted}"/>
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+  <Style Selector="TextBox /template/ Border#PART_BorderElement">
+    <Setter Property="Transitions"><Transitions>
+      <BrushTransition Property="BorderBrush" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+      <BrushTransition Property="Background" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="TextBox.search-capsule"><Setter Property="CornerRadius" Value="20"/><Setter Property="MinHeight" Value="38"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/></Style>
+  <Style Selector="TextBox.search-capsule:focus-within /template/ Border#PART_BorderElement">
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Focus}"/>
+    <Setter Property="BoxShadow" Value="0 0 0 3 #384A9BFF, 0 4 14 0 #1B5276C8"/>
+  </Style>
+  <Style Selector="ComboBox">
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+    <Setter Property="Background" Value="{DynamicResource GlassSurface}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/>
+    <Setter Property="CornerRadius" Value="10"/>
+  </Style>
+
+  <Style Selector="Slider:horizontal">
+    <Setter Property="MinHeight" Value="28"/>
+    <Setter Property="Template">
+      <ControlTemplate>
+        <Grid Background="Transparent" Margin="1,0">
+          <Border Name="GlassTrackBase" Height="4" VerticalAlignment="Center" CornerRadius="3"
+                  Background="{DynamicResource GlassRail}" IsHitTestVisible="False">
+            <Border.Transitions>
+              <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+            </Border.Transitions>
+          </Border>
+          <Track Name="PART_Track" Orientation="Horizontal" VerticalAlignment="Stretch"
+                 Minimum="{TemplateBinding Minimum}" Maximum="{TemplateBinding Maximum}"
+                 Value="{TemplateBinding Value, Mode=TwoWay}" IsDirectionReversed="{TemplateBinding IsDirectionReversed}">
+            <Track.DecreaseButton><RepeatButton Name="PART_DecreaseButton" Theme="{StaticResource GlassSliderSegment}"
+                Background="{DynamicResource R2BrandGradient}"/></Track.DecreaseButton>
+            <Track.IncreaseButton><RepeatButton Name="PART_IncreaseButton" Theme="{StaticResource GlassSliderSegment}"
+                Background="Transparent"/></Track.IncreaseButton>
+            <Thumb Name="GlassThumb" Theme="{StaticResource GlassSliderThumb}" VerticalAlignment="Center"/>
+          </Track>
+        </Grid>
+      </ControlTemplate>
+    </Setter>
+  </Style>
+  <Style Selector="Slider /template/ Thumb#GlassThumb">
+    <Setter Property="Opacity" Value="0"/>
+    <Setter Property="RenderTransform" Value="scale(0.78)"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions"><Transitions>
+      <DoubleTransition Property="Opacity" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="Slider:pointerover /template/ Thumb#GlassThumb, Slider:focus-visible /template/ Thumb#GlassThumb, Slider.editing /template/ Thumb#GlassThumb">
+    <Setter Property="Opacity" Value="1"/><Setter Property="RenderTransform" Value="scale(1)"/>
+  </Style>
+  <Style Selector="Slider:pointerover /template/ Border#GlassTrackBase, Slider.editing /template/ Border#GlassTrackBase">
+    <Setter Property="Height" Value="6"/>
+  </Style>
+  <Style Selector="Slider:pointerover /template/ RepeatButton /template/ Border#Rail, Slider.editing /template/ RepeatButton /template/ Border#Rail">
+    <Setter Property="Height" Value="6"/>
+  </Style>
+
+  <Style Selector="ScrollViewer"><Setter Property="AllowAutoHide" Value="True"/></Style>
+  <Style Selector="ScrollBar:vertical">
+    <Setter Property="MinWidth" Value="0"/><Setter Property="Width" Value="6"/>
+  </Style>
+  <Style Selector="ScrollBar:horizontal">
+    <Setter Property="MinHeight" Value="0"/><Setter Property="Height" Value="6"/>
+  </Style>
+  <Style Selector="ScrollBar /template/ Thumb /template/ Border">
+    <Setter Property="Background" Value="{DynamicResource GlassScrollThumb}"/>
+    <Setter Property="CornerRadius" Value="4"/>
+    <Setter Property="Opacity" Value="0.54"/>
+    <Setter Property="Transitions"><Transitions>
+      <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+    </Transitions></Setter>
+  </Style>
+  <Style Selector="ScrollBar:pointerover /template/ Thumb /template/ Border">
+    <Setter Property="Opacity" Value="1"/>
+  </Style>
+
+  <Style Selector="ToggleSwitch">
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+  </Style>
+  <Style Selector="ToggleSwitch /template/ Border#SwitchKnob">
+    <Setter Property="Background" Value="{DynamicResource GlassKnob}"/>
+  </Style>
+  <Style Selector="ToggleSwitch /template/ Border#SwitchKnobBounds">
+    <Setter Property="Background" Value="{DynamicResource GlassRail}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
+  </Style>
+  <Style Selector="ToggleSwitch:checked /template/ Border#SwitchKnobBounds">
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/>
+  </Style>
+
+  <Style Selector="MenuFlyoutPresenter, ContextMenu">
+    <Setter Property="Background" Value="{DynamicResource GlassPopup}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="5"/>
+    <Setter Property="CornerRadius" Value="16"/>
+  </Style>
+  <Style Selector="ContextMenu /template/ Border, MenuFlyoutPresenter /template/ Border">
+    <Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/>
+  </Style>
+  <Style Selector="MenuItem /template/ Border#LayoutRoot">
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+  <Style Selector="MenuItem:pointerover /template/ Border#LayoutRoot">
+    <Setter Property="Background" Value="{DynamicResource R2Hover}"/>
+  </Style>
+  <Style Selector="ToolTip">
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+    <Setter Property="Background" Value="{DynamicResource GlassPopup}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
+    <Setter Property="CornerRadius" Value="8"/>
+  </Style>
+</Styles>

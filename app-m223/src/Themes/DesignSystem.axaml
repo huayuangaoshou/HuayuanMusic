@@ -4,6 +4,12 @@
       <SolidColorBrush x:Key="Primary" Color="#4A9BFF"/>
       <SolidColorBrush x:Key="R2Accent" Color="#4A9BFF"/>
       <SolidColorBrush x:Key="R2Pink" Color="#FF6FA5"/>
+      <StreamGeometry x:Key="GlassBack">M10 2L4 8L10 14L11.2 12.8L6.4 8L11.2 3.2Z</StreamGeometry>
+      <StreamGeometry x:Key="GlassForward">M6 2L12 8L6 14L4.8 12.8L9.6 8L4.8 3.2Z</StreamGeometry>
+      <StreamGeometry x:Key="GlassMinimize">M2 7.25H14V8.75H2Z</StreamGeometry>
+      <StreamGeometry x:Key="GlassMaximize">M2 2H14V14H2Z M3.5 3.5V12.5H12.5V3.5Z</StreamGeometry>
+      <StreamGeometry x:Key="GlassClose">M3.5 2.5L8 7L12.5 2.5L13.5 3.5L9 8L13.5 12.5L12.5 13.5L8 9L3.5 13.5L2.5 12.5L7 8L2.5 3.5Z</StreamGeometry>
+      <StreamGeometry x:Key="GlassMoon">M13.5 10.5C6.6 11.9 4.2 5.9 7.2 2C2.1 2.5 .5 8.8 3.5 12.1C6 15 11.3 15 13.5 10.5Z</StreamGeometry>
       <StreamGeometry x:Key="R2Heart">M12,20.5 C10.75,19.62 3,14.25 3,8.95 C3,6.08 5.22,4 7.91,4 C9.64,4 11.12,4.86 12,6.16 C12.88,4.86 14.36,4 16.09,4 C18.78,4 21,6.08 21,8.95 C21,14.25 13.25,19.62 12,20.5 Z</StreamGeometry>
       <LinearGradientBrush x:Key="R2HeartFill" StartPoint="0%,0%" EndPoint="80%,100%">
         <GradientStop Color="#FF82AC" Offset="0"/><GradientStop Color="#FF4D7D" Offset="1"/>
@@ -14,6 +20,13 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <BoxShadows x:Key="GlassLift">0 2 6 0 #226B98CA, 0 12 30 0 #263F74BD</BoxShadows>
+          <LinearGradientBrush x:Key="GlassKnob" StartPoint="15%,0%" EndPoint="90%,100%">
+            <GradientStop Color="#FFFFFF" Offset="0"/><GradientStop Color="#F2D9EDFF" Offset="0.52"/><GradientStop Color="#FF9FC6F0" Offset="1"/>
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="GlassScrollThumb" Color="#906789B2"/>
+          <SolidColorBrush x:Key="GlassRail" Color="#A8A2C4E8"/>
+          <SolidColorBrush x:Key="R2Focus" Color="#3269A8"/>
           <SolidColorBrush x:Key="GlassBase" Color="#F9FBFF"/>
           <SolidColorBrush x:Key="GlassSurface" Color="#CCFFFFFF"/>
           <SolidColorBrush x:Key="GlassSide" Color="#B8F4F9FF"/>
@@ -21,9 +34,9 @@
           <SolidColorBrush x:Key="LyricActive" Color="#0F172A"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#475569"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#334155"/>
-          <SolidColorBrush x:Key="TranslationIdle" Color="#64748B"/>
+          <SolidColorBrush x:Key="TranslationIdle" Color="#52637A"/>
           <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#F2FFFFFF" Offset="0"/><GradientStop Color="#559ECBFF" Offset="1"/>
+            <GradientStop Color="#FFFFFFFF" Offset="0"/><GradientStop Color="#B9FFFFFF" Offset="0.38"/><GradientStop Color="#7792BFFF" Offset="0.84"/><GradientStop Color="#55F096C4" Offset="1"/>
           </LinearGradientBrush>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
             <GradientStop Color="#26FF8AB8" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
@@ -35,7 +48,7 @@
           <SolidColorBrush x:Key="R2Side" Color="#F2F7FF"/>
           <SolidColorBrush x:Key="R2Edge" Color="#DCE8FA"/>
           <SolidColorBrush x:Key="R2Ink" Color="#1E293B"/>
-          <SolidColorBrush x:Key="R2Muted" Color="#64748B"/>
+          <SolidColorBrush x:Key="R2Muted" Color="#52637A"/>
           <SolidColorBrush x:Key="R2Hover" Color="#EDF4FF"/>
           <SolidColorBrush x:Key="R2Stripe" Color="#F6FAFF"/>
           <SolidColorBrush x:Key="R2Tint" Color="#FCECF5"/>
@@ -45,6 +58,13 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <BoxShadows x:Key="GlassLift">0 2 7 0 #4C101A31, 0 14 30 0 #6B0A142B</BoxShadows>
+          <LinearGradientBrush x:Key="GlassKnob" StartPoint="15%,0%" EndPoint="90%,100%">
+            <GradientStop Color="#D9C8E4FF" Offset="0"/><GradientStop Color="#687CBAEE" Offset="0.52"/><GradientStop Color="#70617CC8" Offset="1"/>
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="GlassScrollThumb" Color="#A09ABFE5"/>
+          <SolidColorBrush x:Key="GlassRail" Color="#A4476082"/>
+          <SolidColorBrush x:Key="R2Focus" Color="#7DC2FF"/>
           <SolidColorBrush x:Key="GlassBase" Color="#0E1422"/>
           <SolidColorBrush x:Key="GlassSurface" Color="#8C162033"/>
           <SolidColorBrush x:Key="GlassSide" Color="#A0172235"/>
@@ -52,9 +72,9 @@
           <SolidColorBrush x:Key="LyricActive" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#94A3B8"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#CBD5E1"/>
-          <SolidColorBrush x:Key="TranslationIdle" Color="#64748B"/>
+          <SolidColorBrush x:Key="TranslationIdle" Color="#A2B0C5"/>
           <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#699AC5FC" Offset="0"/><GradientStop Color="#559ECBFF" Offset="1"/>
+            <GradientStop Color="#ABC4E0FF" Offset="0"/><GradientStop Color="#6BA5C8FF" Offset="0.35"/><GradientStop Color="#686C95D6" Offset="0.82"/><GradientStop Color="#54DB91C8" Offset="1"/>
           </LinearGradientBrush>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
             <GradientStop Color="#25D06498" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
@@ -82,10 +102,13 @@
     <Setter Property="Background" Value="{DynamicResource GlassSurface}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="CornerRadius" Value="18"/>
+    <Setter Property="CornerRadius" Value="16"/>
   </Style>
-  <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="22"/><Setter Property="BoxShadow" Value="0 5 22 0 #214783B5"/></Style>
-  <Style Selector="Border.dock:pointerover"><Setter Property="Background" Value="{DynamicResource GlassPopup}"/></Style>
+  <Style Selector="Border.dock, Border.glass-float">
+    <Setter Property="CornerRadius" Value="22"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/>
+  </Style>
+  <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="20"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
+
   <Style Selector="Border.buffer-ring">
     <Style.Animations><Animation Duration="0:0:0.68" IterationCount="Infinite" PlaybackDirection="Alternate">
       <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.28"/></KeyFrame>
@@ -130,13 +153,11 @@
   </Style>
   <Style Selector="Button.primary">
     <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
-    <Setter Property="CornerRadius" Value="100"/><Setter Property="RenderTransform" Value="scale(1)"/>
-    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16"/></Transitions></Setter>
+    <Setter Property="CornerRadius" Value="100"/>
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource R2AccentHover}"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
   </Style>
-  <Style Selector="Button.primary:pressed"><Setter Property="RenderTransform" Value="scale(0.9)"/></Style>
   <Style Selector="Button.heart Path"><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="Fill" Value="Transparent"/>
     <Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
@@ -167,22 +188,19 @@
   <Style Selector="ListBox"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
   <Style Selector="ListBox.songs > ListBoxItem:nth-child(even)"><Setter Property="Background" Value="{DynamicResource R2Stripe}"/></Style>
+  <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter>
+  </Style>
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
-  <Style Selector="Slider"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/><Setter Property="Background" Value="{DynamicResource R2Edge}"/></Style>
-  <Style Selector="Slider /template/ RepeatButton#PART_DecreaseButton"><Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/></Style>
-  <Style Selector="Slider /template/ Thumb"><Setter Property="Background" Value="{DynamicResource R2Accent}"/></Style>
-  <Style Selector="Slider.progress"><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/></Style>
-  <Style Selector="Slider.progress /template/ Thumb"><Setter Property="Opacity" Value="0"/><Setter Property="RenderTransform" Value="scale(0.7)"/></Style>
-  <Style Selector="Slider.progress:pointerover /template/ Thumb"><Setter Property="Opacity" Value="1"/><Setter Property="RenderTransform" Value="scale(1.2)"/></Style>
-  <Style Selector="Slider.progress.editing /template/ Thumb"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Border.playlist-tile">
     <Setter Property="RenderTransform" Value="translateY(0px)"/>
-    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.18"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter>
   </Style>
   <Style Selector="Border.playlist-tile:pointerover"><Setter Property="RenderTransform" Value="translateY(-4px)"/></Style>
-  <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18"/></Transitions></Setter></Style>
+  <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter></Style>
   <Style Selector="Border.playlist-tile:pointerover Button.card-play"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Button.card-play:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="TextBlock.wave"><Style.Animations><Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.4"/></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame></Animation></Style.Animations></Style>
+  <StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/GlassControls.axaml"/>
 </Styles>

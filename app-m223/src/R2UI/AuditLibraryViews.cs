@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.VisualTree;
 
 namespace HuayuanPreview.R2;
@@ -54,9 +53,7 @@ public sealed partial class WorkspaceState
         panel.Children.Add(new StackPanel { Orientation=Orientation.Horizontal, Spacing=8, Children={ action,cancel } });
         var dialog = new Window { Title=title, Width=400, SizeToContent=SizeToContent.Height, CanResize=false,
             WindowStartupLocation=WindowStartupLocation.CenterOwner, RequestedThemeVariant=owner.ActualThemeVariant,
-            Content=new Border { Classes={ "glass" }, Margin=new Thickness(12), Padding=new Thickness(14), Child=panel } };
-        dialog.Styles.Add(new Avalonia.Markup.Xaml.Styling.StyleInclude(new Uri("avares://HuayuanMusic.P17.Nightflight/"))
-        { Source=new Uri("avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml") });
+            Content=new Border { Classes={ "glass", "glass-float" }, Margin=new Thickness(12), Padding=new Thickness(14), Child=panel } };
         action.Click += (_, _) =>
         {
             if (remove || !string.IsNullOrWhiteSpace(input.Text)) dialog.Close(remove?"":input.Text.Trim());

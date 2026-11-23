@@ -14,17 +14,10 @@
 <Style Selector="ListBoxItem"><Setter Property="Padding" Value="4"/><Setter Property="CornerRadius" Value="0"/></Style>
 <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Selected}"/><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/><Setter Property="BorderThickness" Value="2,0,0,0"/></Style>
 <Style Selector="ListBoxItem:selected:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource Selected}"/></Style>
-<Style Selector="Slider /template/ Thumb"><Setter Property="Width" Value="8"/><Setter Property="Height" Value="8"/><Setter Property="MinWidth" Value="8"/><Setter Property="MinHeight" Value="8"/></Style>
-<Style Selector="Slider /template/ Thumb /template/ Border"><Setter Property="Background" Value="{DynamicResource Primary}"/></Style>
 <Style Selector="ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource Surface2}"/></Style>
 <Style Selector="TextBox"><Setter Property="PlaceholderForeground" Value="{DynamicResource Sub}"/><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="BorderBrush" Value="{DynamicResource Line}"/></Style>
 <Style Selector="TextBox /template/ TextBlock#PART_Placeholder"><Setter Property="Opacity" Value="1"/></Style>
-<Style Selector="Slider"><Setter Property="Foreground" Value="{DynamicResource Primary}"/></Style>
 <Style Selector="MenuItem"><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
 
-<Style Selector="Slider.player-slider"><Setter Property="Height" Value="32"/><Setter Property="MinHeight" Value="32"/><Setter Property="Background" Value="{DynamicResource Line}"/><Setter Property="Foreground" Value="{DynamicResource Primary}"/></Style>
-<Style Selector="Slider.player-slider /template/ Thumb"><Setter Property="Width" Value="12"/><Setter Property="Height" Value="12"/><Setter Property="MinWidth" Value="12"/><Setter Property="MinHeight" Value="12"/><Setter Property="Background" Value="{DynamicResource Primary}"/><Setter Property="BorderBrush" Value="{DynamicResource Surface}"/><Setter Property="BorderThickness" Value="2"/><Setter Property="RenderTransformOrigin" Value="50%,50%"/><Setter Property="RenderTransform" Value="scale(1)"/></Style>
-<Style Selector="Slider.player-slider:pointerover /template/ Thumb"><Setter Property="RenderTransform" Value="scale(1.25)"/></Style>
-<Style Selector="Slider.player-slider.editing /template/ Thumb"><Setter Property="RenderTransform" Value="scale(1.35)"/></Style>
-<Style Selector="Slider.player-slider:focus-visible"><Setter Property="BorderBrush" Value="{DynamicResource Primary}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="CornerRadius" Value="5"/></Style>
+<StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml"/>
 </Application.Styles></Application>

@@ -2,7 +2,6 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
-using Avalonia.Markup.Xaml.Styling;
 using Avalonia.Interactivity;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
@@ -14,7 +13,7 @@ namespace HuayuanPreview.R2;
 public partial class R2ShellView : UserControl
 {
     private readonly DispatcherTimer filterDelay = new() { Interval = TimeSpan.FromMilliseconds(150) };
-    private readonly DispatcherTimer drawerDelay = new() { Interval = TimeSpan.FromMilliseconds(240) };
+    private readonly DispatcherTimer drawerDelay = new() { Interval = TimeSpan.FromMilliseconds(255) };
     private readonly DispatcherTimer toastDelay = new() { Interval = TimeSpan.FromMilliseconds(2250) };
     private ShellModel? model;
     private bool queueOpen;
@@ -32,8 +31,6 @@ public partial class R2ShellView : UserControl
             filterDelay.Stop();
             if(model?.Workspace.Local==true) model.Workspace.ApplyFilter(CurrentFilter.Text ?? "");
         };
-        DesktopProgress.PointerEntered += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 6d;
-        DesktopProgress.PointerExited += (_, _) => DesktopProgress.Resources["SliderTrackThemeHeight"] = 3d;
         drawerDelay.Tick += (_, _) => { drawerDelay.Stop(); if (!queueOpen) DrawerLayer.IsVisible = false; };
         toastDelay.Tick += (_, _) =>
         {
@@ -187,11 +184,9 @@ public partial class R2ShellView : UserControl
             Title = "登录酷狗", Width = 460, Height = 440, CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             RequestedThemeVariant = ActualThemeVariant,
-            Content = new Border { Classes = { "glass" }, Margin = new Avalonia.Thickness(12),
+            Content = new Border { Classes = { "glass", "glass-float" }, Margin = new Avalonia.Thickness(12),
                 Child = new StackPanel { Children = { holder, refresh } } }
         };
-        dialog.Styles.Add(new StyleInclude(new Uri("avares://HuayuanMusic.P17.Nightflight/"))
-        { Source = new Uri("avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml") });
         loginDialog = dialog;
         dialog.Closed += (_, _) =>
         {
@@ -236,7 +231,7 @@ public partial class R2ShellView : UserControl
         if (Window is not { } window)
             return;
         window.WindowState = window.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-        MaximizeButton.Content = window.WindowState == WindowState.Maximized ? "❐" : "□";
+        ToolTip.SetTip(MaximizeButton, window.WindowState == WindowState.Maximized ? "还原窗口" : "最大化窗口");
     }
     private void CloseWindow(object? sender, RoutedEventArgs args) => Window?.Close();
     private void StartWindowDrag(object? sender, PointerPressedEventArgs args)
@@ -255,7 +250,7 @@ public partial class R2ShellView : UserControl
         if (open) DrawerLayer.IsVisible = true; else drawerDelay.Start();
         DrawerLayer.IsHitTestVisible = open;
         DrawerShade.Opacity = open ? 1 : 0;
-        QueueDrawer.RenderTransform = TransformOperations.Parse(open ? "translateX(0px)" : "translateX(360px)");
+        QueueDrawer.RenderTransform = TransformOperations.Parse(open ? "translateX(0px)" : "translateX(380px)");
     }
 
     private void TransportKeyDown(object? sender, KeyEventArgs args)

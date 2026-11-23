@@ -50,8 +50,8 @@ public sealed partial class WorkspaceState:ObservableObject {
   heading.FontWeight = FontWeight.SemiBold;
   status.Classes.Add("muted");
   status.Margin = new Thickness(0,0,0,4);
-  content.Transitions = new() { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) } };
-  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(25,8,25,12)};
+  content.Transitions = new() { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new Avalonia.Animation.Easings.CubicEaseOut() } };
+  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(24,8,24,16)};
   area.Children.Add(heading);Grid.SetRow(status,1);area.Children.Add(status);Grid.SetRow(content,2);area.Children.Add(content);
   Root=area;
   if(Program.Desktop) AddDesktopNavigation(nav);
@@ -203,7 +203,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    new SelectableTextBlock{Text=Local?"本地歌单":"酷狗概念版 · 只读歌单",Classes={"muted"},FontSize=11},
    new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
-  var grid=new Grid{ColumnDefinitions=new ColumnDefinitions("172,*"),ColumnSpacing=25,Margin=new Thickness(0,2,0,18)};
+  var grid=new Grid{ColumnDefinitions=new ColumnDefinitions("172,*"),ColumnSpacing=24,Margin=new Thickness(0,4,0,16)};
   grid.Children.Add(cover);Grid.SetColumn(meta,1);grid.Children.Add(meta);hero.Content=grid;
   playlistIntroRequest?.Cancel();
   if(Program.Desktop&&!Local&&Host.Concept.Connected&&displayedSnapshot is { } snapshot&&SelectedPlaylistId>0&&SelectedPlaylistId<=snapshot.Playlists.Count)

@@ -2,17 +2,19 @@
              xmlns:lyrics="using:AvaloniaLyrics" xmlns:local="using:HuayuanPreview" xmlns:r2="using:HuayuanPreview.R2"
              x:Class="HuayuanPreview.R2.R2ShellView" x:CompileBindings="False">
   <UserControl.Styles>
-    <StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml"/>
     <StyleInclude Source="avares://AvaloniaLyrics/Themes/AvaloniaLyrics.axaml"/>
   </UserControl.Styles>
-  <Grid RowDefinitions="*,92" ColumnDefinitions="216,*" Background="{DynamicResource GlassBase}">
+  <Grid RowDefinitions="*,92" ColumnDefinitions="224,*" Background="{DynamicResource GlassBase}">
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassPinkGlow}" IsHitTestVisible="False"/>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBlueGlow}" IsHitTestVisible="False"/>
-    <Border Classes="glass" Background="{DynamicResource GlassSide}" Margin="10,10,0,0">
+    <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False"/>
+    <Border Classes="glass glass-side" Background="{DynamicResource GlassSide}" Margin="12,12,0,0">
+      <Grid>
+      <r2:GlassOptics Radius="20" Frost="0.64" Margin="1" IsHitTestVisible="False"/>
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="7,0">
           <Border Width="32" Height="32" CornerRadius="10" Background="{DynamicResource R2Accent}">
-            <PathIcon Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" Data="M9,3 L20,1 L20,15 C20,19 14,21 12,18 C10,15 13,13 17,13 L17,6 L12,7 L12,18 C12,22 6,24 4,21 C2,18 5,16 9,16 Z"/>
+            <PathIcon Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#142540" Data="M9,3 L20,1 L20,15 C20,19 14,21 12,18 C10,15 13,13 17,13 L17,6 L12,7 L12,18 C12,22 6,24 4,21 C2,18 5,16 9,16 Z"/>
           </Border>
           <TextBlock Text="Huayuan Music" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
         </StackPanel>
@@ -29,17 +31,20 @@
           <Button Classes="nav" Click="OpenPluginCenter">DLC 插件中心</Button>
         </StackPanel>
       </Grid>
+      </Grid>
     </Border>
-    <Grid Grid.Column="1" RowDefinitions="58,*">
+    <Grid Grid.Column="1" RowDefinitions="64,*">
       <Border>
         <Grid Name="Toolbar" ColumnDefinitions="Auto,Auto,240,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6" Margin="14,0,7,0">
-          <Button Content="‹" FontSize="22" ToolTip.Tip="后退" AutomationProperties.Name="后退" Click="GoBack" VerticalAlignment="Center"/>
-          <Button Grid.Column="1" Content="›" FontSize="22" ToolTip.Tip="前进" AutomationProperties.Name="前进" Click="GoForward" VerticalAlignment="Center"/>
-          <TextBox Grid.Column="2" Name="CurrentFilter" MaxLength="120" PlaceholderText="筛选本地音乐" VerticalAlignment="Center" TextChanged="FilterChanged"/>
+          <Button FontSize="22" ToolTip.Tip="后退" AutomationProperties.Name="后退" Click="GoBack" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassBack}"/></Button>
+          <Button Grid.Column="1" FontSize="22" ToolTip.Tip="前进" AutomationProperties.Name="前进" Click="GoForward" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassForward}"/></Button>
+          <TextBox Grid.Column="2" Name="CurrentFilter" Classes="search-capsule" MaxLength="120" PlaceholderText="筛选本地音乐" VerticalAlignment="Center" TextChanged="FilterChanged"/>
           <Popup Grid.Column="2" Name="SuggestionsPopup" PlacementTarget="{Binding #CurrentFilter}" Placement="BottomEdgeAlignedLeft" VerticalOffset="5"
                  ShouldUseOverlayLayer="False" TakesFocusFromNativeControl="False" OverlayDismissEventPassThrough="True" IsLightDismissEnabled="True">
-            <Border Classes="glass" Background="{DynamicResource GlassPopup}" Padding="8" Width="282" BoxShadow="0 6 20 0 #244783B5">
-              <StackPanel Spacing="5">
+            <Border Classes="glass glass-float" Background="{DynamicResource GlassPopup}" Width="296">
+              <Grid>
+              <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
+              <StackPanel Margin="10" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Name="SuggestionTitle" Classes="muted" Margin="7,5" VerticalAlignment="Center"/>
                   <Button Grid.Column="1" Name="ClearHistory" Content="清除" Click="ClearRecentSearches" IsVisible="False"/>
@@ -47,6 +52,7 @@
                 <WrapPanel Name="HistoryChips" IsVisible="False"/>
                 <ListBox Name="SuggestionList" MaxHeight="385" Background="Transparent" AutomationProperties.Name="酷狗搜索联想"/>
               </StackPanel>
+              </Grid>
             </Border>
           </Popup>
           <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
@@ -56,39 +62,40 @@
               <TextBlock Text="{Binding AccountLabel}" VerticalAlignment="Center"/>
             </StackPanel>
           </Button>
-          <Button Grid.Column="5" Classes="caption" Content="◐" FontSize="18" ToolTip.Tip="切换浅色或深色" AutomationProperties.Name="切换主题" Click="ToggleTheme" VerticalAlignment="Center"/>
-          <Button Grid.Column="6" Classes="caption" Content="–" ToolTip.Tip="最小化" AutomationProperties.Name="最小化窗口" Click="MinimizeWindow" VerticalAlignment="Center"/>
-          <Button Grid.Column="7" Classes="caption" Name="MaximizeButton" Content="□" ToolTip.Tip="最大化或还原" AutomationProperties.Name="最大化或还原" Click="ToggleWindowSize" VerticalAlignment="Center"/>
-          <Button Grid.Column="8" Classes="caption close" Content="×" FontSize="18" ToolTip.Tip="关闭" AutomationProperties.Name="关闭窗口" Click="CloseWindow" VerticalAlignment="Center"/>
+          <Button Grid.Column="5" Classes="caption" FontSize="18" ToolTip.Tip="切换浅色或深色" AutomationProperties.Name="切换主题" Click="ToggleTheme" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMoon}"/></Button>
+          <Button Grid.Column="6" Classes="caption" ToolTip.Tip="最小化" AutomationProperties.Name="最小化窗口" Click="MinimizeWindow" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMinimize}"/></Button>
+          <Button Grid.Column="7" Classes="caption" Name="MaximizeButton" ToolTip.Tip="最大化或还原" AutomationProperties.Name="最大化或还原" Click="ToggleWindowSize" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMaximize}"/></Button>
+          <Button Grid.Column="8" Classes="caption close" FontSize="18" ToolTip.Tip="关闭" AutomationProperties.Name="关闭窗口" Click="CloseWindow" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
         </Grid>
       </Border>
       <ContentControl Grid.Row="1" Content="{Binding WorkspaceRoot}" ClipToBounds="True"/>
 
     </Grid>
     <Border Grid.ColumnSpan="2" Grid.RowSpan="2" Name="LyricsOverlay" ZIndex="3" IsVisible="False" Opacity="0" Background="{DynamicResource GlassBase}">
-      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.2"/></Transitions></Border.Transitions>
+      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
       <Grid ClipToBounds="True">
         <Border Background="{DynamicResource GlassPinkGlow}"/>
         <Border Background="{DynamicResource GlassBlueGlow}"/>
-        <r2:TrackArtwork DisplaySize="420" IsHitTestVisible="False" Opacity="0.35" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <r2:GlassOptics IsAtmosphere="True" IsHitTestVisible="False"/>
+        <r2:TrackArtwork DisplaySize="420" IsHitTestVisible="False" Opacity="0.43" HorizontalAlignment="Center" VerticalAlignment="Center"
                          RenderTransform="scale(3.1)" DataContext="{Binding Player.DisplayedPlayingSong}">
-          <r2:TrackArtwork.Effect><BlurEffect Radius="95"/></r2:TrackArtwork.Effect>
+          <r2:TrackArtwork.Effect><BlurEffect Radius="76"/></r2:TrackArtwork.Effect>
         </r2:TrackArtwork>
         <Border Background="{DynamicResource R2LyricVeil}"/>
-        <Grid RowDefinitions="54,*" Margin="22,5,25,20">
+        <Grid RowDefinitions="56,*" Margin="24,8,24,24">
           <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="5">
             <Button Classes="glass-pill" Width="40" Height="40" Padding="0" Click="HideLyricOverlay" AutomationProperties.Name="收起正在播放">
               <PathIcon Width="15" Height="15" Data="M2,5 L8,11 L14,5 L16,7 L8,15 L0,7 Z"/>
             </Button>
             <Border Grid.Column="1" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
-            <Button Grid.Column="2" Classes="caption" Content="◐" AutomationProperties.Name="切换歌词页主题" Click="ToggleTheme"/>
-            <Button Grid.Column="3" Classes="caption" Content="–" AutomationProperties.Name="最小化窗口" Click="MinimizeWindow"/>
-            <Button Grid.Column="4" Classes="caption" Content="□" AutomationProperties.Name="最大化或还原" Click="ToggleWindowSize"/>
-            <Button Grid.Column="5" Classes="caption close" Content="×" AutomationProperties.Name="关闭窗口" Click="CloseWindow"/>
+            <Button Grid.Column="2" Classes="caption" AutomationProperties.Name="切换歌词页主题" Click="ToggleTheme"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMoon}"/></Button>
+            <Button Grid.Column="3" Classes="caption" AutomationProperties.Name="最小化窗口" Click="MinimizeWindow"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMinimize}"/></Button>
+            <Button Grid.Column="4" Classes="caption" AutomationProperties.Name="最大化或还原" Click="ToggleWindowSize"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMaximize}"/></Button>
+            <Button Grid.Column="5" Classes="caption close" AutomationProperties.Name="关闭窗口" Click="CloseWindow"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
           </Grid>
-          <Grid Grid.Row="1" ColumnDefinitions="42*,54*" ColumnSpacing="32">
+          <Grid Grid.Row="1" ColumnDefinitions="44*,56*" ColumnSpacing="32">
             <StackPanel Margin="12,0" MaxWidth="390" VerticalAlignment="Center" Spacing="7">
-              <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="19" Padding="1" BoxShadow="0 12 35 0 #425482B1">
+              <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="19" Padding="1" BoxShadow="{DynamicResource GlassLift}">
                 <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="6" Margin="0,6,0,0">
@@ -173,15 +180,17 @@
     </Border>
       <Grid Grid.ColumnSpan="2" Grid.RowSpan="2" Name="DrawerLayer" ZIndex="4" IsVisible="False" IsHitTestVisible="False" ClipToBounds="True">
         <Border Name="DrawerShade" Background="#45000000" Opacity="0" PointerPressed="CloseQueueFromBackdrop">
-          <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18"/></Transitions></Border.Transitions>
+          <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
         </Border>
-        <Border Name="QueueDrawer" Classes="glass" Width="360" Margin="0,8,11,8" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(360px)">
-          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.23"/></Transitions></Border.Transitions>
+        <Border Name="QueueDrawer" Classes="glass glass-float" Width="360" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(380px)">
+          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+          <Grid>
+          <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="3">
               <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
               <Button Grid.Column="1" Foreground="{DynamicResource R2Ink}" Content="清空" Command="{Binding Player.ClearQueueCommand}" VerticalAlignment="Center"/>
-              <Button Grid.Column="2" Content="×" AutomationProperties.Name="收起播放队列" Click="ToggleQueue" VerticalAlignment="Center"/>
+              <Button Grid.Column="2" AutomationProperties.Name="收起播放队列" Click="ToggleQueue" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
             </Grid>
             <ListBox Grid.Row="1" Name="DrawerItems" ItemsSource="{Binding Player.DisplayPlaybackQueue}">
               <ListBox.ItemTemplate>
@@ -217,9 +226,12 @@
                        HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
                        IsVisible="{Binding !Player.HasQueueTracks}"/>
           </Grid>
+          </Grid>
         </Border>
       </Grid>
-    <Border Name="MainDock" Grid.Row="1" Grid.ColumnSpan="2" Classes="glass dock" Margin="11,3,11,11">
+    <Border Name="MainDock" Grid.Row="1" Grid.ColumnSpan="2" Classes="glass dock" Margin="12,4,12,12">
+      <Grid>
+      <r2:GlassOptics Radius="22" Frost="0.74" Margin="1" IsHitTestVisible="False"/>
       <Grid RowDefinitions="16,*">
         <local:CommitSlider Name="DesktopProgress" Classes="progress" Margin="19,-7,19,0" AutomationProperties.Name="播放进度"/>
         <Grid Grid.Row="1" ColumnDefinitions="*,276,332" ColumnSpacing="10" Margin="18,0,18,8" ClipToBounds="True">
@@ -239,8 +251,8 @@
             <Grid Width="43" Height="43">
                   <Button Classes="primary" Width="43" Height="43" Command="{Binding Player.TogglePlayPauseCommand}" ToolTip.Tip="播放或暂停" AutomationProperties.Name="播放或暂停">
               <Grid Width="16" Height="16">
-                <PathIcon Width="15" Height="15" Foreground="White" Data="M4,2 L16,9 L4,16 Z" IsVisible="{Binding !Player.IsPlayingAudio}"/>
-                <PathIcon Width="14" Height="14" Foreground="White" Data="M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z" IsVisible="{Binding Player.IsPlayingAudio}"/>
+                <PathIcon Width="15" Height="15" Foreground="#142540" Data="M4,2 L16,9 L4,16 Z" IsVisible="{Binding !Player.IsPlayingAudio}"/>
+                <PathIcon Width="14" Height="14" Foreground="#142540" Data="M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z" IsVisible="{Binding Player.IsPlayingAudio}"/>
               </Grid>
             </Button>
                   <Border Classes="buffer-ring" IsVisible="{Binding Player.IsBuffering}" IsHitTestVisible="False" Margin="-3" BorderThickness="1.5"
@@ -270,6 +282,7 @@
             </Button>
           </StackPanel>
         </Grid>
+      </Grid>
       </Grid>
     </Border>
     <Border Name="ToastPlate" Grid.ColumnSpan="2" ZIndex="6" IsVisible="False" IsHitTestVisible="False"

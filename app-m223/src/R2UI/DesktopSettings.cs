@@ -60,9 +60,9 @@ public partial class R2ShellView
         }
         static ComboBox Options(string[] choices,int selected) => new()
         { ItemsSource=choices,SelectedIndex=selected,MinWidth=145,HorizontalAlignment=HorizontalAlignment.Left };
-        CheckBox Check(string label,bool value,Func<bool,DesktopOptions,DesktopOptions> update)
+        ToggleSwitch Check(string label,bool value,Func<bool,DesktopOptions,DesktopOptions> update)
         {
-            var check = new CheckBox { Content=label,IsChecked=value };
+            var check = new ToggleSwitch { OnContent=label,OffContent=label,IsChecked=value };
             check.IsCheckedChanged += async (_,_) => await PersistPreferenceAsync(current=>update(check.IsChecked==true,current));
             return check;
         }
