@@ -24,7 +24,7 @@ public partial class R2ShellView : UserControl
         InitializeComponent();
         InitializeOnlineSearch();
         InitializeLyricOverlay();
-        QualityChoice.SelectedIndex=DesktopPreferences.Quality switch { "320"=>1,"flac"=>2,_=>0 };
+        QualityChoice.SelectedIndex=FullQuality.SelectedIndex=DesktopPreferences.Quality switch { "320"=>1,"flac"=>2,_=>0 };
         filterDelay.Tick += (_, _) =>
         {
             filterDelay.Stop();
@@ -59,6 +59,9 @@ public partial class R2ShellView : UserControl
         model.Player.Updated += UpdateVolume;
         model.Player.Toast += ShowToast;
         VolumeSlider.Submit = model.Player.SetVolume;
+        FullVolume.Submit = model.Player.SetVolume;
+        FullProgress.Submit = model.Player.Seek;
+        InteractionController.Attach(DrawerItems, model.LocalWorkspace, model.Player, true);
         UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
@@ -93,10 +96,15 @@ public partial class R2ShellView : UserControl
         updatingFilter = false;
     }
 
+    private bool syncingQuality;
     private async void ChangeQuality(object? sender,SelectionChangedEventArgs args)
     {
-        var index=QualityChoice?.SelectedIndex ?? -1;
+        if(syncingQuality || sender is not ComboBox chooser || QualityChoice == null || FullQuality == null) return;
+        var index=chooser.SelectedIndex;
         if(index is <0 or >2) return;
+        syncingQuality=true;
+        QualityChoice.SelectedIndex=FullQuality.SelectedIndex=index;
+        syncingQuality=false;
         var selected=index switch { 1=>"320",2=>"flac",_=>"standard" };
         if(selected==DesktopPreferences.Quality) return;
         try { await DesktopPreferences.ChooseQualityAsync(selected); Program.Log("R2_QUALITY_PREFERENCE",new{quality=selected}); }
@@ -104,7 +112,19 @@ public partial class R2ShellView : UserControl
         { Program.Log("R2_QUALITY_WRITE_FAILED",new{type=error.GetType().Name}); }
     }
 
-    private void UpdateVolume(){VolumeSlider.Sync(model?.Player.State.Volume ?? 0);UpdateLyricOverlay();}
+    private void UpdateVolume()
+    {
+        var state=model?.Player.State;
+        VolumeSlider.Sync(state?.Volume ?? 0);
+        FullVolume.Sync(state?.Volume ?? 0);
+        if (lyricOpen && state != null)
+        {
+            FullProgress.IsEnabled = state.Duration > 0;
+            FullProgress.Maximum = Math.Max(0, state.Duration);
+            FullProgress.Sync(state.Position);
+        }
+        UpdateLyricOverlay();
+    }
     private Window? Window => TopLevel.GetTopLevel(this) as Window;
 
     private void FilterChanged(object? sender, TextChangedEventArgs args)
@@ -178,7 +198,7 @@ public partial class R2ShellView : UserControl
         }
         if(args.Key==Key.Escape && lyricOpen){CloseLyricOverlay(); args.Handled=true; return;}
         if (args.Source is Visual source &&
-            (source is TextBox || source.GetVisualAncestors().OfType<TextBox>().Any() || source is Slider))
+            (source is TextBox or Slider or SelectableTextBlock || source.GetVisualAncestors().Any(item=>item is TextBox or SelectableTextBlock)))
             return;
         var command = (args.Key, args.KeyModifiers) switch
         {

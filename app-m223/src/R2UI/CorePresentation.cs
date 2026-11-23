@@ -68,6 +68,10 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public string ActiveLyric=>state.LyricIndex>=0&&state.LyricIndex<state.Lyrics.Length
   &&(state.Playing||state.Paused)?state.Lyrics[state.LyricIndex].Text:"";
  public string ProgressText=>$"{FormatSeconds(state.Position)} / {FormatSeconds(state.Duration)}";
+ public string PositionText=>FormatSeconds(state.Position);
+ public string DurationText=>FormatSeconds(state.Duration);
+ public string NowPlayingCredit=>DisplayedPlayingSong is { } row
+  ? string.Join("  ·  ", new[]{row.Singer,row.AlbumName}.Where(text=>!string.IsNullOrWhiteSpace(text))) : "";
  public string TransportStatus=>state.Playing?"播放中":state.Paused?"已暂停":"已停止";
  static string FormatSeconds(double value){var seconds=(int)Math.Max(0,value);return $"{seconds/60:00}:{seconds%60:00}";}
  public bool IsPlayingAudio=>state.Playing;public string PlaybackFeedback=>state.Error.Length>0?state.Error:uiError.Length>0?uiError:"播放队列 · "+state.QueueEntries.Length;
@@ -104,8 +108,8 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
    var tracks=next.Tracks.ToDictionary(track=>track.Id);
    DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();OnPropertyChanged(nameof(DisplayPlaybackQueue));
   }
-  OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
-  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged)OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+  OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(PositionText));OnPropertyChanged(nameof(DurationText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
+  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged)OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
  }
  void DemandResult(){if(core.State.Error.Length>0)throw new InvalidOperationException(core.State.Error);}
  void DemandTrack(TrackRow row){if(!row.Owner.Local||!state.Tracks.Any(t=>t.Id==row.Track.Id&&t.Key==row.Track.Key))throw new InvalidOperationException("P2A 平台曲目只读 · 播放仅限隔离本地曲目");}

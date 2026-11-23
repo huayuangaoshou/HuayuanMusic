@@ -16,6 +16,8 @@ public partial class R2ShellView
     private DesktopSuggestion[] suggestions = [];
     private bool showingRecent;
     private string? lastSubmittedSearch;
+    private string? suggestionAccount;
+    private readonly LinkedList<(string Prefix, DesktopSuggestion[] Items)> suggestionCache = new();
 
     private void InitializeOnlineSearch()
     {
@@ -71,30 +73,40 @@ public partial class R2ShellView
             return;
         }
 
+        if (suggestionAccount != model.Concept.AccountKey)
+        {
+            suggestionCache.Clear();
+            suggestionAccount = model.Concept.AccountKey;
+        }
+        var local = InstantSuggestions(query);
+        ShowSearchSuggestions(local.Length == 0 ? [new(query, "搜索此关键词", query)] : local, false);
         using var request = new CancellationTokenSource();
         suggestionRequest = request;
         try
         {
-            await Task.Delay(225, request.Token);
-            var matches = MatchingHistory(query);
-            if (CurrentFilter.IsFocused)
-                ShowSearchSuggestions([new(query, "正在查找歌曲与歌手…", query)], false);
+            await Task.Delay(90, request.Token);
             var remote = model.Concept.Connected
                 ? await model.Concept.DesktopCall((g, ct) => g.SuggestDesktopAsync(query, ct), request.Token)
                 : [];
             if (!request.IsCancellationRequested && model.Workspace.IsKugou && CurrentFilter.IsFocused &&
+                suggestionAccount == model.Concept.AccountKey &&
                 string.Equals(CurrentFilter.Text?.Trim(), query, StringComparison.Ordinal))
             {
-                var items = remote.Concat(matches).DistinctBy(item => item.Query, StringComparer.OrdinalIgnoreCase).Take(8).ToArray();
-                ShowSearchSuggestions(items.Length == 0 ? [new(query, "搜索此关键词", query)] : items, false);
-                Program.Log("R2_SEARCH_SUGGEST", new { count = items.Length, queryLength = query.Length });
+                if (remote.Length > 0)
+                {
+                    CacheSuggestions(query, remote);
+                    var enriched = remote.Select(item => item.Artist.Length > 0 ? item :
+                        local.FirstOrDefault(candidate => candidate.Artist.Length > 0 &&
+                            candidate.Title.Equals(item.Title, StringComparison.OrdinalIgnoreCase)) ?? item);
+                    var items = enriched.Concat(local).DistinctBy(item => item.Query, StringComparer.OrdinalIgnoreCase).Take(8).ToArray();
+                    ShowSearchSuggestions(items, false);
+                }
+                Program.Log("R2_SEARCH_SUGGEST", new { immediate = local.Length, remote = remote.Length, queryLength = query.Length });
             }
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
         {
-            if (!request.IsCancellationRequested && CurrentFilter.IsFocused && model.Workspace.IsKugou)
-                ShowSearchSuggestions(MatchingHistory(query).Append(new(query, "搜索此关键词", query)).Take(8).ToArray(), false);
             Program.Log("R2_SEARCH_SUGGEST_FAILED", new { type = error.GetType().Name });
         }
         finally
@@ -107,6 +119,49 @@ public partial class R2ShellView
 
     private static IEnumerable<DesktopSuggestion> MatchingHistory(string query) =>
         DesktopPreferences.Recent.Where(term => term.Contains(query, StringComparison.OrdinalIgnoreCase)).Select(RecentSuggestion);
+
+    private DesktopSuggestion[] InstantSuggestions(string query)
+    {
+        var node = suggestionCache.First;
+        var cached = new List<DesktopSuggestion>();
+        while (node != null)
+        {
+            if (string.Equals(query, node.Value.Prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                cached.InsertRange(0, node.Value.Items);
+                suggestionCache.Remove(node);
+                suggestionCache.AddFirst(node);
+                break;
+            }
+            if (query.StartsWith(node.Value.Prefix, StringComparison.OrdinalIgnoreCase))
+                cached.AddRange(node.Value.Items.Where(item => Matches(item.Title, item.Artist)));
+            node = node.Next;
+        }
+        var snapshot = model?.Concept.Snapshot;
+        var loaded = (snapshot?.AccountKey == suggestionAccount ? snapshot : null)?.Playlists.SelectMany(list => list.Tracks)
+            .Where(track => Matches(track.Title, track.Artist))
+            .DistinctBy(track => track.ProviderTrackId)
+            .Take(8)
+            .Select(track => new DesktopSuggestion(track.Title, track.Artist,
+                string.IsNullOrWhiteSpace(track.Artist) ? track.Title : track.Title + " " + track.Artist)) ?? [];
+        return cached.Concat(MatchingHistory(query)).Concat(loaded)
+            .DistinctBy(item => item.Query, StringComparer.OrdinalIgnoreCase).Take(8).ToArray();
+
+        bool Matches(string title, string artist) => title.Contains(query, StringComparison.OrdinalIgnoreCase) ||
+            artist.Contains(query, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private void CacheSuggestions(string query, DesktopSuggestion[] items)
+    {
+        for (var node = suggestionCache.First; node != null; node = node.Next)
+            if (node.Value.Prefix.Equals(query, StringComparison.OrdinalIgnoreCase))
+            {
+                suggestionCache.Remove(node);
+                break;
+            }
+        suggestionCache.AddFirst((query, items));
+        if (suggestionCache.Count > 48) suggestionCache.RemoveLast();
+    }
 
     private Control BuildSuggestion(DesktopSuggestion entry)
     {
@@ -133,6 +188,7 @@ public partial class R2ShellView
 
     private void ShowSearchSuggestions(DesktopSuggestion[] items, bool recent)
     {
+        if (SuggestionsPopup.IsOpen && showingRecent == recent && suggestions.SequenceEqual(items)) return;
         suggestions = items;
         showingRecent = recent;
         chosenSuggestion = -1;

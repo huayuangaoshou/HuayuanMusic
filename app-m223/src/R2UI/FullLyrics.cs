@@ -29,6 +29,10 @@ public partial class R2ShellView
                 _ = model.Player.Seek(position.TotalSeconds);
             }
         });
+        InstallLyricsMenu();
+        InstallDesktopLyricsMenu(DesktopLyricToggle);
+        InstallDesktopLyricsMenu(FullDesktopLyricToggle);
+        UpdateDesktopLyricButtons();
         DetachedFromVisualTree += (_, _) =>
         {
             CloseLyricOverlay();
@@ -41,6 +45,7 @@ public partial class R2ShellView
     {
         if (lyricOpen) { CloseLyricOverlay(); return; }
         lyricOpen = true;
+        MainDock.IsVisible = false;
         LyricsOverlay.IsVisible = true;
         LyricsOverlay.Opacity = 0;
         FullLyricView.EnableAnimation = true;
@@ -50,7 +55,7 @@ public partial class R2ShellView
         {
             if (lyricOpen) LyricsOverlay.Opacity = 1;
         }, Avalonia.Threading.DispatcherPriority.Render);
-        UpdateLyricOverlay();
+        UpdateVolume();
     }
 
     private void HideLyricOverlay(object? sender, RoutedEventArgs args) => CloseLyricOverlay();
@@ -58,6 +63,7 @@ public partial class R2ShellView
     {
         if (!lyricOpen) return;
         lyricOpen = false;
+        CancelComments();
         ReleaseLyricsIfHidden();
         LyricsOverlay.Opacity = 0;
         Avalonia.Threading.DispatcherTimer.RunOnce(() =>
@@ -66,6 +72,7 @@ public partial class R2ShellView
             {
                 FullLyricView.IsActive = false;
                 LyricsOverlay.IsVisible = false;
+                MainDock.IsVisible = true;
             }
         }, TimeSpan.FromMilliseconds(210));
     }
@@ -75,6 +82,7 @@ public partial class R2ShellView
         if ((!lyricOpen && desktopLyrics == null) || model == null) return;
         var player = model.Player;
         var row = player.DisplayedPlayingSong;
+        if (lyricOpen) UpdateCommentTrack(row);
         FullLyricView.Position = TimeSpan.FromSeconds(Math.Max(0, player.State.Position));
         FullLyricView.IsPositionClockRunning = player.State.Playing;
         desktopLyrics?.Sync(player.State);
@@ -99,7 +107,7 @@ public partial class R2ShellView
             previousLocalLyrics = player.State.Lyrics;
             SetLyrics(previousLocalLyrics.Select(line => new LyricLine
             {
-                Text = line.Text, Start = TimeSpan.FromMilliseconds(line.StartMilliseconds)
+                Text = line.Text, Start = TimeSpan.FromMilliseconds(line.StartMilliseconds), Translation = line.Translation
             }).ToArray(), "未找到本地歌词");
         }
     }
@@ -116,7 +124,7 @@ public partial class R2ShellView
             var lines = result == null ? [] : await Task.Run(() => LyricsService.ParseDesktopRenderLines(result.Text, result.Format), request.Token);
             if ((!lyricOpen && desktopLyrics == null) || lyricTrack != key || request.IsCancellationRequested) return;
             SetLyrics(lines, "这首歌暂无歌词");
-            Program.Log("R2_DESKTOP_LYRICS", new { lines = lines.Length, wordLines = lines.Count(line => line.Words.Count > 0) });
+            Program.Log("R2_DESKTOP_LYRICS", new { lines = lines.Length, wordLines = lines.Count(line => line.Words.Count > 0), translations = lines.Count(line => !string.IsNullOrWhiteSpace(line.Translation)) });
         }
         catch (OperationCanceledException) { }
         catch (Exception error)
@@ -138,6 +146,9 @@ public partial class R2ShellView
         FullLyricView.Lines = lines;
         LyricEmpty.Text = empty;
         LyricEmpty.IsVisible = lines.Length == 0;
+        TranslationToggle.IsEnabled = lines.Any(line => !string.IsNullOrWhiteSpace(line.Translation));
+        ToolTip.SetTip(TranslationToggle, TranslationToggle.IsEnabled ? "显示或隐藏译文" : "当前曲目暂无译文");
+        FullLyricView.ShowTranslation = showTranslation && TranslationToggle.IsEnabled;
         desktopLyrics?.SetLyrics(lines, empty);
     }
 
@@ -158,8 +169,6 @@ public partial class R2ShellView
         if (desktopLyrics != null) desktopLyrics.Close();
         else OpenDesktopLyrics();
     }
-
-    private void UnlockDesktopLyrics(object? sender, RoutedEventArgs args) => desktopLyrics?.SetLocked(false);
 
     private void OpenDesktopLyrics()
     {
@@ -207,7 +216,10 @@ public partial class R2ShellView
 
     private void UpdateDesktopLyricButtons()
     {
-        DesktopLyricToggle.Classes.Set("selected", desktopLyrics != null);
-        DesktopLyricUnlock.IsVisible = desktopLyrics?.Locked == true;
+        foreach (var button in new[] { DesktopLyricToggle, FullDesktopLyricToggle })
+        {
+            button.Classes.Set("selected", desktopLyrics != null);
+            ToolTip.SetTip(button, desktopLyrics == null ? "开启桌面歌词" : "关闭桌面歌词 · 右键解锁或重置");
+        }
     }
 }

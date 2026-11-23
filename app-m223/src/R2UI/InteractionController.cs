@@ -31,16 +31,30 @@ public sealed class InteractionController:ObservableObject {
    void Add(string label,Action action,bool enabled=true)=>menu.Items.Add(new MenuItem{Header=label,Command=new RelayCommand(action),IsEnabled=enabled});
    bool local=selected.Length>0&&selected.All(r=>r.Owner.Local&&!r.IsProviderTrack);
    if(selected.Length>0&&selected.All(r=>r.CanUsePlatform)){
-    if(selected.Length==1)Add("播放所选",()=>PlayRow(selected[0]));
+    if(selected.Length==1)Add("立即播放",()=>PlayRow(selected[0]));
     Add("下一首播放",()=>player.Next(selected));
+    Add(selected.Length==1&&row.IsFavorite?"取消红心":"收藏 / 红心",()=>player.Favorite(selected));
     Add("追加到播放队列",()=>player.Append(selected));
    }
-   if(local){Add("收藏 / 取消收藏",()=>player.Favorite(selected));var target=new MenuItem{Header="加入本地歌单"};foreach(var pl in player.State.Lists){long id=pl.Id;target.Items.Add(new MenuItem{Header=pl.Name,Command=new RelayCommand(()=>player.AddMembership(id,selected))});}menu.Items.Add(target);}
+   void Copy(string label,string text) => menu.Items.Add(new MenuItem
+   { Header=label, IsEnabled=!string.IsNullOrWhiteSpace(text), Command=new AsyncRelayCommand(()=>R2ShellView.CopyTextAsync(list,text)) });
+   Copy("复制歌名",row.Name);
+   Copy("复制歌手",row.Singer);
+   Copy("复制歌名 - 歌手",string.Join(" - ",new[]{row.Name,row.Singer}.Where(text=>!string.IsNullOrWhiteSpace(text))));
+   if(!row.IsProviderTrack)Add("打开文件所在目录",()=>RevealLocalFile(row));
+   if(local){var target=new MenuItem{Header="加入本地歌单"};foreach(var pl in player.State.Lists){long id=pl.Id;target.Items.Add(new MenuItem{Header=pl.Name,Command=new RelayCommand(()=>player.AddMembership(id,selected))});}menu.Items.Add(target);}
    if(queue)Add("从播放队列移除",()=>player.Remove(selected));else if(Editable)Add("从本地歌单移除（不删除文件）",()=>player.Remove(selected));
    if(queue||Editable){Add("上移",()=>MoveSelected(-1),sort==0);Add("下移",()=>MoveSelected(1),sort==0);}if(!queue)Add("恢复默认顺序",()=>{sort=0;field="";Display(original);SetStatus();});menu.ShowAt(list,true);e.Handled=true;};
   l.AddHandler(InputElement.PointerPressedEvent,(_,e)=>{if(!(queue||Editable)||sort!=0||FromButton(e.Source)||!e.GetCurrentPoint(l).Properties.IsLeftButtonPressed)return;var row=Hit(e.Source);if(row==null)return;Cancel();dragging=row;origin=e.GetPosition(l);snapshot=Items().Select(r=>r.Identity).ToArray();pointer=e.Pointer;},Avalonia.Interactivity.RoutingStrategies.Bubble,handledEventsToo:true);
   l.PointerMoved+=(_,e)=>DragMove(e);l.PointerReleased+=(_,_)=>Commit();l.PointerCaptureLost+=(_,_)=>Cancel();l.DetachedFromVisualTree+=(_,_)=>Cancel();
   l.AttachedToVisualTree+=(_,_)=>{if(line.Parent==null&&l.Parent is Grid grid){Grid.SetRow(line,Grid.GetRow(l));grid.Children.Add(line);}};
+ }
+ static void RevealLocalFile(TrackRow row)
+ {
+  var path=row.Track.Key;
+  if(!Path.IsPathFullyQualified(path)||!File.Exists(path)||Path.GetDirectoryName(path) is not { } directory)return;
+  try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(directory) { UseShellExecute=true }); }
+  catch(System.ComponentModel.Win32Exception error) { Program.Log("R2_REVEAL_LOCAL_FAILED",new { type=error.GetType().Name }); }
  }
  TrackRow[] Items()=>list.Items.OfType<TrackRow>().ToArray();public TrackRow[] Selected(){var set=list.SelectedItems?.OfType<TrackRow>().ToHashSet()??[];return Items().Where(set.Contains).ToArray();}
  static bool FromButton(object? source)=>source is Button||source is Control c&&c.GetVisualAncestors().OfType<Button>().Any();

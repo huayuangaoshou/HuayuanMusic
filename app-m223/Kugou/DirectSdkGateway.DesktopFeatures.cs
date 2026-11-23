@@ -33,6 +33,7 @@ public sealed partial class DirectSdkGateway
         internal RecommendClient Recommend { get; } = new(new RawDiscoveryApi(transport), account);
         internal RankClient Ranks { get; } = new(new RawRankApi(transport));
         internal LyricClient Lyrics { get; } = new(new RawLyricApi(transport));
+        internal CommentClient Comments { get; } = new(new RawCommentApi(transport));
         internal SongClient Songs { get; } = new(new RawSongApi(transport, account));
     }
 
@@ -82,7 +83,8 @@ public sealed partial class DirectSdkGateway
                     or "/v1/search/album" or "/pubsongs/v2/get_other_list_file_nofilt" or "/ocean/v6/rank/list"
                 : method == HttpMethod.Post && path is "/v3/get_my_info" or "/everyday_song_recommend"
                     or "/openapi/kmr/v2/rank/audio" or "/v1/album_audio/lite" or "/v2/get_res_privilege/lite"
-                    or "/v7/get_all_list" or "/cloudlist.service/v6/add_song" or "/v4/delete_songs",
+                    or "/v7/get_all_list" or "/cloudlist.service/v6/add_song" or "/v4/delete_songs"
+                    or "/mcomment/v1/cmtlist" or "/mcomment/v1/cmt_classify_list" or "/kmr/v2/albums",
             _ => false
         };
     }
@@ -91,6 +93,39 @@ public sealed partial class DirectSdkGateway
     {
         var profile = await sdk.User.GetUserInfoAsync().ConfigureAwait(false);
         return profile is null || string.IsNullOrWhiteSpace(profile.Name) ? null : new(profile.Name, ArtworkUrl.Normalize(profile.Pic));
+    }, ct);
+
+    public Task<string?> ReadDesktopPlaylistIntroAsync(string id, CancellationToken ct) => Serial(async () =>
+    {
+        if (!desktop || id.Length is <1 or >128 || id.Any(c => !char.IsAsciiLetterOrDigit(c) && c != '-' && c != '_')) return null;
+        DemandLogin();
+        using var route = details.Begin([id], ct);
+        var info = await playlist.GetInfoAsync(id).WaitAsync(ct).ConfigureAwait(false);
+        return info?.Intro;
+    }, ct);
+
+    public Task<string?> ReadDesktopAlbumIntroAsync(string id, CancellationToken ct) => DesktopRead(async sdk =>
+    {
+        if (!long.TryParse(id, NumberStyles.None, CultureInfo.InvariantCulture, out var albumId) || albumId <= 0) return null;
+        var root = await sdk.Albums.GetDetailRawAsync(id).ConfigureAwait(false);
+        return FindIntro(root, 0);
+
+        static string? FindIntro(JsonElement node, int depth)
+        {
+            if (depth >= 6) return null;
+            if (node.ValueKind == JsonValueKind.Object)
+            {
+                if (node.TryGetProperty("intro", out var intro) && intro.ValueKind == JsonValueKind.String)
+                    return intro.GetString();
+                foreach (var name in new[] { "data", "albums", "list", "info" })
+                    if (node.TryGetProperty(name, out var nested) && FindIntro(nested, depth + 1) is { Length: >0 } found)
+                        return found;
+            }
+            if (node.ValueKind == JsonValueKind.Array)
+                foreach (var entry in node.EnumerateArray().Take(3))
+                    if (FindIntro(entry, depth + 1) is { Length: >0 } found) return found;
+            return null;
+        }
     }, ct);
 
     public Task<string?> ReadDesktopFavoritesIdAsync(CancellationToken ct) => DesktopRead(async sdk =>
@@ -105,34 +140,15 @@ public sealed partial class DirectSdkGateway
             ? official[0] : null;
     }
 
-    public async Task<DesktopSuggestion[]> SuggestDesktopAsync(string query, CancellationToken ct)
-    {
-        DesktopSuggestion[] terms = [];
-        try
+    public Task<DesktopSuggestion[]> SuggestDesktopAsync(string query, CancellationToken ct) =>
+        DesktopRead(async sdk =>
         {
-            terms = await DesktopRead(async sdk =>
-            {
-                var raw = await sdk.Search.SearchSuggestRawAsync(query, albumTipCount: 3, correctTipCount: 3,
-                    mvTipCount: 0, musicTipCount: 8).ConfigureAwait(false);
-                var result = new List<DesktopSuggestion>();
-                ReadSuggestionTerms(raw, result, 0);
-                return DistinctSuggestions(result);
-            }, ct).ConfigureAwait(false);
-        }
-        catch (Exception ex) when ((ex is HttpRequestException or JsonException || ex is TaskCanceledException) && !ct.IsCancellationRequested)
-        {
-            // The song search can still supply suggestions if the dedicated route is unavailable.
-        }
-
-        if (terms.Any(term => term.Artist.Length > 0)) return terms;
-        var page = await SearchAsync(query, page: 1, size: 8, ct).ConfigureAwait(false);
-        return DistinctSuggestions(page.Tracks.Select(song =>
-        {
-            var prefix = song.Artist + " - ";
-            var title = song.Title.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ? song.Title[prefix.Length..] : song.Title;
-            return new DesktopSuggestion(title, song.Artist, song.Title);
-        }).Concat(terms));
-    }
+            var raw = await sdk.Search.SearchSuggestRawAsync(query, albumTipCount: 1, correctTipCount: 2,
+                mvTipCount: 1, musicTipCount: 8).ConfigureAwait(false);
+            var result = new List<DesktopSuggestion>();
+            ReadSuggestionTerms(raw, result, 0);
+            return DistinctSuggestions(result.OrderByDescending(item => item.Artist.Length > 0));
+        }, ct);
 
     private static DesktopSuggestion[] DistinctSuggestions(IEnumerable<DesktopSuggestion> terms) =>
         terms.Where(term => !string.IsNullOrWhiteSpace(term.Title) && term.Query.Length is >0 and <=120)
@@ -159,8 +175,8 @@ public sealed partial class DirectSdkGateway
                 switch (item.Name.ToLowerInvariant())
                 {
                     case "songname": case "song_name": case "audioname": case "title": title = text; break;
-                    case "singername": case "singer_name": case "artist": case "author_name": artist = text; break;
-                    case "keyword": case "name": case "word": case "tip": case "suggestion": case "hintinfo": hint = text; break;
+                    case "singername": case "singer_name": case "artist": case "authorname": case "author_name": artist = text; break;
+                    case "keyword": case "name": case "word": case "tip": case "suggestion": case "hintinfo": case "text": hint = text; break;
                 }
             }
             if (title.Length > 0) terms.Add(new(title, artist, title));

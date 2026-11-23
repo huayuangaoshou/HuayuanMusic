@@ -14,6 +14,23 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="GlassBase" Color="#F9FBFF"/>
+          <SolidColorBrush x:Key="GlassSurface" Color="#CCFFFFFF"/>
+          <SolidColorBrush x:Key="GlassSide" Color="#B8F4F9FF"/>
+          <SolidColorBrush x:Key="GlassPopup" Color="#F5FFFFFF"/>
+          <SolidColorBrush x:Key="LyricActive" Color="#0F172A"/>
+          <SolidColorBrush x:Key="LyricIdle" Color="#475569"/>
+          <SolidColorBrush x:Key="TranslationActive" Color="#334155"/>
+          <SolidColorBrush x:Key="TranslationIdle" Color="#64748B"/>
+          <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#F2FFFFFF" Offset="0"/><GradientStop Color="#559ECBFF" Offset="1"/>
+          </LinearGradientBrush>
+          <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
+            <GradientStop Color="#26FF8AB8" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+          </RadialGradientBrush>
+          <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
+            <GradientStop Color="#2B6CB8FF" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+          </RadialGradientBrush>
           <SolidColorBrush x:Key="R2Main" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="R2Side" Color="#F2F7FF"/>
           <SolidColorBrush x:Key="R2Edge" Color="#DCE8FA"/>
@@ -28,6 +45,23 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="GlassBase" Color="#0E1422"/>
+          <SolidColorBrush x:Key="GlassSurface" Color="#8C162033"/>
+          <SolidColorBrush x:Key="GlassSide" Color="#A0172235"/>
+          <SolidColorBrush x:Key="GlassPopup" Color="#F21B263B"/>
+          <SolidColorBrush x:Key="LyricActive" Color="#FFFFFF"/>
+          <SolidColorBrush x:Key="LyricIdle" Color="#94A3B8"/>
+          <SolidColorBrush x:Key="TranslationActive" Color="#CBD5E1"/>
+          <SolidColorBrush x:Key="TranslationIdle" Color="#64748B"/>
+          <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#699AC5FC" Offset="0"/><GradientStop Color="#559ECBFF" Offset="1"/>
+          </LinearGradientBrush>
+          <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
+            <GradientStop Color="#25D06498" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+          </RadialGradientBrush>
+          <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
+            <GradientStop Color="#36648CDC" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+          </RadialGradientBrush>
           <SolidColorBrush x:Key="R2Main" Color="#111622"/>
           <SolidColorBrush x:Key="R2Side" Color="#161D2C"/>
           <SolidColorBrush x:Key="R2Edge" Color="#29354B"/>
@@ -44,6 +78,26 @@
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
   </Styles.Resources>
+  <Style Selector="Border.glass">
+    <Setter Property="Background" Value="{DynamicResource GlassSurface}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="CornerRadius" Value="18"/>
+  </Style>
+  <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="22"/><Setter Property="BoxShadow" Value="0 5 22 0 #214783B5"/></Style>
+  <Style Selector="Border.dock:pointerover"><Setter Property="Background" Value="{DynamicResource GlassPopup}"/></Style>
+  <Style Selector="SelectableTextBlock"><Setter Property="Focusable" Value="True"/><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/><Setter Property="SelectionBrush" Value="#667DC9FF"/></Style>
+  <Style Selector="SelectableTextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
+  <Style Selector="Button.glass-pill"><Setter Property="CornerRadius" Value="20"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/><Setter Property="BorderThickness" Value="1"/></Style>
+  <Style Selector="Button.glass-pill.selected"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>
+  <Style Selector="Button.desktop-lyric"><Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="FontWeight" Value="Bold"/></Style>
+  <Style Selector="Button.desktop-lyric.selected">
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="Button.desktop-lyric.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
+  </Style>
+  <Style Selector="MenuFlyoutPresenter"><Setter Property="Background" Value="{DynamicResource GlassPopup}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/><Setter Property="CornerRadius" Value="14"/></Style>
   <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
   <Style Selector="TextBlock.current"><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/></Style>

@@ -169,11 +169,33 @@ public sealed partial class WorkspaceState:ObservableObject {
   var filter=new TextBox{PlaceholderText="筛选歌单内曲目",Text=FilterText,MaxWidth=265,HorizontalAlignment=HorizontalAlignment.Left};
   filter.TextChanged+=(_,_)=>ApplyFilter(filter.Text??"");
   var meta=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Spacing=9,Children={
-   new TextBlock{Text=Local?"本地歌单":"酷狗概念版 · 只读歌单",Classes={"muted"},FontSize=11},
-   new TextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
+   new SelectableTextBlock{Text=Local?"本地歌单":"酷狗概念版 · 只读歌单",Classes={"muted"},FontSize=11},
+   new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
   var grid=new Grid{ColumnDefinitions=new ColumnDefinitions("172,*"),ColumnSpacing=25,Margin=new Thickness(0,2,0,18)};
   grid.Children.Add(cover);Grid.SetColumn(meta,1);grid.Children.Add(meta);hero.Content=grid;
+  playlistIntroRequest?.Cancel();
+  if(Program.Desktop&&!Local&&Host.Concept.Connected&&displayedSnapshot is { } snapshot&&SelectedPlaylistId>0&&SelectedPlaylistId<=snapshot.Playlists.Count)
+  {
+   var intro = new SelectableTextBlock { Classes={"muted"}, FontSize=12, TextWrapping=TextWrapping.Wrap, MaxLines=3, IsVisible=false };
+   meta.Children.Insert(3,intro);
+   _=LoadPlaylistIntroAsync(snapshot.Playlists[(int)SelectedPlaylistId-1].ProviderPlaylistId,intro);
+  }
+ }
+ CancellationTokenSource? playlistIntroRequest;
+ async Task LoadPlaylistIntroAsync(string id,SelectableTextBlock label)
+ {
+  using var request=new CancellationTokenSource();
+  playlistIntroRequest=request;
+  try
+  {
+   var text=await Host.Concept.DesktopCall((g,ct)=>g.ReadDesktopPlaylistIntroAsync(id,ct),request.Token);
+   if(!request.IsCancellationRequested&&!string.IsNullOrWhiteSpace(text)){label.Text=text;label.IsVisible=true;}
+  }
+  catch(OperationCanceledException){}
+  catch(Exception error)
+  { Program.Log("R2_PLAYLIST_INTRO_UNAVAILABLE",new{type=error.GetType().Name}); }
+  finally{if(ReferenceEquals(playlistIntroRequest,request))playlistIntroRequest=null;}
  }
  TrackRow ConceptRow(ProviderTrackRef track,string key)=>new(
   new CoreTrack(-1,key,track.Title,track.Artist,track.Album,Host.Concept.CatalogDuration(track.ProviderTrackId),track.CoverUrl),this);

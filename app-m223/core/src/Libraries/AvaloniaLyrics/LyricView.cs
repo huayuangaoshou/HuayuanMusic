@@ -671,12 +671,13 @@ public class LyricView : ItemsControl
     }
 
     public bool SeekOnLineTap { get; set; }
+    public bool DistinguishActiveForeground { get; set; }
 
     private FuncDataTemplate<LyricLine> CreateDefaultItemTemplate()
     {
         return new FuncDataTemplate<LyricLine>((_, _) =>
         {
-            var control = new LyricLineControl();
+            var control = new LyricLineControl { DistinguishActiveForeground = DistinguishActiveForeground };
             control.Tapped += (_, args) =>
             {
                 if (!SeekOnLineTap || control.Line is not { } line || SeekCommand?.CanExecute(line.Start) != true) return;

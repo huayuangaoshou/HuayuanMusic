@@ -12,11 +12,12 @@ public sealed partial class WorkspaceState
     private R2Page? onlineSongsPage;
     private R2Page? onlineDetailPage;
     private ContentControl? onlineResults;
-    private TextBlock? onlineStatus;
-    private TextBlock? onlineHeading;
+    private SelectableTextBlock? onlineStatus;
+    private SelectableTextBlock? onlineHeading;
     private readonly Dictionary<DesktopCatalogKind, Button> searchTabs = [];
     private CancellationTokenSource? catalogRequest;
     private string onlineQuery = "";
+    private string detailSubtitle = "";
 
     private void AddDesktopNavigation(StackPanel nav)
     {
@@ -39,6 +40,7 @@ public sealed partial class WorkspaceState
     public async Task OpenOnlineSearchAsync(string query, DesktopCatalogKind kind = DesktopCatalogKind.Song)
     {
         if (Local || string.IsNullOrWhiteSpace(query)) return;
+        detailSubtitle = "";
         onlineQuery = query.Trim();
         EnsureOnlinePage();
         onlineHeading!.Text = $"“{onlineQuery}”的搜索结果";
@@ -72,8 +74,8 @@ public sealed partial class WorkspaceState
         if (onlinePage != null) return;
         onlineSongsPage = SongPage("单曲结果", []);
         onlineDetailPage = SongPage("曲目列表", []);
-        onlineHeading = new TextBlock { FontSize = 20, FontWeight = FontWeight.SemiBold };
-        onlineStatus = new TextBlock { Classes = { "muted" }, Margin = new Thickness(0, 3, 0, 8) };
+        onlineHeading = new SelectableTextBlock { FontSize = 20, FontWeight = FontWeight.SemiBold };
+        onlineStatus = new SelectableTextBlock { Classes = { "muted" }, Margin = new Thickness(0, 3, 0, 8) };
         onlineResults = new ContentControl();
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         foreach (var (kind, label) in new[]
@@ -82,7 +84,7 @@ public sealed partial class WorkspaceState
             (DesktopCatalogKind.Artist, "歌手"), (DesktopCatalogKind.Album, "专辑")
         })
         {
-            var tab = new Button { Content = label, Classes = { "nav" } };
+            var tab = new Button { Content = label, Classes = { "glass-pill" } };
             tab.Click += async (_, _) => await OpenOnlineSearchAsync(onlineQuery, kind);
             searchTabs.Add(kind, tab);
             tabs.Children.Add(tab);
@@ -151,6 +153,7 @@ public sealed partial class WorkspaceState
 
     private void PrepareDiscovery(string title)
     {
+        detailSubtitle = "";
         EnsureOnlinePage();
         foreach (var tab in searchTabs.Values) tab.IsVisible = false;
         onlineHeading!.Text = title;
@@ -165,7 +168,8 @@ public sealed partial class WorkspaceState
         var page = detail ? onlineDetailPage! : onlineSongsPage!;
         InteractionController.For(Lists[page]).IsOnlineSearch = search;
         Fill(page, rows);
-        onlineStatus!.Text = rows.Length == 0 ? "暂无可播放曲目" : $"{rows.Length} 首曲目";
+        onlineStatus!.Text = rows.Length == 0 ? "暂无可播放曲目" :
+            detail && !string.IsNullOrWhiteSpace(detailSubtitle) ? $"{detailSubtitle}  ·  {rows.Length} 首曲目" : $"{rows.Length} 首曲目";
         onlineResults!.Content = page.View;
     }
 
@@ -186,11 +190,24 @@ public sealed partial class WorkspaceState
     private async Task OpenCollectionAsync(DesktopCatalogItem item)
     {
         onlineHeading!.Text = item.Title;
+        detailSubtitle = item.Subtitle;
         await RunCatalogAsync(async ct =>
         {
             var rows = await Host.Concept.DesktopCall((g, t) => g.ReadDesktopCollectionAsync(item, t), ct);
             ct.ThrowIfCancellationRequested();
             ShowSongs(rows, detail: true);
+            if (item.Kind is DesktopCatalogKind.Playlist or DesktopCatalogKind.Album)
+            {
+                try
+                {
+                    var intro = await Host.Concept.DesktopCall((g, t) => item.Kind == DesktopCatalogKind.Album
+                        ? g.ReadDesktopAlbumIntroAsync(item.Id, t) : g.ReadDesktopPlaylistIntroAsync(item.Id, t), ct);
+                    if (!ct.IsCancellationRequested && !string.IsNullOrWhiteSpace(intro))
+                        onlineStatus!.Text += Environment.NewLine + intro;
+                }
+                catch (Exception error) when (error is HttpRequestException or InvalidDataException or UnauthorizedAccessException or System.Text.Json.JsonException)
+                { Program.Log("R2_COLLECTION_INTRO_UNAVAILABLE", new { type = error.GetType().Name }); }
+            }
         });
     }
 

@@ -19,7 +19,10 @@ internal sealed class DesktopLyricWindow : Window
     private readonly TextBlock current = LyricLabel();
     private readonly TextBlock next = LyricLabel();
     private readonly Border tools;
-    private readonly Button play;
+    private readonly PathIcon playIcon;
+    private readonly Window reference;
+    private static readonly Geometry PlayIcon = Geometry.Parse("M4,2 L16,9 L4,16 Z");
+    private static readonly Geometry PauseIcon = Geometry.Parse("M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z");
     private readonly DesktopLyricMousePassthroughService passthrough = new();
     private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
@@ -36,6 +39,7 @@ internal sealed class DesktopLyricWindow : Window
 
     internal DesktopLyricWindow(Window reference, CorePresentation player, DesktopLyricOptions preferences)
     {
+        this.reference = reference;
         Title = "HuayuanMusic 桌面歌词";
         Width = 760;
         Height = 178;
@@ -49,12 +53,13 @@ internal sealed class DesktopLyricWindow : Window
         Background = Brushes.Transparent;
 
         var commands = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5 };
-        Button Add(string label, string accessible, Action action)
+        Button Add(object label, string accessible, Action action)
         {
             var button = new Button
             {
-                Content = label, Padding = new Thickness(8, 3), MinHeight = 28, Foreground = Brushes.White,
-                Background = new SolidColorBrush(Color.Parse("#403F5270"))
+                Content = label, Padding = new Thickness(8, 3), MinHeight = 28,
+                Foreground = new SolidColorBrush(Color.Parse("#223954")),
+                Background = new SolidColorBrush(Color.Parse("#38BADBFF"))
             };
             AutomationProperties.SetName(button, accessible);
             ToolTip.SetTip(button, accessible);
@@ -62,19 +67,33 @@ internal sealed class DesktopLyricWindow : Window
             commands.Children.Add(button);
             return button;
         }
-        Add("⏮", "桌面歌词上一首", () => player.PlayPreviousCommand.Execute(null));
-        play = Add("▶", "桌面歌词播放或暂停", () => player.TogglePlayPauseCommand.Execute(null));
-        Add("⏭", "桌面歌词下一首", () => player.PlayNextCommand.Execute(null));
+        static PathIcon Icon(string path) => new() { Width = 13, Height = 13, Data = Geometry.Parse(path), Foreground = new SolidColorBrush(Color.Parse("#223954")) };
+        var grip = Icon("M1,3 H17 V5 H1 Z M1,8 H17 V10 H1 Z M1,13 H17 V15 H1 Z");
+        grip.Margin = new Thickness(7,0,6,0);
+        grip.Cursor = new Cursor(StandardCursorType.SizeAll);
+        grip.VerticalAlignment = VerticalAlignment.Center;
+        ToolTip.SetTip(grip, "拖动桌面歌词");
+        commands.Children.Add(grip);
+        Add(Icon("M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"), "桌面歌词上一首", () => player.PlayPreviousCommand.Execute(null));
+        playIcon = Icon("M4,2 L16,9 L4,16 Z");
+        Add(playIcon, "桌面歌词播放或暂停", () => player.TogglePlayPauseCommand.Execute(null));
+        Add(Icon("M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"), "桌面歌词下一首", () => player.PlayNextCommand.Execute(null));
         Add("A−", "减小歌词字号", () => AdjustFont(-2));
         Add("A+", "增大歌词字号", () => AdjustFont(2));
-        if (passthrough.IsSupported) Add("锁定", "锁定桌面歌词并穿透鼠标", () => SetLocked(true));
-        Add("×", "关闭桌面歌词", Close);
+        if (passthrough.IsSupported)
+            Add(Icon("M4,8 H14 V17 H4 Z M6,8 V5 C6,1 12,1 12,5 V8 H10 V5 C10,3 8,3 8,5 V8 Z"), "锁定桌面歌词并穿透鼠标", () => SetLocked(true));
+        Add(Icon("M4,2 L9,7 L14,2 L16,4 L11,9 L16,14 L14,16 L9,11 L4,16 L2,14 L7,9 L2,4 Z"), "关闭桌面歌词", Close);
 
         tools = new Border
         {
-            Child = commands, Padding = new Thickness(6, 4), CornerRadius = new CornerRadius(12),
+            Child = commands, Padding = new Thickness(7, 4), CornerRadius = new CornerRadius(22),
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Center,
-            Background = new SolidColorBrush(Color.Parse("#C51A253B")),
+            Background = new SolidColorBrush(Color.Parse("#EAF5FAFF")),
+            BorderBrush = new LinearGradientBrush
+            {
+                GradientStops = [new(Colors.White,0), new(Color.Parse("#CF9ECBFF"),1)]
+            },
+            BorderThickness = new Thickness(1), BoxShadow = BoxShadows.Parse("0 3 12 0 #2C4A78A8"),
             Opacity = 0, IsHitTestVisible = false
         };
         tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170) }];
@@ -92,19 +111,7 @@ internal sealed class DesktopLyricWindow : Window
         AdjustFont(0);
         Opened += (_, _) =>
         {
-            var requested = preferences.X is int x && preferences.Y is int y ? new PixelPoint(x, y) : (PixelPoint?)null;
-            var screen = (requested is { } point ? reference.Screens.All.FirstOrDefault(item => item.WorkingArea.Contains(point)) : null) ??
-                reference.Screens.ScreenFromWindow(reference) ?? reference.Screens.Primary;
-            if (screen != null)
-            {
-                var area = screen.WorkingArea;
-                var width = (int)(Width * screen.Scaling);
-                var height = (int)(Height * screen.Scaling);
-                var position = requested is { } saved && area.Contains(saved)
-                    ? saved : new PixelPoint(area.X + (area.Width - width) / 2, area.Bottom - height - 70);
-                Position = new PixelPoint(Math.Clamp(position.X, area.X, Math.Max(area.X, area.Right - width)),
-                    Math.Clamp(position.Y, area.Y, Math.Max(area.Y, area.Bottom - height)));
-            }
+            Place(preferences.X is int x && preferences.Y is int y ? new PixelPoint(x, y) : null);
             new DesktopLyricWindowChromeService().HideFromWindowSwitcher(this);
             if (preferences.Locked) SetLocked(true);
             renderClock.Start();
@@ -142,7 +149,7 @@ internal sealed class DesktopLyricWindow : Window
         anchorPosition = snapshot.Position;
         anchorTimestamp = Stopwatch.GetTimestamp();
         running = snapshot.Playing;
-        play.Content = running ? "Ⅱ" : "▶";
+        playIcon.Data = running ? PauseIcon : PlayIcon;
         RenderLyrics();
     }
 
@@ -162,6 +169,28 @@ internal sealed class DesktopLyricWindow : Window
         ScheduleSave();
         LockChanged?.Invoke();
         Program.Log("R2_DESKTOP_LYRIC_LOCK", new { locked });
+    }
+
+    internal void ResetAppearance()
+    {
+        fontSize = 30;
+        AdjustFont(0);
+        Place(null);
+        ScheduleSave();
+    }
+
+    private void Place(PixelPoint? requested)
+    {
+        var screen = (requested is { } point ? reference.Screens.All.FirstOrDefault(item => item.WorkingArea.Contains(point)) : null)
+            ?? reference.Screens.ScreenFromWindow(reference) ?? reference.Screens.Primary;
+        if (screen == null) return;
+        var area = screen.WorkingArea;
+        var width = (int)(Width * screen.Scaling);
+        var height = (int)(Height * screen.Scaling);
+        var position = requested is { } saved && area.Contains(saved)
+            ? saved : new PixelPoint(area.X + (area.Width - width) / 2, area.Bottom - height - 70);
+        Position = new PixelPoint(Math.Clamp(position.X, area.X, Math.Max(area.X, area.Right - width)),
+            Math.Clamp(position.Y, area.Y, Math.Max(area.Y, area.Bottom - height)));
     }
 
     private void ShowTools(bool shown)

@@ -389,6 +389,8 @@ public class LyricLineControl : UserControl
         }
     }
 
+    public bool DistinguishActiveForeground { get; set; }
+
     private void UpdateLayoutState(bool rebuildWords)
     {
         var line = Line;
@@ -399,8 +401,12 @@ public class LyricLineControl : UserControl
         _primaryWordPanel.HorizontalContentAlignment = horizontalAlignment;
         _translationWordPanel.HorizontalContentAlignment = horizontalAlignment;
 
-        ApplyTextBlockStyle(_primaryTextBlock, PrimaryFontSize, PrimaryForeground, isActive, InactivePrimaryOpacity, DefaultFontWeight, DefaultFontWeight);
-        ApplyTextBlockStyle(_translationTextBlock, TranslationFontSize, TranslationForeground, false, TranslationStaticOpacity, FontWeight.Medium, FontWeight.Medium);
+        var primary=DistinguishActiveForeground && isActive ? PrimaryPlayedForeground : PrimaryForeground;
+        var translation=DistinguishActiveForeground && isActive ? TranslationPlayedForeground : TranslationForeground;
+        ApplyTextBlockStyle(_primaryTextBlock, PrimaryFontSize, primary, isActive, DistinguishActiveForeground ? 1 : InactivePrimaryOpacity,
+            DefaultFontWeight, DistinguishActiveForeground ? FontWeight.Bold : DefaultFontWeight);
+        ApplyTextBlockStyle(_translationTextBlock, TranslationFontSize, translation, DistinguishActiveForeground && isActive,
+            DistinguishActiveForeground ? 1 : TranslationStaticOpacity, FontWeight.Medium, FontWeight.Medium);
         ApplyTextBlockStyle(_romanizationTextBlock, RomanizationFontSize, RomanizationForeground, isActive, InactiveSecondaryOpacity, FontWeight.Medium, FontWeight.Medium);
 
         _primaryTextBlock.Text = line?.Text ?? string.Empty;
@@ -432,7 +438,8 @@ public class LyricLineControl : UserControl
     {
         var line = Line;
         var isActive = ReferenceEquals(line, ActiveLine);
-        RefreshWordVisuals(_primaryWordVisuals, _renderPosition, isActive, PrimaryForeground, PrimaryPlayedForeground, 0.34d, WordRenderMode == LyricWordRenderMode.LegacyLift);
+        RefreshWordVisuals(_primaryWordVisuals, _renderPosition, isActive, PrimaryForeground, PrimaryPlayedForeground,
+            DistinguishActiveForeground ? 1 : 0.34d, WordRenderMode == LyricWordRenderMode.LegacyLift);
     }
 
     private void SyncPositionAnchor()
