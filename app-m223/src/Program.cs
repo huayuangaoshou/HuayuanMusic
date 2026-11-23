@@ -93,7 +93,7 @@ public sealed class App : Application
         bool exitRequested = false;
         var shell = window.R2Model!;
         var view = window.R2View!;
-        using var icon = AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/Huayuan-C31.ico"));
+        using var icon = AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/app.ico"));
         var trayMenu = new NativeMenu();
         NativeMenuItem AddTray(string label, Action action)
         {
@@ -109,7 +109,7 @@ public sealed class App : Application
         AddTray("解锁桌面歌词", view.UnlockDesktopLyricsFromHost);
         AddTray("打开主窗口", Reveal);
         AddTray("彻底退出", () => { exitRequested = true; window.Close(); });
-        var tray = new TrayIcon { Icon = new WindowIcon(icon), ToolTipText = "Huayuan Music", Menu = trayMenu, IsVisible = true };
+        var tray = new TrayIcon { Icon = new WindowIcon(icon), ToolTipText = "HuayuanMusic · 花苑音乐", Menu = trayMenu, IsVisible = true };
         tray.Clicked += (_, _) => Reveal();
         shell.Player.Updated += UpdateTray;
         var activationRegistration = Program.Activation == null ? null :
@@ -133,6 +133,7 @@ public sealed class App : Application
             initialization = InitializeAsync();
             if(outputFailed)shell.Player.Notify("无法播放，请检查音频输出设备");
             window.R2View?.RestoreDesktopLyrics();
+            window.R2View?.BeginSilentUpdateCheck();
         };
         window.Closing += async (_, args) =>
         {

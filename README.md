@@ -1,317 +1,137 @@
-# Huayuan Music P1 personal development preview
-
-This private, noncommercial personal fork is based on **KA Music v4.2.2**,
-copyright (c) 2026 Linsxyx, baseline `faeeb676f7315c70d43e4edc32b966fff55e5364`.
-The upstream [MIT license](LICENSE) is retained. Closed-source personal development
-is the intended scope; this is **not a release or a claim of cleared third-party rights**.
-The upstream README below contains a noncommercial-use restriction that conflicts
-with the MIT grant; it is preserved as evidence and remains a review item.
-Native BASS libraries, artwork, fonts and other dependencies have separate terms.
-See [P1 acceptance](docs/P1_CODEX_ACCEPTANCE.md) and [license risks](docs/P1_LICENSE_REVIEW.md).
-Upstream download, community and release links below refer to KA Music, not fork updates.
-For the safe offline gates, run `python tools/run_p1_offline.py` and
-`python tools/verify_huayuan_p1.py`. Do not use the inherited online startup instructions
-as evidence of P1 acceptance.
-
 <div align="center">
-  <img src="src/Apps/KugouAvaloniaPlayer/Assets/ka-logo.png" alt="KA Music Logo" width="128" />
+  <img src="app-m223/src/Assets/icon-1024.png" alt="HuayuanMusic Logo" width="128" />
 
-  <h1>KA Music</h1>
-
+  <h1>HuayuanMusic · 花苑音乐</h1>
 
   <p>
     <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-10.0-blue.svg" alt=".NET 10.0" /></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License: MIT" /></a>
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/releases"><img src="https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-brightgreen.svg" alt="Platform" /></a>
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/releases"><img src="https://img.shields.io/github/v/release/Linsxyx/KugouMusic.NET" alt="Release" /></a>
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/releases"><img src="https://img.shields.io/github/downloads/Linsxyx/KugouMusic.NET/total?label=download" alt="Downloads" /></a>
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/stargazers"><img src="https://img.shields.io/github/stars/Linsxyx/KugouMusic.NET?style=flat&color=yellow" alt="GitHub stars" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/platform-Windows-brightgreen.svg" alt="Platform: Windows" /></a>
+    <a href="#"><img src="https://img.shields.io/badge/version-1.0.0-ff9ecf.svg" alt="Version" /></a>
   </p>
 
   <p>
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/releases">下载体验</a>
+    <a href="#本地构建">本地构建</a>
     ·
-    <a href="https://github.com/Linsxyx/KugouMusic.NET/issues">问题反馈</a>
+    <a href="#架构">可插拔 DLC 架构</a>
     ·
-    <a href="#页面展示">查看截图</a>
-    ·
-    <a href="#交流群">交流群</a>
+    <a href="#免责声明">免责声明</a>
   </p>
 </div>
 
-最好用、最轻量的酷狗音乐概念版播放器。
+> 一款面向 Windows 的粉蓝白液态玻璃风格桌面音乐播放器。基于 .NET 10 与 Avalonia 构建，追求轻盈、顺滑、完整的桌面听歌体验。
 
-项目基于 **.NET 10 / 11 + Avalonia** 打造，尽量提供一致的全平台桌面体验，而不是浏览器套壳式客户端。因为作者长期使用 Arch Linux 和 Windows 双系统，而 Linux 上又缺少一款体验完整的酷狗音乐播放器，这个项目就这样诞生了。
+---
 
-> 注：“最好用、最轻量”是项目目标与设计方向。
+## 软件亮点
 
-## 快速开始
+- **粉蓝白液态玻璃（Liquid Glass）**：全站统一的粉蓝白渐变氛围与白瓷玻璃质感，配合程序化折射与微动效，呈现柔和通透的现代视觉。
+- **上提居中的自适应双语歌词**：完整歌词视图自动上提并居中，中文与原文歌词双语对照，逐字高亮与进度动画流畅同步。
+- **保留原色调的单行滚动桌面歌词**：桌面歌词浮窗保留歌词原始色调，单行滚动展示，支持鼠标穿透、锁定与位置记忆。
+- **`1 : 1.5 : 1` 播控坞**：比例协调的播放控制坞，搭配完整的队列数字胶囊，播放状态一目了然。
+- **三端三态标准格式下载**：统一的歌曲下载体验，标准格式、进度可控。
+- **系统托盘与单实例唤醒**：最小化到托盘、托盘菜单控制，重复启动自动唤醒已开窗口。
+- **Windows SMTC 集成**：接入系统媒体传输控制（SMTC），锁屏/媒体键可控播放。
+- **可插拔 DLC 启停闭环**：平台能力以 DLC 形式可插拔接入，支持独立启停与完整卸载。
 
-- 下载地址：[Releases](https://github.com/Linsxyx/KugouMusic.NET/releases)
-- 问题反馈：[Issues](https://github.com/Linsxyx/KugouMusic.NET/issues)
-- 桌面客户端：`KugouAvaloniaPlayer`
-- 终端播放器：`KgTest`
-- 开发者入口：`KuGou.Net` / `KgWebApi.Net` / `SimpleAudio` / `AvaloniaLyrics`
-- 安卓版正在开发中，[项目地址](https://github.com/umr-xiaomai/kgka_Music_hl)
+## 粉蓝白液态玻璃特性
 
-## 为什么值得用
+花苑音乐的核心视觉由一套共享的程序化氛围系统驱动：
 
-- 更轻：基于 Avalonia 原生桌面栈，不走 Electron 路线，安装包体积小
-- 更像桌面播放器：托盘、桌面歌词、关闭行为、自动更新这些桌面交互是完整的
-- 对 Linux 更友好，在Linux也能拥有和其他平台一样的托盘和歌词悬浮窗体验
-- 酷狗生态能力完整：登录、推荐、榜单、歌单、搜索、歌词、VIP 状态都已接入
-- 私有媒体库也能接入：支持导入 Jellyfin 音乐媒体库，按专辑生成本地歌单
-- 搬家无压力：支持解析并导入网易云音乐、QQ 音乐歌单，轻松迁移歌单
-- 播放控制更到位：播放队列、随机模式、热切音质、10 段均衡器都可用
-- 智能过渡：在PC端也能体验到丝滑的智能过渡效果
+- **粉蓝白渐变氛围**：左上粉、右下蓝、中央柔白的三向渐变场，随浅色/深色主题自动切换明度。
+- **白瓷玻璃质感**：玻璃面板通过程序化折射采样 + 磨砂（frost）混合，边缘高光与斜切 bevel 呈现白瓷般的通透感。
+- **微动效**：按钮、面板与播控坞在交互时带平滑的缩放/位移动效，减少生硬跳变。
 
-## 页面展示
+## 架构
 
-### 主界面
+### 可插拔 DLC 架构
 
-每日推荐、私人FM。
+花苑音乐采用「核心 + DLC」的可插拔设计，将平台能力与主程序解耦：
 
-![主界面](docs/images/main.png)
-
-
-
-### 桌面歌词
-
-Apple Music风味的滚动歌词，支持在线歌词和本地歌词，歌词浮窗全平台体验一致。
-
-![歌词界面](docs/images/lyrics.gif)
-
-
-## 下载与平台支持
-
-请前往 [Releases](https://github.com/Linsxyx/KugouMusic.NET/releases) 下载最新版本。
-
-- Windows x64：`KugouAvaloniaPlayer-win-x64.exe`
-- Linux x64：`KugouAvaloniaPlayer-linux-x64.AppImage`
-- Linux arm64（手动更新包）：`KugouAvaloniaPlayer-linux-arm64.tar.gz`
-- macOS arm64 安装包：`KugouAvaloniaPlayer-mac-arm64-Setup.pkg`
-- macOS arm64（手动更新包）：`KugouAvaloniaPlayer-mac-arm64.app.zip`
-- macOS x64（手动更新包）：`KugouAvaloniaPlayer-mac-x64.app.zip`
-
-### Linux SQLite 依赖
-
-Linux x64 / arm64 使用系统 SQLite（`libsqlite3.so.0`），不随播放器打包 SQLite 原生库。UOS / Debian / Ubuntu 如缺少该库，可安装运行时包：
-
-```bash
-sudo apt install libsqlite3-0
-```
-
-Windows 和 macOS 继续使用随程序附带的 SQLite。
+- **核心（Core）**：本地音乐库、播放队列、BASS 音频核心、HTTP 206 媒体网关与桌面歌词等基础能力，始终随主程序运行。
+- **DLC（平台扩展）**：酷狗概念版等平台接入以独立 DLC 形式存在，支持动态启停、独立授权与完整卸载，不影响核心本地播放。
+- **媒体代理网关**：`DirectSdkGateway` / `DirectSdkGateway.MediaProxy` 负责 HTTP 206 分片拉流与 BASS 音频解码，保证在线播放的流畅与可控。
 
 ### 自动更新
 
-项目通过 **Velopack + GitHub Releases** 提供更新能力。
+主程序内置零依赖的 GitHub Releases 更新检测（使用 .NET 原生 `HttpClient` 与 `System.Text.Json`，不引入任何第三方更新组件）：
 
-- 支持自动更新的架构：
-  - Windows x64（`KugouAvaloniaPlayer-win-x64.exe`）
-  - Linux x64（`KugouAvaloniaPlayer-linux-x64.AppImage`）
-  - macOS arm64（`KugouAvaloniaPlayer-mac-arm64-Setup.pkg`）
-- 不支持自动更新的架构（仅手动更新）：
-  - Linux arm64（`KugouAvaloniaPlayer-linux-arm64.tar.gz`）
-  - macOS x64（`KugouAvaloniaPlayer-mac-x64.app.zip`）
-- 手动更新方式：
-  - 下载对应架构的新压缩包
-  - 解压后覆盖旧程序目录，或迁移到新目录运行
-  - 手动更新不会自动提示，请定期关注 Releases
+- 启动后后台静默检查最新版本，网络不可用或未发布时静默忽略，绝不打扰听歌。
+- 设置页提供「检查更新」按钮，手动触发并展示当前版本。
+- 发现新版本时弹出粉蓝白玻璃更新弹窗，一键下载安装包并静默升级、自动重启。
 
-### macOS 说明
+## 本地构建
 
-当前 macOS 安装包未签名，如遇到 Gatekeeper 拦截，可执行：
+### 前置条件
 
-```bash
-xattr -dr com.apple.quarantine /Applications/KugouAvaloniaPlayer.app
+- Windows 10 19041+ / Windows 11
+- .NET 10 SDK
+- （可选）Inno Setup 6，用于生成一键安装包
+
+### 构建步骤
+
+```powershell
+# 一键构建：生成透明圆角图标 → 离线自包含 Release 发布 → （可选）Inno Setup 打包
+.\app-m223\bundle.ps1
 ```
 
-如果 `KugouAvaloniaPlayer-mac-arm64-Setup.pkg` 无法安装，可以改用 `KugouAvaloniaPlayer-mac-arm64.app.zip` 解压运行；`KugouAvaloniaPlayer-mac-x64.app.zip` 本身就是手动更新包，不支持自动更新。
+产物输出到 `app-m223/artifacts/release-build/`：
 
-## 核心功能
+- `app/` —— 自包含 Release 可执行目录，主程序为 `HuayuanMusic.P17.Nightflight.exe`
+- `HuayuanMusic-Setup-v1.0.0.exe` —— Inno Setup 一键安装包（需本机已安装 Inno Setup 6）
 
-### 在线内容
+也可以手动分步执行：
 
-- 手机号验证码登录
-- 二维码扫码登录
-- 登录持久化与自动恢复
-- 每日推荐
-- 发现歌单与推荐内容
-- 排行榜与榜单歌曲分页
-- 歌手详情页
-- 搜索歌曲、歌单、专辑
-- 用户信息与 VIP 状态展示
+```powershell
+# 1. 生成透明圆角图标
+.\app-m223\tools\Build-AppIcon.ps1
 
-### 本地音乐库
+# 2. 编译（离线锁定模式）
+dotnet publish app-m223/src/Preview.csproj -c Release -r win-x64 --self-contained true --locked-mode -o app-m223/artifacts/release-build/app
 
-- 本地音乐库首页，集中管理本地歌单、导入文件夹和 Jellyfin 媒体库
-- 可导入本地音乐文件夹，上千首歌曲也能快速导入
-- 支持刷新已导入的本地文件夹和 Jellyfin 媒体库
-- 支持为本地歌单和本地歌曲设置封面
-- 支持匹配歌词与歌手
-- 未登录可播放本地歌曲
-- 支持 `MP3`、`FLAC`、`WAV`、`OGG`、`M4A`、`AAC`、`WEBM`、`DSF`、`DFF` 等音频格式
-- 支持本地 KRC / LRC / VTT / QRC 歌词
-
-### 桌面体验
-
-- 桌面歌词浮窗
-- 歌词逐字高亮与进度动画
-- 系统托盘菜单
-- 关闭行为可配置：退出程序 / 最小化到托盘
-- 自动更新
-
-### 播放控制与音质
-
-- 在线歌曲播放
-- 播放队列管理
-- 下一首播放 / 随机模式
-- 热切播放音质
-- 10 段均衡器，支持预设与自定义
-- 收藏当前歌曲、在线歌单增删改
-
-### 跨平台支持
-
-- Windows、Linux、macOS 三端可运行
-- Linux 提供 `AppImage`
-- 桌面歌词鼠标穿透支持跨平台实现
-
-## 为什么它在 Linux 上更值得用
-
-很多音乐播放器对于Linux的支持很差，无法拥有和其他平台一样的体验。`KA Music` 的目标不是停留在能运行，而是尽量把 Linux 桌面用户真正会在意的体验补齐，托盘、桌面歌词、本地播放、基础设置和日常交互都要可用，歌词悬浮窗能像Windows平台一样鼠标穿透、置顶、透明。
-
-## 常见问题
-
-### 1. 为什么我本地运行时提示无法自动更新？
-
-自动更新依赖 Velopack 安装。若你通过 `dotnet run` 或手动复制文件运行，应用会跳过自动更新检查。请使用 Releases 安装包安装。
-
-### 2. 为什么未登录时不能播放在线歌曲？
-
-当前在线播放要求有效登录态。你可以先登录，也可以直接播放本地导入的歌曲。
-
-### 3. 为什么应用显示名是 KA Music，但安装包名还是 KugouAvaloniaPlayer？
-
-这是为了兼容历史版本升级链路。应用显示名可以继续优化，但安装包标识保持稳定，能避免老版本升级断链。
-
-### 4. 无法播放怎么办？
-
-获取不到 url 重新登录,获取到url但播放不了关掉系统代理
-
-### 5. Windows下自动更新失败了怎么办
-
-检查是否移动文件，或者检查是否安装到了Program Files 或 Windows 或 System 这类的高权限目录下。
-
-
-
-## 更新日志
-
-完整版本历史请查看 [Releases](https://github.com/Linsxyx/KugouMusic.NET/releases)。
-
-### v4.2.0
-- 播放页新增两个仿Folia播放器的播放主题
-- 修复排行榜获取失败
-- 部分页面支持esc返回
-- 优化设置页面
-- 修复部分已知问题
-
-### v4.1.0
-- 修复linux-arm64 无法正常使用
-- 修复部分已知问题
-
-### v4.0.0
-- 全新播放主题
-- 桌面歌词记忆位置与锁定效果
-- 修复部分页面显示效果
-- 更换全新图标
-
-## 开发者入口
-
-这个仓库不只有播放器本体，也包含围绕酷狗能力做的几个底层项目。
-
-- `src/Apps/KugouAvaloniaPlayer`：Avalonia 桌面客户端，也就是现在的 `KA Music`
-- `src/Apps/KgTest`：终端 TUI 播放器
-- `src/Libraries/KuGou.Net`：酷狗业务 SDK，封装登录、搜索、歌单、歌词、榜单、用户等能力
-- `src/Apps/KgWebApi.Net`：基于 SDK 的 ASP.NET Core Web API 封装
-- `src/Libraries/SimpleAudio`：基于 ManagedBass 的跨平台播放与音效层
-- `src/Libraries/AvaloniaLyrics`：歌词控件库
-- `src/Native/KuGou.Net.Native`：把 SDK 能力导出为 Native AOT 友好的 C ABI
-
-## 终端播放器 KgTest
-
-`KgTest` 一个测试用的终端播放器，功能还算凑合，目前也把智能过渡功能加上了，想试试的可以克隆仓库运行。详细功能、快捷键和配置说明见 [src/Apps/KgTest/README.md](src/Apps/KgTest/README.md)。
-
-## 本地开发
-
-项目仅支持 .NET 10，建议本地开发安装稳定版 .NET 10 SDK，CI 使用 .NET 10 SDK。Windows 播放器目标为 `net10.0-windows10.0.19041.0`，其余项目及非 Windows 播放器目标为 `net10.0`。
-
-```bash
-git clone https://github.com/Linsxyx/KugouMusic.NET.git
-cd KugouMusic.NET
-
-dotnet restore KugouMusic.NET.slnx
-dotnet build KugouMusic.NET.slnx
-
-dotnet run --project src/Apps/KugouAvaloniaPlayer/KugouAvaloniaPlayer.csproj
+# 3. 打包（可选）
+& "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" app-m223/installer.iss
 ```
 
-如需运行终端播放器：
+### 首次运行 Windows SmartScreen 提示
 
-```bash
-dotnet run --project src/Apps/KgTest/KgTest.csproj
-```
+本程序当前未做代码签名证书，首次运行时 Windows SmartScreen 可能弹出「已保护你的电脑」提示。这是未签名程序的正常现象，请按以下步骤放行：
 
-如需运行 Web API：
+1. 点击提示框中的「更多信息」。
+2. 点击「仍要运行」。
+3. 之后即可正常启动。
 
-```bash
-dotnet run --project src/Apps/KgWebApi.Net/KgWebApi.Net.csproj
-```
+用户音乐数据（下载歌曲、自建歌单、播放历史）保存在 `%USERPROFILE%\Music\HuayuanMusic`，升级或卸载均不会误删。
 
-Web API 文档（开发环境）：`http://localhost:5058/scalar/v1`
+## 第三方组件与致谢
 
-## 仓库结构
+- **BASS / ManagedBass**：音频解码与播放核心，遵循其**非商业免费授权**。若用于商业用途，请自行向 un4seen 购买授权。
+- **Avalonia**：跨平台 UI 框架（MIT License）。
+- **.NET**：微软开源运行时（MIT License）。
+- 本项目源自对开源酷狗音乐概念版播放器（KA Music，MIT License，Copyright (c) 2026 Linsxyx）的学习与重构，特此致谢。
 
-```text
-KugouMusic.NET
-├─ src
-│  ├─ Apps
-│  │  ├─ KugouAvaloniaPlayer   # Avalonia 桌面客户端
-│  │  ├─ KgTest                # 终端 TUI 播放器
-│  │  └─ KgWebApi.Net          # ASP.NET Core Web API
-│  ├─ Libraries
-│  │  ├─ KuGou.Net             # 核心 SDK
-│  │  ├─ SimpleAudio           # 音频播放与音效层
-│  │  └─ AvaloniaLyrics        # Avalonia 歌词控件
-│  └─ Native
-│     └─ KuGou.Net.Native      # Native AOT 导出层
-└─ docs/images           # README 截图资源
-```
+## 免责声明 / Disclaimer
 
-## 交流群
+**中文**
 
-- QQ群：1081635731 
+本项目是基于公开接口开发的第三方音乐客户端，仅供个人学习与技术研究使用。
 
-## 👍 灵感来源
+- **数据来源**：音乐数据通过公开接口获取，本项目不存储、不传播任何音频文件。
+- **版权声明**：音乐内容版权归原平台及版权方所有，请尊重知识产权，支持正版音乐。
+- **使用限制**：禁止将本项目用于任何商业用途或违法行为。
+- **责任声明**：因使用本项目产生的任何法律纠纷或损失，均由使用者自行承担。
+- **BASS 授权**：本项目中的 BASS 组件遵循其非商业免费授权，商业使用须另行取得授权。
 
-- [KuGouMusicApi](https://github.com/MakcRe/KuGouMusicApi)
-- [folia-major](https://github.com/chthollyphile/folia-major)
+**English**
 
-## ⚠️ 免责声明
+This is a third-party music client built on public APIs, intended for personal study and technical research only.
 
-本项目是基于公开 API 接口开发的第三方音乐客户端，仅供个人学习和技术研究使用。
-- **数据来源**：所有音乐数据通过公开接口获取，本项目不存储、不传播任何音频文件
-- **版权声明**：音乐内容版权归原平台及版权方所有，请尊重知识产权，支持正版音乐
-- **使用限制**：禁止将本项目用于任何商业用途或违法行为
-- **责任声明**：因使用本项目产生的任何法律纠纷或损失，均由使用者自行承担
-- **争议处理**：如果官方音乐平台觉得本项目不妥，请通过 Issues 联系
+- **Data source**: Music data is fetched through public interfaces; this project does not store or distribute any audio files.
+- **Copyright**: Music content belongs to its original platform and rights holders. Please respect intellectual property and support legitimate music.
+- **Usage restriction**: Commercial use or any illegal activity is prohibited.
+- **Liability**: The user bears sole responsibility for any legal disputes or losses arising from the use of this project.
+- **BASS license**: The BASS component is used under its free non-commercial license; commercial use requires a separate license.
 
-## Star History
+## License
 
-<a href="https://www.star-history.com/?repos=Linsxyx%2FKugouMusic.NET&type=timeline&legend=top-left">
- <picture>
-   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=Linsxyx/KugouMusic.NET&type=timeline&theme=dark&legend=top-left&sealed_token=wzW4_hbpIKDoQdW7tn5bcNpH6c7DFxIYPqvGh2wibQkklM_uKiVmIdmh3NvI12WBJghhp-mskCsRaaDsIxRzwtZMEQnAtlp5BOhGfj0tb29oSa9jzx0ACg" />
-   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=Linsxyx/KugouMusic.NET&type=timeline&legend=top-left&sealed_token=wzW4_hbpIKDoQdW7tn5bcNpH6c7DFxIYPqvGh2wibQkklM_uKiVmIdmh3NvI12WBJghhp-mskCsRaaDsIxRzwtZMEQnAtlp5BOhGfj0tb29oSa9jzx0ACg" />
-   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=Linsxyx/KugouMusic.NET&type=timeline&legend=top-left&sealed_token=wzW4_hbpIKDoQdW7tn5bcNpH6c7DFxIYPqvGh2wibQkklM_uKiVmIdmh3NvI12WBJghhp-mskCsRaaDsIxRzwtZMEQnAtlp5BOhGfj0tb29oSa9jzx0ACg" />
- </picture>
-</a>
+本项目主体采用 [MIT License](LICENSE)，第三方组件遵循其各自的许可证，详见 LICENSE 中的第三方组件声明。

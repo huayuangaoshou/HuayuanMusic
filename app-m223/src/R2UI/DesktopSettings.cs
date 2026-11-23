@@ -108,6 +108,13 @@ public partial class R2ShellView
         clear.Click += async (_,_) => await RefreshCacheAsync(true);
         Section("缓存与存储", stats, new WrapPanel { ItemSpacing=7, LineSpacing=7, Children={
             ButtonFor("打开缓存目录",OpenCacheFolder),clear } });
+
+        var version = new TextBlock { Text = $"当前版本 v{HuayuanPreview.Services.UpdateManager.CurrentVersion}",
+            Classes = { "muted" }, VerticalAlignment = VerticalAlignment.Center };
+        var checkUpdate = new Button { Content = "检查更新", Classes = { "glass-pill" } };
+        checkUpdate.Click += CheckForUpdates;
+        Section("关于与更新", Row("版本", version),
+            new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children = { checkUpdate } });
         body.AttachedToVisualTree += async (_,_) =>
         {
             labels = await Task.Run(()=>SimpleAudioPlayer.GetOutputDevices().ToArray());

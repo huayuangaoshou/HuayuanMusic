@@ -50,7 +50,7 @@ public sealed partial class PreviewWindow {
   }
   UpdateProgress(adapter.State);
   adapter.Changed += UpdateProgress;
-  Title = "HuayuanMusic · M2-23";
+  Title = "HuayuanMusic · 花苑音乐";
   MinWidth = 1000; MinHeight = 700; Width = 1280; Height = 840;
   Closed += (_, _) => { adapter.Changed -= UpdateProgress; R2Model.Dispose(); };
  }

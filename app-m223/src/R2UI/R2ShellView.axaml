@@ -13,10 +13,8 @@
       <r2:GlassOptics Radius="20" Frost="0.64" Margin="1" IsHitTestVisible="False"/>
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="7,0">
-          <Border Width="32" Height="32" CornerRadius="10" Background="{DynamicResource R2Accent}">
-            <PathIcon Width="15" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#142540" Data="M9,3 L20,1 L20,15 C20,19 14,21 12,18 C10,15 13,13 17,13 L17,6 L12,7 L12,18 C12,22 6,24 4,21 C2,18 5,16 9,16 Z"/>
-          </Border>
-          <TextBlock Text="Huayuan Music" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
+          <TextBlock Text="HuayuanMusic · 花苑音乐" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
           <TextBlock Text="工作空间" Classes="muted" FontSize="11" Margin="10,2,0,4"/>
