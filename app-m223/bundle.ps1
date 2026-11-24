@@ -39,6 +39,11 @@ $props = @(
     '-p:GenerateSonnetLanguageData=false'
 )
 
+# Wipe the publish directory first so stale runtime data (profiles, cookies,
+# caches, logs, sqlite) can never leak into the installer or the release asset.
+if (Test-Path -LiteralPath $publishDir) {
+    Remove-Item -LiteralPath $publishDir -Recurse -Force
+}
 $null = New-Item -ItemType Directory -Force -Path $publishDir
 Push-Location $PSScriptRoot
 try {
