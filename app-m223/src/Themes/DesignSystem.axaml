@@ -224,9 +224,15 @@
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Border.playlist-tile">
     <Setter Property="RenderTransform" Value="translateY(0px)"/>
-    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter>
+    <Setter Property="BoxShadow" Value="0 8 16 0 #140F172A"/>
+    <Setter Property="Transitions"><Transitions>
+      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+    </Transitions></Setter>
   </Style>
-  <Style Selector="Border.playlist-tile:pointerover"><Setter Property="RenderTransform" Value="translateY(-4px)"/></Style>
+  <Style Selector="Border.playlist-tile:pointerover">
+    <Setter Property="RenderTransform" Value="translateY(-2px)"/>
+    <Setter Property="BoxShadow" Value="0 12 24 0 #290F172A"/>
+  </Style>
   <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter></Style>
   <Style Selector="Border.playlist-tile:pointerover Button.card-play"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Button.card-play:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
