@@ -29,7 +29,7 @@
           <SolidColorBrush x:Key="GlassBase" Color="#F7F9FC"/>
           <SolidColorBrush x:Key="GlassSurface" Color="#F7FFFFFF"/>
           <SolidColorBrush x:Key="GlassSide" Color="#B8F4F9FF"/>
-          <SolidColorBrush x:Key="GlassPopup" Color="#F7FFFFFF"/>
+          <SolidColorBrush x:Key="GlassPopup" Color="#D9FFFFFF"/>
           <SolidColorBrush x:Key="LyricActive" Color="#0F172A"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#475569"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#334155"/>
@@ -38,10 +38,10 @@
             <GradientStop Color="#E6EEF8" Offset="0"/><GradientStop Color="#F2FFFFFF" Offset="0.38"/><GradientStop Color="#7792BFFF" Offset="0.84"/><GradientStop Color="#55F096C4" Offset="1"/>
           </LinearGradientBrush>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
-            <GradientStop Color="#26FF8AB8" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+            <GradientStop Color="#4DFF8AB8" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
           <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
-            <GradientStop Color="#2B6CB8FF" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+            <GradientStop Color="#556CB8FF" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
           <SolidColorBrush x:Key="R2Main" Color="{x:Static tok:DesignTokens.LightSurface}"/>
           <SolidColorBrush x:Key="R2Side" Color="{x:Static tok:DesignTokens.LightBase}"/>
@@ -82,7 +82,7 @@
           <SolidColorBrush x:Key="GlassBase" Color="#0E1422"/>
           <SolidColorBrush x:Key="GlassSurface" Color="#8C162033"/>
           <SolidColorBrush x:Key="GlassSide" Color="#A0172235"/>
-          <SolidColorBrush x:Key="GlassPopup" Color="#F21B263B"/>
+          <SolidColorBrush x:Key="GlassPopup" Color="#D91B263B"/>
           <SolidColorBrush x:Key="LyricActive" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#94A3B8"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#CBD5E1"/>
@@ -91,10 +91,10 @@
             <GradientStop Color="#ABC4E0FF" Offset="0"/><GradientStop Color="#6BA5C8FF" Offset="0.35"/><GradientStop Color="#686C95D6" Offset="0.82"/><GradientStop Color="#54DB91C8" Offset="1"/>
           </LinearGradientBrush>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
-            <GradientStop Color="#25D06498" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+            <GradientStop Color="#4DD06498" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
           <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
-            <GradientStop Color="#36648CDC" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
+            <GradientStop Color="#5A648CDC" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
           <SolidColorBrush x:Key="R2Main" Color="{x:Static tok:DesignTokens.DarkSurface}"/>
           <SolidColorBrush x:Key="R2Side" Color="{x:Static tok:DesignTokens.DarkBase}"/>

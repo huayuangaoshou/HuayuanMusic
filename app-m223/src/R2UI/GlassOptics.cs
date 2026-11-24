@@ -115,12 +115,6 @@ public sealed class GlassOptics : Control
                     .36 * glow(uv, float2(.53,.45), float2(.53,.54)));
             }
 
-            // R9-b 透出色提饱和：按亮度混回彩色，幅度由调用方 saturation uniform 控制。
-            half3 saturate3(half3 c) {
-                half luma = dot(c, half3(.299,.587,.114));
-                return mix(half3(luma), c, saturation);
-            }
-
             // R9-a 柔化采样：12 tap（中心 + 十字 8 + 对角 3 权重均匀），过渡奶油化无颗粒。
             // degrade 时退化为单点采样，跳过模糊。
             half3 blurSample(float2 sampleAt) {
@@ -160,10 +154,14 @@ public sealed class GlassOptics : Control
                     blurred.r = mix(center.r, r.r, edgeW);
                     blurred.b = mix(center.b, b.b, edgeW);
                 }
-                half3 colored = saturate3(blurred);
-
                 half3 milk = mix(half3(1,.989,1), half3(.082,.123,.208), night);
-                half3 color = mix(colored, milk, frost);
+                half3 mixed = mix(blurred, milk, frost);
+
+                // R9-b 透出色提饱和：对「最终奶白混合色」提饱和才是 vibrancy；
+                // 对淡源提饱和会被 frost 奶白稀释掉（可见色差≈6%）。sat 已由 C# 端按夜间降为 SaturationNight。
+                half3 colored = mix(half3(dot(mixed, half3(.299,.587,.114))), mixed, saturation);
+
+                half3 color = colored;
                 float incidence = max(0.0, dot(normal, float2(-.65,-.76)));
                 float shine = bevel * (.05 + .19 * incidence);
 

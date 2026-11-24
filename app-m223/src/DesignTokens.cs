@@ -165,9 +165,9 @@ public static class DesignTokens
     public const int DepthLayerChrome     = 2; // L2 chrome 播放条/侧栏/顶栏
     public const int DepthLayerFloating   = 3; // L3 悬浮层菜单/弹窗/桌面歌词
     // 材质 frost 分档（接 R9 材质体系）
-    public const double FrostPanel    = 0.60; // L1
-    public const double FrostChrome   = 0.72; // L2
-    public const double FrostFloating = 0.48; // L3
+    public const double FrostPanel    = 0.45; // L1
+    public const double FrostChrome   = 0.55; // L2
+    public const double FrostFloating = 0.32; // L3
     // R9 透出色提饱和幅度（随 frost 档位对齐：chrome +18% / panel +28% / floating +34%）
     // 数值 = 1 + 提幅，shader 内 mix(luma, color, saturation)。
     public const double SaturationChrome   = 1.18; // L2 chrome 播放条/侧栏/顶栏
