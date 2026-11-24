@@ -119,7 +119,27 @@ public sealed partial class WorkspaceState:ObservableObject {
  TrackRow Row(CoreTrack track,long member=0,long list=0){string key=member>0?$"m:{list}:{member}":"t:"+track.Id;if(!rowViews.TryGetValue(key,out var row)||row.Track!=track){row=new TrackRow(track,this,memberId:member,listId:list);rowViews[key]=row;}return row;}
  R2Page SongPage(string title,IEnumerable<TrackRow> rows,bool batchDeletable=false){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);interactions.BatchDeletable=batchDeletable;header.DataContext=interactions;var empty = MakeSongEmptyState(title);
  grid.Children.Add(empty); Grid.SetRow(empty,1); emptySongPages.Add(page,(header,empty));
+ StaggerListEntrance(list);
  Fill(page,rows);return page;}
+ // R4: 列表进场 18ms 错峰淡入，总时长硬上限 300ms；超 17 行余项直接显示，只动 Opacity。
+ void StaggerListEntrance(ListBox list){
+  if(!Program.Desktop)return;
+  var played=false;
+  list.AttachedToVisualTree+=(_,_)=>{
+   if(played)return;played=true;
+   Dispatcher.UIThread.Post(()=>{
+    var max=DesignTokens.ListTotalMs/DesignTokens.ListStaggerMs; // 300/18 ≈ 16
+    var count=Math.Min(list.ItemCount,max);
+    for(var index=0;index<count;index++){
+     if(list.ContainerFromIndex(index) is not ListBoxItem container)continue;
+     container.Opacity=0;
+     container.Transitions=new Transitions{new DoubleTransition{Property=Visual.OpacityProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.QuickMs),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
+     var i=index;
+     _=Task.Delay(i*DesignTokens.ListStaggerMs).ContinueWith(_=>Dispatcher.UIThread.Post(()=>{if(container.IsVisible)container.Opacity=1;}));
+    }
+   },DispatcherPriority.Loaded);
+  };
+ }
  void AddNav(StackPanel nav,R2Page page)
  {
   Pages.Add(page);
