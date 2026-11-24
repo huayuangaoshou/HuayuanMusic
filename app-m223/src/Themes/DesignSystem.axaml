@@ -1,9 +1,10 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:r2="using:HuayuanPreview.R2">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:r2="using:HuayuanPreview.R2" xmlns:tok="using:HuayuanPreview">
   <Styles.Resources>
     <ResourceDictionary>
-      <SolidColorBrush x:Key="Primary" Color="#4A9BFF"/>
-      <SolidColorBrush x:Key="R2Accent" Color="#4A9BFF"/>
-      <SolidColorBrush x:Key="R2Pink" Color="#FF6FA5"/>
+      <!-- 颜色唯一来源：DesignTokens。视觉表现层不得散写硬编码 hex。 -->
+      <SolidColorBrush x:Key="Primary" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+      <SolidColorBrush x:Key="R2Accent" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+      <SolidColorBrush x:Key="R2Pink" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
       <StreamGeometry x:Key="GlassBack">M10 2L4 8L10 14L11.2 12.8L6.4 8L11.2 3.2Z</StreamGeometry>
       <StreamGeometry x:Key="GlassForward">M6 2L12 8L6 14L4.8 12.8L9.6 8L4.8 3.2Z</StreamGeometry>
       <StreamGeometry x:Key="GlassMinimize">M2 7.25H14V8.75H2Z</StreamGeometry>
@@ -11,13 +12,9 @@
       <StreamGeometry x:Key="GlassClose">M3.5 2.5L8 7L12.5 2.5L13.5 3.5L9 8L13.5 12.5L12.5 13.5L8 9L3.5 13.5L2.5 12.5L7 8L2.5 3.5Z</StreamGeometry>
       <StreamGeometry x:Key="GlassMoon">M13.5 10.5C6.6 11.9 4.2 5.9 7.2 2C2.1 2.5 .5 8.8 3.5 12.1C6 15 11.3 15 13.5 10.5Z</StreamGeometry>
       <StreamGeometry x:Key="R2Heart">M12,20.5 C10.75,19.62 3,14.25 3,8.95 C3,6.08 5.22,4 7.91,4 C9.64,4 11.12,4.86 12,6.16 C12.88,4.86 14.36,4 16.09,4 C18.78,4 21,6.08 21,8.95 C21,14.25 13.25,19.62 12,20.5 Z</StreamGeometry>
-      <LinearGradientBrush x:Key="R2HeartFill" StartPoint="0%,0%" EndPoint="80%,100%">
-        <GradientStop Color="#FF82AC" Offset="0"/><GradientStop Color="#FF4D7D" Offset="1"/>
-      </LinearGradientBrush>
-      <LinearGradientBrush x:Key="R2BrandGradient" StartPoint="0%,0%" EndPoint="100%,0%">
-        <GradientStop Color="#FF6FA5" Offset="0"/><GradientStop Color="#4A9BFF" Offset="1"/>
-      </LinearGradientBrush>
-      <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
+      <SolidColorBrush x:Key="R2HeartFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+      <SolidColorBrush x:Key="R2BrandGradient" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+      <SolidColorBrush x:Key="R2AccentHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <BoxShadows x:Key="GlassLift">0 8 24 0 #140F172A</BoxShadows>
@@ -44,30 +41,26 @@
           <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
             <GradientStop Color="#2B6CB8FF" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
-          <SolidColorBrush x:Key="R2Main" Color="#FFFFFF"/>
-          <SolidColorBrush x:Key="R2Side" Color="#F2F7FF"/>
-          <SolidColorBrush x:Key="R2Edge" Color="#DCE8FA"/>
-          <SolidColorBrush x:Key="R2Ink" Color="#1F2329"/>
-          <SolidColorBrush x:Key="R2Muted" Color="#52637A"/>
-          <SolidColorBrush x:Key="R2Hover" Color="#EDF4FF"/>
-          <SolidColorBrush x:Key="R2Stripe" Color="#F6FAFF"/>
-          <SolidColorBrush x:Key="R2Tint" Color="#FCECF5"/>
-          <SolidColorBrush x:Key="R2RedInk" Color="#AD3373"/>
+          <SolidColorBrush x:Key="R2Main" Color="{x:Static tok:DesignTokens.LightSurface}"/>
+          <SolidColorBrush x:Key="R2Side" Color="{x:Static tok:DesignTokens.LightBase}"/>
+          <SolidColorBrush x:Key="R2Edge" Color="{x:Static tok:DesignTokens.LightLine}"/>
+          <SolidColorBrush x:Key="R2Ink" Color="{x:Static tok:DesignTokens.LightText}"/>
+          <SolidColorBrush x:Key="R2Muted" Color="{x:Static tok:DesignTokens.LightSub}"/>
+          <SolidColorBrush x:Key="R2Hover" Color="{x:Static tok:DesignTokens.LightHover}"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.LightStripe}"/>
+          <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.AccentSoft}"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#00000000" Offset="1"/>
           </LinearGradientBrush>
           <LinearGradientBrush x:Key="FullLyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#28FFFFFF" Offset="0"/><GradientStop Color="#4DFFFFFF" Offset="0.5"/><GradientStop Color="#28FFFFFF" Offset="1"/>
           </LinearGradientBrush>
-          <SolidColorBrush x:Key="FullLyricIdle" Color="#3C4456"/>
-          <SolidColorBrush x:Key="FullLyricTranslation" Color="#5B6A86"/>
-          <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
-            <GradientStop Color="#E7417F" Offset="0"/>
-            <GradientStop Color="#E84D9C" Offset="0.55"/>
-            <GradientStop Color="#4A6FE0" Offset="1"/>
-          </LinearGradientBrush>
+          <SolidColorBrush x:Key="FullLyricIdle" Color="{x:Static tok:DesignTokens.LightText}"/>
+          <SolidColorBrush x:Key="FullLyricTranslation" Color="{x:Static tok:DesignTokens.LightSub}"/>
+          <SolidColorBrush x:Key="FullLyricSung" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="FullLyricBack" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#FFF4FA" Offset="0"/><GradientStop Color="#F3F7FF" Offset="0.5"/><GradientStop Color="#FEF2F7" Offset="1"/>
+            <GradientStop Color="{x:Static tok:DesignTokens.LightBase}" Offset="0"/><GradientStop Color="{x:Static tok:DesignTokens.LightSurface}" Offset="0.5"/><GradientStop Color="{x:Static tok:DesignTokens.LightBase}" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
@@ -95,30 +88,26 @@
           <RadialGradientBrush x:Key="GlassBlueGlow" Center="92%,90%" GradientOrigin="92%,90%" RadiusX="63%" RadiusY="72%">
             <GradientStop Color="#36648CDC" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
-          <SolidColorBrush x:Key="R2Main" Color="#111622"/>
-          <SolidColorBrush x:Key="R2Side" Color="#161D2C"/>
-          <SolidColorBrush x:Key="R2Edge" Color="#29354B"/>
-          <SolidColorBrush x:Key="R2Ink" Color="#F2F3F5"/>
-          <SolidColorBrush x:Key="R2Muted" Color="#A0A5B1"/>
-          <SolidColorBrush x:Key="R2Hover" Color="#202E46"/>
-          <SolidColorBrush x:Key="R2Stripe" Color="#151D2D"/>
-          <SolidColorBrush x:Key="R2Tint" Color="#382942"/>
-          <SolidColorBrush x:Key="R2RedInk" Color="#FFA0C2"/>
+          <SolidColorBrush x:Key="R2Main" Color="{x:Static tok:DesignTokens.DarkSurface}"/>
+          <SolidColorBrush x:Key="R2Side" Color="{x:Static tok:DesignTokens.DarkBase}"/>
+          <SolidColorBrush x:Key="R2Edge" Color="{x:Static tok:DesignTokens.DarkLine}"/>
+          <SolidColorBrush x:Key="R2Ink" Color="{x:Static tok:DesignTokens.DarkText}"/>
+          <SolidColorBrush x:Key="R2Muted" Color="{x:Static tok:DesignTokens.DarkSub}"/>
+          <SolidColorBrush x:Key="R2Hover" Color="{x:Static tok:DesignTokens.DarkHover}"/>
+          <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.DarkStripe}"/>
+          <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.DarkTint}"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#72080D18" Offset="0"/><GradientStop Color="#A0080D18" Offset="0.55"/><GradientStop Color="#D90A101C" Offset="1"/>
           </LinearGradientBrush>
           <LinearGradientBrush x:Key="FullLyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.5"/><GradientStop Color="#00000000" Offset="1"/>
           </LinearGradientBrush>
-          <SolidColorBrush x:Key="FullLyricIdle" Color="#DADFFF"/>
-          <SolidColorBrush x:Key="FullLyricTranslation" Color="#E7EEFF"/>
-          <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
-            <GradientStop Color="#FFE7F2" Offset="0"/>
-            <GradientStop Color="#FF9EC8" Offset="0.55"/>
-            <GradientStop Color="#A5CDFF" Offset="1"/>
-          </LinearGradientBrush>
+          <SolidColorBrush x:Key="FullLyricIdle" Color="{x:Static tok:DesignTokens.DarkText}"/>
+          <SolidColorBrush x:Key="FullLyricTranslation" Color="{x:Static tok:DesignTokens.DarkSub}"/>
+          <SolidColorBrush x:Key="FullLyricSung" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="FullLyricBack" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#0E1422" Offset="0"/><GradientStop Color="#101828" Offset="0.5"/><GradientStop Color="#0E1422" Offset="1"/>
+            <GradientStop Color="{x:Static tok:DesignTokens.DarkBase}" Offset="0"/><GradientStop Color="{x:Static tok:DesignTokens.DarkSurface}" Offset="0.5"/><GradientStop Color="{x:Static tok:DesignTokens.DarkBase}" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
