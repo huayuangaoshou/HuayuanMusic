@@ -38,6 +38,8 @@ public sealed partial class PreviewWindow {
   ExtendClientAreaToDecorationsHint = true;
   ExtendClientAreaTitleBarHeightHint = 0;
   WindowDecorations = WindowDecorations.None;
+  // R6: 窗口底启用真实材质——Win11 22000+ 用 Mica，其余回退不透明 Base。
+  EnableDesktopBackdrop();
   Content = R2View;
   var progress = R2View.FindControl<CommitSlider>("DesktopProgress")!;
   progress.IsVisible = true;
@@ -53,6 +55,33 @@ public sealed partial class PreviewWindow {
   Title = "HuayuanMusic";
   MinWidth = 1000; MinHeight = 700; Width = 1280; Height = 840;
   Closed += (_, _) => { adapter.Changed -= UpdateProgress; R2Model.Dispose(); };
+ }
+ // R6: 窗口底真实材质。Win11 22000+ 用 Mica；其余回退不透明 Base（由 R2ShellView 的 GlassBase 平涂兜底）。
+ internal bool DesktopBackdropActive { get; private set; }
+ void EnableDesktopBackdrop()
+ {
+  var request = OperatingSystem.IsWindowsVersionAtLeast(10, 0, 22000)
+   ? new[] { WindowTransparencyLevel.Mica, WindowTransparencyLevel.None }
+   : new[] { WindowTransparencyLevel.None };
+  TransparencyLevelHint = request;
+  // Mica 需窗口背景透明才能透出；不透明兜底时保留 R2ShellView 的 GlassBase 平涂。
+  DesktopBackdropActive = false;
+  PropertyChanged += OnBackdropLevelChanged;
+  // 初始按当前实际材质等级应用一次，避免等待后续属性变更事件。
+  ApplyBackdropState();
+ }
+ void OnBackdropLevelChanged(object? sender, AvaloniaPropertyChangedEventArgs args)
+ {
+  if (args.Property != ActualTransparencyLevelProperty) return;
+  ApplyBackdropState();
+ }
+ void ApplyBackdropState()
+ {
+  var mica = ActualTransparencyLevel == WindowTransparencyLevel.Mica;
+  if (mica == DesktopBackdropActive) return;
+  DesktopBackdropActive = mica;
+  Background = mica ? Avalonia.Media.Brushes.Transparent : null;
+  R2View?.ApplyBackdrop(mica);
  }
  public async Task AttachR2LocalAsync(){
   if(!R2Enabled||!Path.GetFileName(OfflineStartupProfile.Current.Root).StartsWith("p17-body-r3-manual-test-r2-",StringComparison.Ordinal))throw new UnauthorizedAccessException("R2 requires a new synthetic-only admitted profile");

@@ -166,7 +166,10 @@ public partial class R2ShellView : UserControl
         var target = CoverTint;
         if (row == null || row.Track.Cover == null)
         {
-            target.Background = (IBrush)Application.Current!.Resources["GlassBase"]!;
+            // 无封面：回退到底色。Mica 生效时保持半透明以透出材质。
+            target.Background = backdropMica
+                ? Root.Background
+                : (IBrush)Application.Current!.Resources["GlassBase"]!;
             return;
         }
         try
@@ -185,6 +188,22 @@ public partial class R2ShellView : UserControl
         catch { /* 取色失败回退，不报错 */ }
     }
     private Window? Window => TopLevel.GetTopLevel(this) as Window;
+
+    // R6: 窗口底真实材质。Mica 生效时把根背景压到半透明，让系统材质透出；回退时恢复 GlassBase 平涂兜底。
+    private bool backdropMica;
+    internal void ApplyBackdrop(bool mica)
+    {
+        backdropMica = mica;
+        var baseColor = ActualThemeVariant == ThemeVariant.Dark ? DesignTokens.DarkBase : DesignTokens.LightBase;
+        var surface = mica
+            ? Color.FromArgb(219, baseColor.R, baseColor.G, baseColor.B) // ~86% 不透明，与已有 Mica 路径的 WindowFill 一致
+            : baseColor;
+        var backdrop = new SolidColorBrush(surface);
+        Root.Background = backdrop;
+        // 无封面时 CoverTint 回退到底色；材质激活时改用半透明底，避免盖住 Mica。
+        if (tintTrackKey == null)
+            CoverTint.Background = backdrop;
+    }
 
     private void FilterChanged(object? sender, TextChangedEventArgs args)
     {
