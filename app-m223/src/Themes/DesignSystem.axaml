@@ -197,8 +197,17 @@
     <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
   </Style>
   <Style Selector="Button.heart:pointerover Path"><Setter Property="Stroke" Value="{DynamicResource R2Pink}"/><Setter Property="RenderTransform" Value="scale(1.1)"/></Style>
-  <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/></Style>
-  <Style Selector="Button.heart:pressed Path"><Setter Property="RenderTransform" Value="scale(1.24)"/></Style>
+  <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/>
+    <Style.Animations>
+      <!-- R11-b: 红心点亮 1→1.2→1 回弹序列，200ms，无果冻感。 -->
+      <Animation Duration="0:0:0.20" FillMode="None">
+        <KeyFrame Cue="0%"><Setter Property="RenderTransform" Value="scale(1)"/></KeyFrame>
+        <KeyFrame Cue="50%"><Setter Property="RenderTransform" Value="scale(1.2)"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="RenderTransform" Value="scale(1)"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+  <Style Selector="Button.heart:pressed Path"><Setter Property="RenderTransform" Value="scale(0.98)"/></Style>
   <Style Selector="Border.song-current"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>
   <Style Selector="Border.unavailable TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
   <Style Selector="Border.unavailable r2|TrackArtwork"><Setter Property="Opacity" Value="0.55"/></Style>
