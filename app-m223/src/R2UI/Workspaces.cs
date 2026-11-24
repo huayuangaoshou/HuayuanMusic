@@ -7,6 +7,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Data;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Media.Transformation;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -51,7 +52,13 @@ public sealed partial class WorkspaceState:ObservableObject {
   status.Classes.Add("muted");
   status.IsVisible = !Program.Desktop;
   status.Margin = new Thickness(0,0,0,4);
-  content.Transitions = new() { new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(160), Easing = new Avalonia.Animation.Easings.CubicEaseOut() } };
+  // R11: 进场编排——内容卡 12px 上移 + 淡入；退场更快（进场 60%）。
+  content.Transitions = new()
+  {
+   new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(DesignTokens.MotionView), Easing = new Avalonia.Animation.Easings.CubicEaseOut() },
+   new TransformOperationsTransition { Property = Visual.RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(DesignTokens.MotionView), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }
+  };
+  content.RenderTransform = TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
   var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(24,8,24,16)};
   area.Children.Add(heading);Grid.SetRow(status,1);area.Children.Add(status);Grid.SetRow(content,2);area.Children.Add(content);
   Root=area;
@@ -121,21 +128,29 @@ public sealed partial class WorkspaceState:ObservableObject {
  grid.Children.Add(empty); Grid.SetRow(empty,1); emptySongPages.Add(page,(header,empty));
  StaggerListEntrance(list);
  Fill(page,rows);return page;}
- // R4: 列表进场 18ms 错峰淡入，总时长硬上限 300ms；超 17 行余项直接显示，只动 Opacity。
+ // R11: 列表行进场编排——逐行 +30ms 错峰，最多前 10 行，元素位移 12px + 淡入；余项直接显示。只动 Opacity/RenderTransform。
  void StaggerListEntrance(ListBox list){
   if(!Program.Desktop)return;
   var played=false;
   list.AttachedToVisualTree+=(_,_)=>{
    if(played)return;played=true;
    Dispatcher.UIThread.Post(()=>{
-    var max=DesignTokens.ListTotalMs/DesignTokens.ListStaggerMs; // 300/18 ≈ 16
+    var max=DesignTokens.ChoreoRowMax; // 前 10 行
     var count=Math.Min(list.ItemCount,max);
     for(var index=0;index<count;index++){
      if(list.ContainerFromIndex(index) is not ListBoxItem container)continue;
      container.Opacity=0;
-     container.Transitions=new Transitions{new DoubleTransition{Property=Visual.OpacityProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.QuickMs),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
+     container.RenderTransform=TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
+     container.Transitions=new Transitions{
+      new DoubleTransition{Property=Visual.OpacityProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.MotionMicro),Easing=new Avalonia.Animation.Easings.CubicEaseOut()},
+      new TransformOperationsTransition{Property=Visual.RenderTransformProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.MotionMicro),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}
+     };
      var i=index;
-     _=Task.Delay(i*DesignTokens.ListStaggerMs).ContinueWith(_=>Dispatcher.UIThread.Post(()=>{if(container.IsVisible)container.Opacity=1;}));
+     _=Task.Delay(i*DesignTokens.ChoreoRowStagger).ContinueWith(_=>Dispatcher.UIThread.Post(()=>{
+      if(!container.IsVisible)return;
+      container.Opacity=1;
+      container.RenderTransform=TransformOperations.Parse("translateY(0px)");
+     }));
     }
    },DispatcherPriority.Loaded);
   };
@@ -402,11 +417,18 @@ public sealed partial class WorkspaceState:ObservableObject {
   Save();
   if(push&&CurrentPage!=null&&CurrentPage!=page){back.Push(Here());forward.Clear();}
   CurrentPage=page;
-  content.Opacity=0;
-  content.Content=page.View;
-  Dispatcher.UIThread.Post(()=>content.Opacity=1,DispatcherPriority.Render);
+  // R11 进场编排：标题先到（0ms）→ 内容卡 +60ms 后 12px 上移淡入；切走瞬时（比切来快，退场≈进场 60% 以内）。
   heading.Text=page.DisplayName;
   heading.IsVisible=page!=DetailPage&&page!=onlinePage;
+  content.Opacity=0;
+  content.RenderTransform=TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
+  content.Content=page.View;
+  Dispatcher.UIThread.Post(async()=>{
+   await Task.Delay(DesignTokens.ChoreoCardDelay);
+   if(CurrentPage!=page)return; // 期间又切了页，放弃本次进场
+   content.Opacity=1;
+   content.RenderTransform=TransformOperations.Parse("translateY(0px)");
+  },DispatcherPriority.Render);
   status.IsVisible=!Local&&page!=DetailPage&&page!=onlinePage&&page.DisplayName!="我的账号";
   status.Text=Local?"":Host.Concept.Summary;
   HighlightNavigation();
