@@ -17,7 +17,9 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-          <BoxShadows x:Key="GlassLift">0 8 24 0 #140F172A</BoxShadows>
+          <!-- R11 阴影分档：L2 chrome 8/24 α0.18，L3 floating 16/48 α0.25（层级越高阴影越大越淡）。中性色唯一来源。 -->
+          <BoxShadows x:Key="GlassLift">0 8 24 0 #2E0F172A</BoxShadows>
+          <BoxShadows x:Key="GlassLiftL3">0 16 48 0 #400F172A</BoxShadows>
           <LinearGradientBrush x:Key="GlassKnob" StartPoint="15%,0%" EndPoint="90%,100%">
             <GradientStop Color="#FFFFFF" Offset="0"/><GradientStop Color="#F2D9EDFF" Offset="0.52"/><GradientStop Color="#FF9FC6F0" Offset="1"/>
           </LinearGradientBrush>
@@ -69,7 +71,8 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <BoxShadows x:Key="GlassLift">0 2 7 0 #4C101A31, 0 14 30 0 #6B0A142B</BoxShadows>
+          <BoxShadows x:Key="GlassLift">0 8 24 0 #2E101A31</BoxShadows>
+          <BoxShadows x:Key="GlassLiftL3">0 16 48 0 #400A142B</BoxShadows>
           <LinearGradientBrush x:Key="GlassKnob" StartPoint="15%,0%" EndPoint="90%,100%">
             <GradientStop Color="#D9C8E4FF" Offset="0"/><GradientStop Color="#687CBAEE" Offset="0.52"/><GradientStop Color="#70617CC8" Offset="1"/>
           </LinearGradientBrush>
@@ -126,9 +129,8 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="12"/>
   </Style>
-  <Style Selector="Border.dock, Border.glass-float">
-    <Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/>
-  </Style>
+  <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
+  <Style Selector="Border.glass-float"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLiftL3}"/></Style>
   <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
 
   <Style Selector="Border.buffer-ring">

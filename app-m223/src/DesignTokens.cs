@@ -130,4 +130,22 @@ public static class DesignTokens
     public const double AcrylicTintOpacity = 0.6; // ExperimentalAcrylicBorder TintOpacity 上限
     public const double AcrylicShadowBlur   = 24;
     public const double AcrylicShadowOpacity = 0.14;
+
+    // ── Z 轴四层景深（R11）。层级越高 → frost 越低（越透）、阴影越大越淡。──
+    public const int DepthLayerAtmosphere = 0; // L0 氛围底纹：无材质、无阴影
+    public const int DepthLayerPanel      = 1; // L1 内容卡/列表：panel
+    public const int DepthLayerChrome     = 2; // L2 chrome 播放条/侧栏/顶栏
+    public const int DepthLayerFloating   = 3; // L3 悬浮层菜单/弹窗/桌面歌词
+    // 材质 frost 分档（接 R9 材质体系）
+    public const double FrostPanel    = 0.60; // L1
+    public const double FrostChrome   = 0.72; // L2
+    public const double FrostFloating = 0.48; // L3
+    // 阴影分档（唯一来源 GlassLift；层级越高阴影越大越淡）
+    public const double ShadowL2Blur     = 24;   // L2 chrome: 0 8 24 α0.18
+    public const double ShadowL2Opacity  = 0.18;
+    public const double ShadowL3Blur     = 48;   // L3 floating: 0 16 48 α0.25
+    public const double ShadowL3Opacity  = 0.25;
+    // 弹窗 scrim
+    public const double ScrimOpacity = 0.32; // 黑 α0.32 + 模糊 8px
+    public static readonly Color ScrimColor = Color.Parse("#52000000"); // α 0.32
 }
