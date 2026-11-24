@@ -67,6 +67,19 @@ public static class DesignTokens
     public const double RadiusM = 12;
     public const double RadiusL = 16;
 
+    // ── R10 布局数学（YesPlayMusic 移植：只抄参数与节奏）──────
+    public const double ContentPadTop     = 64;   // 内容区上留白
+    public const double ContentPadBottom  = 96;   // 底部留白（给悬浮播放条让位）
+    public const double ContentPadSideMin = 64;   // 左右留白下限（5vw 与 64px 取大）
+    public const double ContentMaxWidth   = 1336; // 内容最大宽居中封顶
+    public const double DockHeight        = 64;   // 悬浮播放条高
+    public const double PageTitleMin      = 36;   // 页面大标题 36~42
+    public const double PageTitleMax      = 42;
+    public const double BlockTitleSize    = 18;   // 区块标题
+    public const double SongRowCover      = 46;   // 歌曲行内封面
+    public const double SongRowHeight     = 62;   // 歌曲行自然高度
+    public const double SongRowPad        = 8;    // 歌曲行 padding
+
     // ── 字号（阶梯）──────────────────────────────────────────
     public const double FontXs   = 13;   // 最小 13px
     public const double FontSm   = 14;
@@ -155,6 +168,15 @@ public static class DesignTokens
     public const double FrostPanel    = 0.60; // L1
     public const double FrostChrome   = 0.72; // L2
     public const double FrostFloating = 0.48; // L3
+    // R9 透出色提饱和幅度（随 frost 档位对齐：chrome +18% / panel +28% / floating +34%）
+    // 数值 = 1 + 提幅，shader 内 mix(luma, color, saturation)。
+    public const double SaturationChrome   = 1.18; // L2 chrome 播放条/侧栏/顶栏
+    public const double SaturationPanel    = 1.28; // L1 内容卡/列表
+    public const double SaturationFloating = 1.34; // L3 悬浮层菜单/弹窗
+    // 夜间模式提饱和幅度降为 1.15（避免暗底上彩色溢出刺眼）
+    public const double SaturationNight = 1.15;
+    // R9 降级：软渲染 / 低性能设备跳过采样与色散（保留提饱和与边缘高光廉价近似）
+    public static bool ShaderDegrade => Program.Args.Contains("--software") || Program.Args.Contains("--low");
     // 阴影分档（唯一来源 GlassLift；层级越高阴影越大越淡）
     public const double ShadowL2Blur     = 24;   // L2 chrome: 0 8 24 α0.18
     public const double ShadowL2Opacity  = 0.18;

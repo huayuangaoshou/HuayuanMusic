@@ -18,12 +18,16 @@ public sealed class GlassOptics : Control
         AvaloniaProperty.Register<GlassOptics, bool>(nameof(IsAtmosphere));
     public static readonly StyledProperty<double> FrostProperty =
         AvaloniaProperty.Register<GlassOptics, double>(nameof(Frost), .64);
+    /// <summary>R9 透出色提饱和系数（随 frost 档位由调用方传入，1=不饱和）。</summary>
+    public static readonly StyledProperty<double> SaturationProperty =
+        AvaloniaProperty.Register<GlassOptics, double>(nameof(Saturation), 1.28);
 
     public double Radius { get => GetValue(RadiusProperty); set => SetValue(RadiusProperty, value); }
     public bool IsAtmosphere { get => GetValue(IsAtmosphereProperty); set => SetValue(IsAtmosphereProperty, value); }
     public double Frost { get => GetValue(FrostProperty); set => SetValue(FrostProperty, value); }
+    public double Saturation { get => GetValue(SaturationProperty); set => SetValue(SaturationProperty, value); }
 
-    static GlassOptics() => AffectsRender<GlassOptics>(RadiusProperty, FrostProperty, IsAtmosphereProperty, BoundsProperty);
+    static GlassOptics() => AffectsRender<GlassOptics>(RadiusProperty, FrostProperty, SaturationProperty, IsAtmosphereProperty, BoundsProperty);
 
     public GlassOptics() => ActualThemeVariantChanged += (_, _) => InvalidateVisual();
 
@@ -37,11 +41,13 @@ public sealed class GlassOptics : Control
         var origin = IsAtmosphere ? default : this.TranslatePoint(default, root) ?? default;
         context.Custom(new Draw(new Parameters(new Rect(Bounds.Size), size, origin,
             Math.Clamp(Radius, 0, Math.Min(Bounds.Width, Bounds.Height) / 2), Math.Clamp(Frost, 0, 1),
-            ActualThemeVariant == ThemeVariant.Dark, IsAtmosphere)));
+            ActualThemeVariant == ThemeVariant.Dark, IsAtmosphere,
+            Math.Max(1.0, Saturation),
+            DesignTokens.ShaderDegrade)));
     }
 
     private readonly record struct Parameters(Rect Bounds, Size Viewport, Point Origin, double Radius,
-        double Frost, bool Dark, bool Atmosphere);
+        double Frost, bool Dark, bool Atmosphere, double Saturation, bool Degrade);
 
     private sealed class Draw(Parameters values) : ICustomDrawOperation
     {
@@ -68,7 +74,9 @@ public sealed class GlassOptics : Control
                 ["corner"] = (float)parameters.Radius,
                 ["frost"] = (float)parameters.Frost,
                 ["night"] = parameters.Dark ? 1f : 0f,
-                ["atmosphere"] = parameters.Atmosphere ? 1f : 0f
+                ["atmosphere"] = parameters.Atmosphere ? 1f : 0f,
+                ["saturation"] = (float)(parameters.Dark ? DesignTokens.SaturationNight : parameters.Saturation),
+                ["degrade"] = parameters.Degrade ? 1f : 0f
             };
             using var shader = effect.ToShader(uniforms);
             if (shader == null) return;
@@ -88,6 +96,8 @@ public sealed class GlassOptics : Control
             uniform float frost;
             uniform float night;
             uniform float atmosphere;
+            uniform float saturation;
+            uniform float degrade;
 
             float glow(float2 uv, float2 center, float2 spread) {
                 float2 delta = (uv - center) / spread;
@@ -105,6 +115,25 @@ public sealed class GlassOptics : Control
                     .36 * glow(uv, float2(.53,.45), float2(.53,.54)));
             }
 
+            // R9-b 透出色提饱和：按亮度混回彩色，幅度由调用方 saturation uniform 控制。
+            half3 saturate3(half3 c) {
+                half luma = dot(c, half3(.299,.587,.114));
+                return mix(half3(luma), c, saturation);
+            }
+
+            // R9-a 柔化采样：12 tap（中心 + 十字 8 + 对角 3 权重均匀），过渡奶油化无颗粒。
+            // degrade 时退化为单点采样，跳过模糊。
+            half3 blurSample(float2 sampleAt) {
+                half3 acc = field(sampleAt) * .30;
+                acc += .10 * (field(sampleAt + float2( 7, 0)) + field(sampleAt + float2(-7, 0)) +
+                              field(sampleAt + float2( 0, 7)) + field(sampleAt + float2( 0,-7)));
+                acc += .06 * (field(sampleAt + float2(16, 0)) + field(sampleAt + float2(-16, 0)) +
+                              field(sampleAt + float2( 0,16)) + field(sampleAt + float2( 0,-16)));
+                acc += .045 * (field(sampleAt + float2(10,10)) + field(sampleAt + float2(-10,10)) +
+                               field(sampleAt + float2(10,-10)) + field(sampleAt + float2(-10,-10)));
+                return acc;
+            }
+
             half4 main(float2 p) {
                 if (atmosphere > .5) return half4(field(p), 1);
                 float2 centered = p - extent * .5;
@@ -116,14 +145,34 @@ public sealed class GlassOptics : Control
                 if (q.x > 0.0 && q.y > 0.0) normal = normalize(max(q,.001)) * sign(centered);
                 float bevel = exp(min(distance,0.0) / 12.0);
                 float2 sampleAt = origin + p - normal * bevel * 27.0;
-                half3 blurred = field(sampleAt) * .44;
-                blurred += .14 * (field(sampleAt + float2(18,0)) + field(sampleAt - float2(18,0)) +
-                                   field(sampleAt + float2(0,18)) + field(sampleAt - float2(0,18)));
+
+                // R9-d 边缘色散：仅距边 <6px 对 R/B 通道做 ±1.5px 偏移采样，中心不受影响；degrade 跳过。
+                half3 blurred;
+                if (degrade > .5) {
+                    blurred = field(sampleAt); // 降级：跳过采样与色散，单点直采
+                } else {
+                    // 边缘带权重：距边 0~6px 线性衰减，>6px 为 0（中心无色散）
+                    float edgeW = 1.0 - saturate(max(0.0, distance + 6.0) / 6.0);
+                    half3 center = blurSample(sampleAt);
+                    half3 r = blurSample(sampleAt + float2( 1.5, 0));
+                    half3 b = blurSample(sampleAt + float2(-1.5, 0));
+                    blurred = center;
+                    blurred.r = mix(center.r, r.r, edgeW);
+                    blurred.b = mix(center.b, b.b, edgeW);
+                }
+                half3 colored = saturate3(blurred);
+
                 half3 milk = mix(half3(1,.989,1), half3(.082,.123,.208), night);
-                half3 color = mix(blurred, milk, frost);
+                half3 color = mix(colored, milk, frost);
                 float incidence = max(0.0, dot(normal, float2(-.65,-.76)));
                 float shine = bevel * (.05 + .19 * incidence);
-                color = mix(color, mix(half3(1),half3(.68,.81,1),night), shine);
+
+                // R9-c 边缘 specular 高光：1.5px 亮线（白 alpha ~0.35，角部略强），给玻璃厚度感。
+                float spec = (1.0 - smoothstep(0.0, 1.5, max(0.0, distance + 1.5)));
+                float cornerBoost = 1.0 + .55 * smoothstep(.85, 1.0, max(q.x,q.y) / max(extent.x,extent.y) * 2.0);
+                float specStrength = spec * cornerBoost;
+                color = mix(color, mix(half3(1),half3(.68,.81,1),night), shine + specStrength * .35);
+
                 return half4(color * alpha, alpha);
             }
             """;

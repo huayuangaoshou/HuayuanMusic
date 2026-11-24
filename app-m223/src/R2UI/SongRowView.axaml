@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
+             x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" xmlns:tok="using:HuayuanPreview" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="{x:Static tok:DesignTokens.SongRowHeight}">
   <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}" CornerRadius="7">
-  <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,68,56" ColumnSpacing="7" Margin="7,0">
+  <Grid ColumnDefinitions="33,46,3*,1.25*,1.20*,68,56" ColumnSpacing="7" Margin="7,0">
     <Border Width="18" Height="18" CornerRadius="7" HorizontalAlignment="Center" VerticalAlignment="Center"
             IsVisible="{Binding IsBatchMode}" BorderThickness="1.5"
             BorderBrush="{DynamicResource R2Muted}" Background="Transparent">
@@ -9,10 +9,10 @@
     </Border>
     <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsNumberVisible}"/>
     <vm:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsWaveVisible}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-    <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
+    <vm:TrackArtwork Grid.Column="1" DisplaySize="{x:Static tok:DesignTokens.SongRowCover}" VerticalAlignment="Center"/>
     <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="5">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="3">
-        <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="13" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+        <TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" Classes.current="{Binding IsCurrent}" FontSize="{x:Static tok:DesignTokens.FontMd}" FontWeight="Medium" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
         <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Center">
           <TextBlock Text="无损 FLAC" FontSize="10" Classes="muted" IsVisible="{Binding IsLosslessFile}" VerticalAlignment="Center"/>
           <PathIcon Width="12" Height="12" IsVisible="{Binding IsDownloaded}" ToolTip.Tip="已下载" Foreground="{DynamicResource R2Muted}" Data="M2 8L6 12L14 4L15.5 5.5L6 15L.5 9.5Z"/>
@@ -31,8 +31,8 @@
       </StackPanel>
       <Button Grid.Column="1" Content="查看" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
     </Grid>
-    <TextBlock Grid.Column="3" Text="{Binding Singer}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
-    <TextBlock Grid.Column="4" Text="{Binding AlbumName}" Classes="muted" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="3" Text="{Binding Singer}" Classes="muted" FontSize="{x:Static tok:DesignTokens.FontXs}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
+    <TextBlock Grid.Column="4" Text="{Binding AlbumName}" Classes="muted" FontSize="{x:Static tok:DesignTokens.FontXs}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center"/>
     <StackPanel Name="OnlineRowActions" Grid.Column="5" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center"
                 IsVisible="{Binding CanUseOnlineActions}">
       <vm:HeartButton/>

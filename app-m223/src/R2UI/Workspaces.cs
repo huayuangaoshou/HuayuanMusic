@@ -47,10 +47,12 @@ public sealed partial class WorkspaceState:ObservableObject {
  public WorkspaceState(ShellModel host,bool local){Host=host;Local=local;
   var nav=new StackPanel{Spacing=4,Margin=new Thickness(0)};
   Navigation = nav;
-  heading.FontSize = 27;
+  heading.FontSize = DesignTokens.PageTitleMin; // R10 页面大标题 36px（36~42 区间）
   heading.FontWeight = FontWeight.SemiBold;
-  heading.LineHeight = 27 * DesignTokens.LineHeightTitle; // R11 大标题行高 1.08
+  heading.LineHeight = DesignTokens.PageTitleMin * DesignTokens.LineHeightTitle; // R11 大标题行高 1.08
+  heading.Margin = new Thickness(0, 0, 0, 28); // R10 大标题下缘 margin 28px
   status.Classes.Add("muted");
+  status.FontSize = DesignTokens.FontSm; // R10 副标题 14px
   status.IsVisible = !Program.Desktop;
   status.Margin = new Thickness(0,0,0,4);
   // R11: 进场编排——内容卡 12px 上移 + 淡入；退场更快（进场 60%）。
@@ -60,9 +62,11 @@ public sealed partial class WorkspaceState:ObservableObject {
    new TransformOperationsTransition { Property = Visual.RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(DesignTokens.MotionView), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }
   };
   content.RenderTransform = TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
-  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(24,8,24,16)};
+  // R10 布局：史诗级留白——上 64 / 左右 64（≥5vw）/ 底部 96（给悬浮播放条让位）。
+  var area=new Grid{RowDefinitions=new RowDefinitions("Auto,Auto,*"),Margin=new Thickness(DesignTokens.ContentPadSideMin,DesignTokens.ContentPadTop,DesignTokens.ContentPadSideMin,DesignTokens.ContentPadBottom)};
   area.Children.Add(heading);Grid.SetRow(status,1);area.Children.Add(status);Grid.SetRow(content,2);area.Children.Add(content);
-  Root=area;
+  // R10 布局：内容最大宽 1336px 居中，超宽屏不无限拉伸。
+  Root = new Border { MaxWidth = DesignTokens.ContentMaxWidth, HorizontalAlignment = HorizontalAlignment.Stretch, Child = area };
   if(Program.Desktop) AddDesktopNavigation(nav);
   if (Local && Program.Desktop)
   {

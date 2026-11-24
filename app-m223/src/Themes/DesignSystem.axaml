@@ -236,7 +236,7 @@
   <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
   <Style Selector="ListBox.songs > ListBoxItem"><Setter Property="Background" Value="{DynamicResource R2RowBase}"/></Style>
   <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
   </Style>
   <Style Selector="ListBox.songs > ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource R2RowHover}"/></Style>
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
