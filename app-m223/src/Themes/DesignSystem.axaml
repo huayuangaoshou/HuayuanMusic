@@ -49,6 +49,8 @@
           <SolidColorBrush x:Key="R2Hover" Color="{x:Static tok:DesignTokens.LightHover}"/>
           <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.LightStripe}"/>
           <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.AccentSoft}"/>
+          <SolidColorBrush x:Key="R2RowBase" Color="{x:Static tok:DesignTokens.LightRowBase}"/>
+          <SolidColorBrush x:Key="R2RowHover" Color="{x:Static tok:DesignTokens.AccentSoftHover}"/>
           <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#00000000" Offset="1"/>
@@ -99,6 +101,8 @@
           <SolidColorBrush x:Key="R2Hover" Color="{x:Static tok:DesignTokens.DarkHover}"/>
           <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.DarkStripe}"/>
           <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.DarkTint}"/>
+          <SolidColorBrush x:Key="R2RowBase" Color="{x:Static tok:DesignTokens.DarkRowBase}"/>
+          <SolidColorBrush x:Key="R2RowHover" Color="{x:Static tok:DesignTokens.AccentSoftHover}"/>
           <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#72080D18" Offset="0"/><GradientStop Color="#A0080D18" Offset="0.55"/><GradientStop Color="#D90A101C" Offset="1"/>
@@ -219,10 +223,11 @@
   </Style>
   <Style Selector="ListBox"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-  <Style Selector="ListBox.songs > ListBoxItem:nth-child(even)"><Setter Property="Background" Value="{DynamicResource R2Stripe}"/></Style>
+  <Style Selector="ListBox.songs > ListBoxItem"><Setter Property="Background" Value="{DynamicResource R2RowBase}"/></Style>
   <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter>
   </Style>
+  <Style Selector="ListBox.songs > ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource R2RowHover}"/></Style>
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Border.playlist-tile">

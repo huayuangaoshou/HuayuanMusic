@@ -41,6 +41,11 @@ public static class DesignTokens
     public static readonly Color DarkStripe = Color.Parse("#211E28");
     public static readonly Color DarkTint   = Color.Parse("#3A2A36");
 
+    // ── 歌单行底（非当前行统一半透明底，压平氛围光晕透出差异）──
+    public static readonly Color LightRowBase = Color.Parse("#80FFFFFF");
+    public static readonly Color DarkRowBase  = Color.Parse("#80282530");
+    public static readonly Color AccentSoftHover = Color.Parse("#14FBDDEB"); // AccentSoft 8%
+
     // ── 状态色（浅色 / 深色）────────────────────────────────
     public static readonly Color LightError   = Color.Parse("#9B2745");
     public static readonly Color DarkError    = Color.Parse("#FFB4C0");
