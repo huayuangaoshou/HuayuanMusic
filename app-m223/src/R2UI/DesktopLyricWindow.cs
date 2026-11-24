@@ -171,13 +171,7 @@ internal sealed class DesktopLyricWindow : Window
         };
     }
 
-    private static DesktopLyricLine CreateLine(IBrush foreground) => new(foreground)
-    {
-        Effect = new DropShadowEffect
-        {
-            BlurRadius = 5, OffsetX = 0, OffsetY = 1, Opacity = 1, Color = Color.Parse("#0B1020")
-        }
-    };
+    private static DesktopLyricLine CreateLine(IBrush foreground) => new(foreground);
 
     private IntPtr HitTestWindow(IntPtr handle, uint message, IntPtr wParam, IntPtr lParam, ref bool handled)
     {

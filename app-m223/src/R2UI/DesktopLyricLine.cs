@@ -13,6 +13,9 @@ internal sealed class DesktopLyricLine : Control
     // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
     private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
     private static readonly IBrush HitArea = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+    // 补丁2：文字可读性由双层投影承担——宽影保任意背景可读，细影保锐度。
+    private static readonly IEffect WideShadow = new DropShadowEffect { BlurRadius = 10, OffsetX = 0, OffsetY = 0, Opacity = 0.5, Color = Color.Parse("#0B1020") };
+    private static readonly IEffect SharpShadow = new DropShadowEffect { BlurRadius = 2, OffsetX = 0, OffsetY = 0, Opacity = 0.9, Color = Color.Parse("#0B1020") };
     private readonly IBrush foreground;
     private string text = "";
     private IReadOnlyList<LyricWord> words = [];
@@ -139,6 +142,11 @@ internal sealed class DesktopLyricLine : Control
         var viewport = new Rect(Bounds.Size);
         var origin = new Point(HorizontalOffset, 0);
         context.FillRectangle(HitArea, viewport);
+        // 双层阴影：宽影保任意背景可读（BlurRadius 10 / Opacity 0.5），细影保锐度（BlurRadius 2 / Opacity 0.9）。
+        using (context.PushEffect(WideShadow, viewport))
+            normal.Draw(context, origin);
+        using (context.PushEffect(SharpShadow, viewport))
+            normal.Draw(context, origin);
         normal.Draw(context, origin);
         if (sung != null)
         {
