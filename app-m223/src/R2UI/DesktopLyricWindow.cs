@@ -103,7 +103,7 @@ internal sealed class DesktopLyricWindow : Window
             BorderThickness = new Thickness(1), BoxShadow = BoxShadows.Parse("0 8 24 0 #140F172A"),
             Opacity = 0, IsHitTestVisible = false
         };
-        tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170) }];
+        tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }];
         var labels = new StackPanel
         {
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center,

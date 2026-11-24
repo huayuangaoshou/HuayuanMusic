@@ -55,11 +55,11 @@
                 <ControlTemplate>
                     <Panel>
                         <Border Name="BgLayer"
-                                CornerRadius="10"
+                                CornerRadius="7"
                                 Background="Transparent">
                             <Border.Transitions>
                                 <Transitions>
-                                    <BrushTransition Property="Background" Duration="0:0:0.15" />
+                                    <BrushTransition Property="Background" Duration="0:0:0.15" Easing="CubicEaseOut" />
                                 </Transitions>
                             </Border.Transitions>
                         </Border>
@@ -122,7 +122,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" />
+                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut" />
                 </Transitions>
             </Setter>
         </Style>
@@ -163,7 +163,7 @@
     </UserControl.Styles>
 
 
-    <Border CornerRadius="24"
+    <Border CornerRadius="12"
             Margin="12"
             Background="{StaticResource CardBg}"
             BoxShadow="0 0 0 1 #0F000000, 0 4 16 0 #14000000, 0 16 40 0 #0E000000">
@@ -180,7 +180,7 @@
                             VerticalAlignment="Center">
 
                     <Border Width="30" Height="30"
-                            CornerRadius="8"
+                            CornerRadius="7"
                             Background="{StaticResource AccentLight}">
                         <Svg Classes="ThemeSvgIcon"
                              Path="avares://HuayuanMusic.P1/Assets/FormatList.svg"
@@ -197,7 +197,7 @@
 
                     <!-- 数量徽章 -->
                     <Border Background="{StaticResource BadgeBg}"
-                            CornerRadius="20"
+                            CornerRadius="999"
                             Padding="7,2"
                             VerticalAlignment="Center">
                         <TextBlock Text="{Binding Player.DisplayPlaybackQueueCount}"

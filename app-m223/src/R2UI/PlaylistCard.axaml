@@ -2,7 +2,7 @@
              x:Class="HuayuanPreview.R2.PlaylistCard" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:PlaylistCardModel" x:CompileBindings="True" Margin="0,4,16,16">
   <Border Classes="playlist-tile">
     <Grid RowDefinitions="172,Auto,Auto" Width="172">
-      <Button Padding="0" Background="Transparent" CornerRadius="16" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Title}" AutomationProperties.AutomationId="{Binding AutomationId}">
+      <Button Padding="0" Background="Transparent" CornerRadius="12" Command="{Binding OpenCommand}" AutomationProperties.Name="{Binding Title}" AutomationProperties.AutomationId="{Binding AutomationId}">
         <ContentControl Content="{Binding Cover}" HorizontalAlignment="Center"/>
       </Button>
       <Button Classes="primary card-play" Width="38" Height="38" Margin="0,0,9,9" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding PlayCommand}" IsVisible="{Binding CanPlay}" AutomationProperties.Name="播放歌单"><PathIcon Width="14" Height="14" Data="M3 1L15 8L3 15Z"/></Button>

@@ -5,7 +5,7 @@
       <Setter Property="Template">
         <ControlTemplate>
           <Border Background="Transparent">
-            <Border Name="Rail" Height="4" CornerRadius="3" VerticalAlignment="Center"
+            <Border Name="Rail" Height="4" CornerRadius="7" VerticalAlignment="Center"
                     Background="{TemplateBinding Background}" IsHitTestVisible="False">
               <Border.Transitions>
                 <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
@@ -23,10 +23,10 @@
       <Setter Property="Template">
         <ControlTemplate>
           <Border Background="Transparent">
-            <Border Name="Lens" Width="14" Height="14" CornerRadius="8" HorizontalAlignment="Center"
+            <Border Name="Lens" Width="14" Height="14" CornerRadius="999" HorizontalAlignment="Center"
                     VerticalAlignment="Center" Background="{DynamicResource GlassKnob}"
                     BorderBrush="{DynamicResource GlassRim}" BorderThickness="1"
-                    BoxShadow="0 2 6 0 #594D83BA" IsHitTestVisible="False"/>
+                    BoxShadow="{DynamicResource GlassLift}" IsHitTestVisible="False"/>
           </Border>
         </ControlTemplate>
       </Setter>
@@ -116,7 +116,7 @@
   <Style Selector="TextBox.search-capsule"><Setter Property="CornerRadius" Value="24"/><Setter Property="MinHeight" Value="38"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/></Style>
   <Style Selector="TextBox.search-capsule:focus-within /template/ Border#PART_BorderElement">
     <Setter Property="BorderBrush" Value="{DynamicResource R2Focus}"/>
-    <Setter Property="BoxShadow" Value="0 0 0 3 #384A9BFF, 0 4 14 0 #1B5276C8"/>
+    <Setter Property="BoxShadow" Value="0 8 24 0 #1410181F"/>
   </Style>
   <Style Selector="ComboBox">
     <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
@@ -130,7 +130,7 @@
     <Setter Property="Template">
       <ControlTemplate>
         <Grid Background="Transparent" Margin="1,0">
-          <Border Name="GlassTrackBase" Height="4" VerticalAlignment="Center" CornerRadius="3"
+          <Border Name="GlassTrackBase" Height="4" VerticalAlignment="Center" CornerRadius="7"
                   Background="{DynamicResource GlassRail}" IsHitTestVisible="False">
             <Border.Transitions>
               <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>

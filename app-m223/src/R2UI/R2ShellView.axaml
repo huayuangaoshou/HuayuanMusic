@@ -15,9 +15,9 @@
       <Grid>
       <r2:GlassOptics Radius="20" Frost="0.64" Margin="1" IsHitTestVisible="False"/>
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
-        <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center" Margin="7,0">
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="8,0">
           <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
-          <TextBlock Text="HuayuanMusic" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Text="HuayuanMusic" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
           <TextBlock Text="工作空间" Classes="muted" FontSize="11" Margin="10,2,0,4"/>
@@ -38,7 +38,7 @@
     </Border>
     <Grid Grid.Column="1" RowDefinitions="64,*">
       <Border>
-        <Grid Name="Toolbar" ColumnDefinitions="Auto,Auto,240,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="6" Margin="14,0,7,0">
+        <Grid Name="Toolbar" ColumnDefinitions="Auto,Auto,240,*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="8" Margin="16,0,8,0">
           <Button Classes="icon" Width="32" Height="32" ToolTip.Tip="后退" AutomationProperties.Name="后退" Click="GoBack" VerticalAlignment="Center"><PathIcon Width="16" Height="16" Data="{DynamicResource GlassBack}"/></Button>
           <Button Grid.Column="1" Classes="icon" Width="32" Height="32" ToolTip.Tip="前进" AutomationProperties.Name="前进" Click="GoForward" VerticalAlignment="Center"><PathIcon Width="16" Height="16" Data="{DynamicResource GlassForward}"/></Button>
           <TextBox Grid.Column="2" Name="CurrentFilter" Classes="search-capsule" MaxLength="120" PlaceholderText="筛选本地音乐" VerticalAlignment="Center" TextChanged="FilterChanged"/>
@@ -49,7 +49,7 @@
               <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
               <StackPanel Margin="10" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto">
-                  <TextBlock Name="SuggestionTitle" Classes="muted" Margin="7,5" VerticalAlignment="Center"/>
+                  <TextBlock Name="SuggestionTitle" Classes="muted" Margin="8,4" VerticalAlignment="Center"/>
                   <Button Grid.Column="1" Name="ClearHistory" Content="清除" Click="ClearRecentSearches" IsVisible="False"/>
                 </Grid>
                 <WrapPanel Name="HistoryChips" IsVisible="False"/>
@@ -60,7 +60,7 @@
           </Popup>
           <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
           <Button Grid.Column="4" Name="AccountButton" IsVisible="{Binding KugouEnabled}" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="我的账号">
-            <StackPanel Orientation="Horizontal" Spacing="7">
+            <StackPanel Orientation="Horizontal" Spacing="8">
               <ContentControl Content="{Binding AccountAvatar}" Width="24" Height="24" VerticalAlignment="Center"/>
               <TextBlock Text="{Binding AccountLabel}" VerticalAlignment="Center"/>
             </StackPanel>
@@ -98,26 +98,26 @@
             <Button Grid.Column="5" Classes="caption close" AutomationProperties.Name="关闭窗口" Click="CloseWindow"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
           </Grid>
           <Grid Grid.Row="1" ColumnDefinitions="44*,56*" ColumnSpacing="32">
-            <StackPanel Margin="12,0" MaxWidth="390" VerticalAlignment="Center" Spacing="7">
-              <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="19" Padding="1" BoxShadow="{DynamicResource GlassLift}">
+            <StackPanel Margin="12,0" MaxWidth="390" VerticalAlignment="Center" Spacing="8">
+              <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="12" Padding="1" BoxShadow="{DynamicResource GlassLift}">
                 <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
               <Border Padding="16,0" HorizontalAlignment="Stretch">
                 <StackPanel HorizontalAlignment="Center" Spacing="0" Margin="0,6,0,0">
-                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9">
-                    <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="20" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource R2Ink}"/>
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
+                    <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="18" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource R2Ink}"/>
                     <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
                     <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
                   </StackPanel>
                   <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" FontSize="14" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
                 </StackPanel>
               </Border>
-              <Grid ColumnDefinitions="43,*,43" ColumnSpacing="7" Margin="0,3,0,0">
+              <Grid ColumnDefinitions="43,*,43" ColumnSpacing="8" Margin="0,4,0,0">
                 <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center"/>
                 <local:CommitSlider Grid.Column="1" Name="FullProgress" Classes="progress" AutomationProperties.Name="歌词页播放进度"/>
                 <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
               </Grid>
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9">
+              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
                 <Button Classes="glass-pill" Content="{Binding Player.ModeLabel}" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="播放模式"/>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayPreviousCommand}" ToolTip.Tip="上一首" AutomationProperties.Name="上一首"><PathIcon Width="16" Height="16" Data="M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"/></Button>
                 <Grid Width="53" Height="53">
@@ -128,11 +128,11 @@
                   </Grid>
                 </Button>
                   <Border Classes="buffer-ring" IsVisible="{Binding Player.IsBuffering}" IsHitTestVisible="False" Margin="-3" BorderThickness="1.5"
-                          CornerRadius="40" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
+                          CornerRadius="999" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
                 </Grid>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayNextCommand}" ToolTip.Tip="下一首" AutomationProperties.Name="下一首"><PathIcon Width="16" Height="16" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
               </StackPanel>
-              <Border Classes="glass" CornerRadius="25" HorizontalAlignment="Center" Padding="7,3">
+              <Border Classes="glass" CornerRadius="999" HorizontalAlignment="Center" Padding="8,4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Content="音量" Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量"/>
                   <local:CommitSlider Name="FullVolume" Width="51" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" AutomationProperties.Name="歌词页音量"/>
@@ -147,14 +147,14 @@
               </Border>
             </StackPanel>
             <Grid Grid.Column="1" RowDefinitions="42,*">
-              <Border Classes="glass" CornerRadius="22" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4">
+              <Border Classes="glass" CornerRadius="999" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4">
                 <StackPanel Orientation="Horizontal" Spacing="3">
                   <Button Name="LyricsTab" Classes="glass-pill selected" Content="歌词" Click="ShowLyricsTab"/>
                   <Button Name="CommentsTab" IsVisible="{Binding Player.DisplayedPlayingSong.IsProviderTrack}" Classes="glass-pill" Click="ShowCommentsTab" AutomationProperties.Name="歌曲评论">
-                    <StackPanel Orientation="Horizontal" Spacing="7">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBlock Text="评论"/>
-                      <Border Name="CommentBadge" IsVisible="False" Background="{DynamicResource R2Tint}" CornerRadius="14" Padding="6,1">
-                        <TextBlock Name="CommentCount" FontSize="10" Foreground="{DynamicResource R2RedInk}"/>
+                      <Border Name="CommentBadge" IsVisible="False" Background="{DynamicResource R2Tint}" CornerRadius="999" Padding="6,1">
+                        <TextBlock Name="CommentCount" FontSize="11" Foreground="{DynamicResource R2RedInk}"/>
                       </Border>
                     </StackPanel>
                   </Button>
@@ -167,7 +167,7 @@
                     <GradientStop Color="Black" Offset=".89"/><GradientStop Color="Transparent" Offset="1"/>
                   </LinearGradientBrush>
                 </Grid.OpacityMask>
-                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="20" TranslationFontSize="16" ActiveAnchorRatio="0.44"
+                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="18" TranslationFontSize="15" ActiveAnchorRatio="0.44"
                                   PrimaryForeground="{DynamicResource FullLyricIdle}" PrimaryPlayedForeground="{DynamicResource FullLyricSung}"
                                   TranslationForeground="{DynamicResource FullLyricTranslation}" TranslationPlayedForeground="{DynamicResource FullLyricSung}"
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableScale="False"
@@ -176,7 +176,7 @@
                 <TextBlock Name="LyricEmpty" Classes="muted" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
               <ScrollViewer Grid.Row="1" Name="CommentsPane" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
-                <StackPanel Margin="7,6,12,16" Spacing="10">
+                <StackPanel Margin="8,8,12,16" Spacing="12">
                   <TextBlock Name="CommentsStatus" Classes="muted" HorizontalAlignment="Center" Margin="0,30,0,0"/>
                   <StackPanel Name="HotComments" Spacing="8"/>
                   <StackPanel Name="LatestComments" Spacing="8"/>
@@ -198,7 +198,7 @@
           <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="3">
-              <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
               <Button Grid.Column="1" Name="QueueLocateButton" Classes="icon" Width="30" Height="30" Command="{Binding LocateCurrentCommand}"
                       IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲" VerticalAlignment="Center">
                 <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
@@ -209,7 +209,7 @@
             <ListBox Grid.Row="1" Name="DrawerItems" ItemsSource="{Binding Player.DisplayPlaybackQueue}">
               <ListBox.ItemTemplate>
                 <DataTemplate>
-                  <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" CornerRadius="9" ToolTip.Tip="{Binding UnavailableReason}">
+                  <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" CornerRadius="7" ToolTip.Tip="{Binding UnavailableReason}">
                     <Grid ColumnDefinitions="24,36,*,45,28" ColumnSpacing="5" Margin="2,4" Height="45">
                       <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
                       <r2:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -219,7 +219,7 @@
                           <TextBlock Text="{Binding Name}" Classes.current="{Binding IsCurrent}" TextTrimming="CharacterEllipsis"/>
                           <StackPanel Orientation="Horizontal" Spacing="5">
                             <TextBlock Text="{Binding Singer}" MaxWidth="96" TextTrimming="CharacterEllipsis" Classes="muted" FontSize="11"/>
-                            <TextBlock Text="{Binding SourceLabel}" Classes="muted" FontSize="10"/>
+                            <TextBlock Text="{Binding SourceLabel}" Classes="muted" FontSize="11"/>
                           </StackPanel>
                         </StackPanel>
                       </Button>
@@ -244,15 +244,15 @@
         <r2:GlassOptics Radius="25" Frost="0.91" Margin="1" IsHitTestVisible="False"/>
         <Border Padding="20,10,20,10">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
-            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="10" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
-              <Button Padding="0" CornerRadius="9" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
+            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
+              <Button Padding="0" CornerRadius="7" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
                 <r2:TrackArtwork DisplaySize="40" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Button>
               <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                 <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
                 <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="11"/>
               </StackPanel>
-              <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="10" VerticalAlignment="Center"
+              <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
                           DataContext="{Binding Player.DisplayedPlayingSong}" IsVisible="{Binding Player.HasCurrentSong}">
                 <r2:HeartButton/>
                 <r2:SongDownloadButton/>
@@ -276,7 +276,7 @@
               </Grid>
             </Button>
                   <Border Classes="buffer-ring" IsVisible="{Binding Player.IsBuffering}" IsHitTestVisible="False" Margin="-3" BorderThickness="1.5"
-                          CornerRadius="40" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
+                          CornerRadius="999" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
                 </Grid>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayNextCommand}" ToolTip.Tip="下一首" AutomationProperties.Name="下一首"><PathIcon Width="16" Height="16" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
                 <Button Name="DesktopLyricToggle" Classes="glass-pill desktop-lyric" Click="ToggleDesktopLyrics" AutomationProperties.Name="桌面歌词开关"><PathIcon Width="16" Height="16" Data="M1 1H15V11H1Z M3 3V9H13V3Z M7 11H9V13H12V15H4V13H7Z"/></Button>
@@ -302,7 +302,7 @@
                 <Button Name="DockQueueButton" Classes="icon" Click="ToggleQueue" ToolTip.Tip="{Binding Player.QueueCountTooltip}" AutomationProperties.Name="播放队列">
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <PathIcon Width="16" Height="16" Data="M1 2H15V4H1Z M1 7H11V9H1Z M1 12H9V14H1Z M12 10L16 12.5L12 15Z"/>
-                    <Border Name="DockQueueBadge" MinWidth="24" Height="20" Padding="7,0" CornerRadius="999" HorizontalAlignment="Right" Background="{DynamicResource R2Tint}">
+                    <Border Name="DockQueueBadge" MinWidth="24" Height="20" Padding="8,0" CornerRadius="999" HorizontalAlignment="Right" Background="{DynamicResource R2Tint}">
                       <TextBlock Text="{Binding Player.QueueBadgeText}" FontFeatures="tnum" Foreground="{DynamicResource R2RedInk}" FontSize="11" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                   </StackPanel>
@@ -330,7 +330,7 @@
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
               <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <TextBlock Text="歌曲评论" FontSize="20" FontWeight="SemiBold"/>
+                  <TextBlock Text="歌曲评论" FontSize="18" FontWeight="SemiBold"/>
                   <TextBlock Name="DrawerCommentCount" FontFeatures="tnum" Classes="muted" VerticalAlignment="Center"/>
                 </StackPanel>
                 <SelectableTextBlock Name="DrawerCommentTitle" Classes="muted" TextTrimming="CharacterEllipsis"/>
@@ -340,8 +340,8 @@
             <ScrollViewer Grid.Row="1" Name="DrawerCommentScroll">
               <StackPanel Spacing="8">
                 <TextBlock Name="DrawerCommentStatus" Classes="muted"/>
-                <StackPanel Name="DrawerCommentHot" Spacing="7"/>
-                <StackPanel Name="DrawerCommentLatest" Spacing="7"/>
+                <StackPanel Name="DrawerCommentHot" Spacing="8"/>
+                <StackPanel Name="DrawerCommentLatest" Spacing="8"/>
                 <Button Name="DrawerCommentMore" Click="LoadDrawerComments" Classes="glass-pill" HorizontalAlignment="Center"/>
               </StackPanel>
             </ScrollViewer>
@@ -350,10 +350,10 @@
       </Border>
     </Grid>
     <Border Name="ToastPlate" Grid.ColumnSpan="2" ZIndex="6" IsVisible="False" IsHitTestVisible="False"
-            Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="17,10" CornerRadius="16"
+            Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="16,12" CornerRadius="12"
             Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Pink}" BorderThickness="1"
-            BoxShadow="0 5 18 0 #334A9BFF">
-      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15"/></Transitions></Border.Transitions>
+            BoxShadow="{DynamicResource GlassLift}">
+      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
       <TextBlock Name="ToastText" FontWeight="Medium" Foreground="{DynamicResource R2Ink}" MaxWidth="520" TextTrimming="CharacterEllipsis"/>
     </Border>
   </Grid>

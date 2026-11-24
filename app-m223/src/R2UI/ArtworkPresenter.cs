@@ -61,7 +61,7 @@ public sealed class TrackArtwork : ContentControl
         }
 
         var image = new Image { Stretch = Stretch.UniformToFill, Opacity = 0 };
-        image.Transitions = new() { new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) } };
+        image.Transitions = new() { new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180), Easing = new Avalonia.Animation.Easings.CubicEaseOut() } };
         Content = new Border
         {
             Width = DisplaySize, Height = DisplaySize, CornerRadius = new CornerRadius(7), ClipToBounds = true,

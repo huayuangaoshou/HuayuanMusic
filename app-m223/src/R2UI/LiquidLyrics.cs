@@ -91,7 +91,7 @@ public partial class R2ShellView
         FullLyricView.IsActive = !comments && lyricOpen;
         CommentsPane.IsVisible = comments;
         if (!comments) return;
-        CommentsPane.Transitions ??= [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180) }];
+        CommentsPane.Transitions ??= [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }];
         CommentsPane.Opacity = 0;
         Dispatcher.UIThread.Post(() => { if (commentsOpen) CommentsPane.Opacity = 1; });
         if (nextCommentPage == 1 && commentRequest == null) _ = FetchCommentsAsync();

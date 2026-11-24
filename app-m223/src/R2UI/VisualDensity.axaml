@@ -14,7 +14,7 @@
  <Style Selector="ListBoxItem">
   <Setter Property="Padding" Value="6,2"/><Setter Property="FontSize" Value="12"/>
   <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-  <Setter Property="Template"><ControlTemplate><Border Name="RowSurface" Background="{TemplateBinding Background}" CornerRadius="3" Padding="{TemplateBinding Padding}"><ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/></Border></ControlTemplate></Setter>
+  <Setter Property="Template"><ControlTemplate><Border Name="RowSurface" Background="{TemplateBinding Background}" CornerRadius="7" Padding="{TemplateBinding Padding}"><ContentPresenter Name="PART_ContentPresenter" Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Center"/></Border></ControlTemplate></Setter>
  </Style>
  <Style Selector="ListBoxItem:pointerover /template/ Border#RowSurface"><Setter Property="Background" Value="#F1F5FB"/></Style>
  <Style Selector="ListBoxItem:selected /template/ Border#RowSurface"><Setter Property="Background" Value="#DCE9FC"/></Style>
