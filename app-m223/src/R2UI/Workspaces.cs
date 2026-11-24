@@ -197,8 +197,11 @@ public sealed partial class WorkspaceState:ObservableObject {
  private void UpdateHero(string title,int count)
  {
   var cover=new Border{CornerRadius=new CornerRadius(12),BoxShadow=BoxShadows.Parse("0 6 18 0 #25000000"),Child=CoverFor(SelectedPlaylistId,172)};
-  var play=new Button{Classes={"primary"},Content="▶  播放全部",Padding=new Thickness(18,8),HorizontalAlignment=HorizontalAlignment.Left,
+  var play=new Button{Classes={"primary"},Padding=new Thickness(18,8),HorizontalAlignment=HorizontalAlignment.Left,
    IsEnabled=count>0&&(Local||Host.Concept.Connected),Command=new RelayCommand(()=>PlayPlaylist(SelectedPlaylistId))};
+  play.Content=new StackPanel{Orientation=Orientation.Horizontal,Spacing=7,VerticalAlignment=VerticalAlignment.Center,Children={
+   new PathIcon{Width=13,Height=13,Data=Geometry.Parse("M4,2 L16,9 L4,16 Z"),Foreground=Brushes.White,VerticalAlignment=VerticalAlignment.Center},
+   new TextBlock{Text="播放全部",Foreground=Brushes.White,FontWeight=FontWeight.SemiBold,VerticalAlignment=VerticalAlignment.Center}}};
   var filter=new TextBox{PlaceholderText="筛选歌单内曲目",Text=FilterText,MaxWidth=265,HorizontalAlignment=HorizontalAlignment.Left};
   filter.TextChanged+=(_,_)=>ApplyFilter(filter.Text??"");
   var meta=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Spacing=9,Children={

@@ -132,14 +132,14 @@
   </Style>
   <Style Selector="SelectableTextBlock"><Setter Property="Focusable" Value="True"/><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/><Setter Property="SelectionBrush" Value="#667DC9FF"/></Style>
   <Style Selector="SelectableTextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
-  <Style Selector="Button.glass-pill"><Setter Property="CornerRadius" Value="20"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/><Setter Property="BorderThickness" Value="1"/></Style>
-  <Style Selector="Button.glass-pill.selected"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>
+  <Style Selector="Button.glass-pill"><Setter Property="CornerRadius" Value="20"/><Setter Property="Background" Value="{DynamicResource R2Main}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
+  <Style Selector="Button.glass-pill.selected"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/></Style>
   <Style Selector="Button.desktop-lyric"><Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="FontWeight" Value="Bold"/></Style>
   <Style Selector="Button.desktop-lyric.selected">
-    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/>
   </Style>
   <Style Selector="Button.desktop-lyric.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
+    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/>
   </Style>
   <Style Selector="MenuFlyoutPresenter"><Setter Property="Background" Value="{DynamicResource GlassPopup}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/><Setter Property="CornerRadius" Value="14"/></Style>
   <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
@@ -167,11 +167,11 @@
     <Setter Property="BorderThickness" Value="2,0,0,0"/>
   </Style>
   <Style Selector="Button.primary">
-    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
     <Setter Property="CornerRadius" Value="100"/>
   </Style>
   <Style Selector="Button.primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="#142540"/>
+    <Setter Property="Background" Value="{DynamicResource R2BrandGradient}"/><Setter Property="Foreground" Value="White"/>
   </Style>
   <Style Selector="Button.heart"><Setter Property="Background" Value="Transparent"/>
     <Setter Property="BorderThickness" Value="0"/>
