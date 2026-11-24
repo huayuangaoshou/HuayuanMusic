@@ -193,7 +193,7 @@
           <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
         </Border>
         <Border Name="QueueDrawer" Classes="glass glass-float" Width="360" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(380px)">
-          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.28" Easing="BackEaseOut"/></Transitions></Border.Transitions>
           <Grid>
           <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
@@ -323,7 +323,7 @@
         <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
       </Border>
       <Border Name="CommentDrawer" Classes="glass glass-float" Width="430" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(444px)">
-        <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.24" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+        <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.28" Easing="BackEaseOut"/></Transitions></Border.Transitions>
         <Grid>
           <r2:GlassOptics Radius="22" Frost="0.93" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="Auto,*" Margin="16">

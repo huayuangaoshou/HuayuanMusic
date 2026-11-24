@@ -82,7 +82,7 @@ public static class DesignTokens
     // ── 行高系数 ─────────────────────────────────────────────
     public const double LineHeightRatio = 1.45;
 
-    // ── 动效时长 ─────────────────────────────────────────────
+    // ── 动效时长（R11 三档：微反馈 / 组件开合 / 视图切换）────
     public const int QuickMs   = 140;
     public const int NormalMs  = 200;
     public const int ListStaggerMs  = 18;   // 列表进场错峰
@@ -90,6 +90,20 @@ public static class DesignTokens
     public const int LyricScrollMs = 300;   // 歌词容器滚动
     public const int CoverCrossfadeMs = 400; // 切歌背景过渡
     public const int LyricOpacityMs  = 200; // 歌词行透明度过渡
+
+    // R11 动效时长三档（微反馈 150~200 / 组件开合 250~300 / 视图切换 400）
+    public const int MotionMicro = 180; // hover、按压、勾选、红心点亮
+    public const int MotionOpen  = 280; // 抽屉、弹层、菜单、评论面板
+    public const int MotionView  = 400; // 页面跳转、列表重排
+
+    // R11 进场编排：标题 0ms → 内容卡 +60ms → 列表行逐行 +30ms（最多前 10 行）
+    public const int ChoreoCardDelay   = 60;
+    public const int ChoreoRowStagger  = 30;
+    public const int ChoreoRowMax      = 10;
+    public const double ChoreoOffsetPx = 12; // 进场元素统一位移 12px + 淡入
+
+    // R11 液态回弹：仅弹层开合与悬浮播放条出现，位移过冲 ≈4%，禁果冻弹跳
+    public const double BackEaseAmplitude = 0.4;
 
     // ── 阴影 ─────────────────────────────────────────────────
     public const double HoverLift   = -2;       // hover 上移 px
