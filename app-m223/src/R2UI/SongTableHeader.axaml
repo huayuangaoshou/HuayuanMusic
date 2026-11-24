@@ -7,6 +7,11 @@
       <Button Grid.Column="3" Content="歌手" Classes="nav" Command="{Binding SortArtistCommand}"/>
       <Button Grid.Column="4" Content="专辑" Classes="nav" Command="{Binding SortAlbumCommand}"/>
       <TextBlock Grid.Column="6" Text="时长" Classes="muted" VerticalAlignment="Center"/>
+      <Button Grid.Column="6" Classes="icon" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,38,0"
+              VerticalAlignment="Center" Command="{Binding LocateCurrentCommand}"
+              IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲">
+        <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
+      </Button>
     </Grid>
   </Border>
 </UserControl>

@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HuayuanPreview.R2.SongDownloadButton" Width="30" Height="30">
-  <Button Name="ActionButton" Width="30" Height="30" Padding="0" Click="Download"
+  <Button Name="ActionButton" Classes="icon" Width="30" Height="30" Padding="0" Click="Download"
           HorizontalContentAlignment="Center" VerticalContentAlignment="Center">
     <Grid Width="22" Height="22">
       <PathIcon Name="DownloadIcon" Width="16" Height="16"

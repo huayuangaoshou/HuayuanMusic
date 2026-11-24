@@ -60,6 +60,49 @@
     <Setter Property="BorderThickness" Value="1"/>
   </Style>
 
+  <!-- Chromeless icon buttons: no frame, no fill, no focus ring; the glyph itself
+       carries hover/press feedback via scale and color. -->
+  <Style Selector="Button.icon">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="Padding" Value="0"/>
+    <Setter Property="MinWidth" Value="0"/>
+    <Setter Property="MinHeight" Value="0"/>
+  </Style>
+  <Style Selector="Button.icon /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+  </Style>
+  <Style Selector="Button.icon:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.icon:pressed /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.icon:focus-visible /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="BorderBrush" Value="Transparent"/>
+    <Setter Property="BorderThickness" Value="0"/>
+  </Style>
+  <Style Selector="Button.icon PathIcon, Button.icon Path">
+    <Setter Property="RenderTransform" Value="scale(1)"/>
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="Transitions">
+      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions>
+    </Setter>
+  </Style>
+  <Style Selector="Button.icon:pointerover PathIcon, Button.icon:pointerover Path">
+    <Setter Property="RenderTransform" Value="scale(1.12)"/>
+  </Style>
+  <Style Selector="Button.icon:pressed PathIcon, Button.icon:pressed Path">
+    <Setter Property="RenderTransform" Value="scale(0.92)"/>
+  </Style>
+
   <Style Selector="TextBox /template/ TextBlock#PART_Placeholder">
     <Setter Property="Foreground" Value="{DynamicResource R2Muted}"/>
     <Setter Property="Opacity" Value="1"/>

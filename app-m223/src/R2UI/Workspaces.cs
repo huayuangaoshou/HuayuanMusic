@@ -146,6 +146,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   for(int index=0;index<items.Length;index++) items[index].Number=index+1;
   InteractionController.For(Lists[page]).SetRows(items);
   if(emptySongPages.TryGetValue(page,out var view)){view.Empty.IsVisible=items.Length==0;view.Header.IsVisible=items.Length>0;}
+  InteractionController.For(Lists[page]).RefreshCurrentState();
  }
  private string? PlaylistCover(ProviderPlaylist list) =>
   list.CoverUrl ?? list.Tracks.Select(track=>track.CoverUrl).FirstOrDefault(cover=>cover!=null);
@@ -354,6 +355,8 @@ public sealed partial class WorkspaceState:ObservableObject {
  {
   foreach(var list in Lists.Values)
    foreach(var row in list.Items.OfType<TrackRow>())row.Refresh();
+  foreach(var list in Lists.Values)
+   InteractionController.Find(list)?.RefreshCurrentState();
  }
  public async Task SearchAsync(){
   if(Local){Fill(SearchPage,CatalogRows.Where(Filter));Navigate(SearchPage);return;}
@@ -379,6 +382,20 @@ public sealed partial class WorkspaceState:ObservableObject {
   status.Text=Local?"":Host.Concept.Summary;
   HighlightNavigation();
   Restore();
+  AutoLocateCurrent(page);
+ }
+ /// <summary>When a list page is entered, centre the currently-playing row once so the
+ /// user can see where it is — without fighting manual scrolling afterwards.</summary>
+ private void AutoLocateCurrent(R2Page page)
+ {
+  if(!Lists.TryGetValue(page,out var list))return;
+  var controller=InteractionController.Find(list);
+  if(controller==null)return;
+  Dispatcher.UIThread.Post(()=>{
+   if(CurrentPage!=page)return;
+   if(list.Items.OfType<TrackRow>().Any(row=>row.IsCurrent))
+    controller.LocateCurrent();
+  },DispatcherPriority.Loaded);
  }
  private void HighlightNavigation()
  {

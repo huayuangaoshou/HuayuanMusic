@@ -14,14 +14,14 @@
         </StackPanel>
       </Grid>
       <StackPanel Grid.Column="1" Classes="row-actions" Orientation="Horizontal" Spacing="1" VerticalAlignment="Center" IsVisible="{Binding CanUsePlatform}">
-        <Button Padding="0" Width="28" Height="30" Click="PlayInline" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放">
+        <Button Classes="icon" Padding="0" Width="28" Height="30" Click="PlayInline" AutomationProperties.Name="{Binding PlayLabel}" ToolTip.Tip="播放">
           <PathIcon Width="13" Height="13" Data="M4,2 L16,9 L4,16 Z"/>
         </Button>
         <vm:HeartButton IsVisible="{Binding !CanUseOnlineActions}"/>
-        <Button Padding="0" Width="28" Height="30" Command="{Binding NextCommand}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首">
+        <Button Classes="icon" Padding="0" Width="28" Height="30" Command="{Binding NextCommand}" AutomationProperties.Name="下一首播放" ToolTip.Tip="安排下一首">
           <PathIcon Width="15" Height="15" Data="M2,4 H13 V6 H2 Z M2,9 H9 V11 H2 Z M2,14 H9 V16 H2 Z M11,9 L18,13 L11,17 Z"/>
         </Button>
-        <Button Width="28" Height="28" Padding="0" IsVisible="{Binding CanUseOnlineActions}" Click="CommentInline" AutomationProperties.Name="查看评论" ToolTip.Tip="查看评论"><PathIcon Width="15" Height="15" Data="M1 2H15V12H8L4 16V12H1Z M3 4V10H6V12L8 10H13V4Z M5 6H11V8H5Z"/></Button>
+        <Button Classes="icon" Width="28" Height="28" Padding="0" IsVisible="{Binding CanUseOnlineActions}" Click="CommentInline" AutomationProperties.Name="查看评论" ToolTip.Tip="查看评论"><PathIcon Width="15" Height="15" Data="M1 2H15V12H8L4 16V12H1Z M3 4V10H6V12L8 10H13V4Z M5 6H11V8H5Z"/></Button>
       </StackPanel>
       <Button Grid.Column="1" Content="查看" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
     </Grid>

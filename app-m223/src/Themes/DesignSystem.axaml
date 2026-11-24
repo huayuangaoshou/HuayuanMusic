@@ -17,13 +17,6 @@
       <LinearGradientBrush x:Key="R2BrandGradient" StartPoint="0%,0%" EndPoint="100%,0%">
         <GradientStop Color="#FF6FA5" Offset="0"/><GradientStop Color="#4A9BFF" Offset="1"/>
       </LinearGradientBrush>
-      <SolidColorBrush x:Key="FullLyricIdle" Color="#DADFFF"/>
-      <SolidColorBrush x:Key="FullLyricTranslation" Color="#E7EEFF"/>
-      <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
-        <GradientStop Color="#FFE7F2" Offset="0"/>
-        <GradientStop Color="#FF9EC8" Offset="0.55"/>
-        <GradientStop Color="#A5CDFF" Offset="1"/>
-      </LinearGradientBrush>
       <SolidColorBrush x:Key="R2AccentHover" Color="#5276C8"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
@@ -61,7 +54,20 @@
           <SolidColorBrush x:Key="R2Tint" Color="#FCECF5"/>
           <SolidColorBrush x:Key="R2RedInk" Color="#AD3373"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
-            <GradientStop Color="#70101C32" Offset="0"/><GradientStop Color="#9C101C32" Offset="0.61"/><GradientStop Color="#C00B1224" Offset="1"/>
+            <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#00000000" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="FullLyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#28FFFFFF" Offset="0"/><GradientStop Color="#4DFFFFFF" Offset="0.5"/><GradientStop Color="#28FFFFFF" Offset="1"/>
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="FullLyricIdle" Color="#3C4456"/>
+          <SolidColorBrush x:Key="FullLyricTranslation" Color="#5B6A86"/>
+          <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#E7417F" Offset="0"/>
+            <GradientStop Color="#E84D9C" Offset="0.55"/>
+            <GradientStop Color="#4A6FE0" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="FullLyricBack" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#FFF4FA" Offset="0"/><GradientStop Color="#F3F7FF" Offset="0.5"/><GradientStop Color="#FEF2F7" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
@@ -100,6 +106,19 @@
           <SolidColorBrush x:Key="R2RedInk" Color="#FFA0C2"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#72080D18" Offset="0"/><GradientStop Color="#A0080D18" Offset="0.55"/><GradientStop Color="#D90A101C" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="FullLyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.5"/><GradientStop Color="#00000000" Offset="1"/>
+          </LinearGradientBrush>
+          <SolidColorBrush x:Key="FullLyricIdle" Color="#DADFFF"/>
+          <SolidColorBrush x:Key="FullLyricTranslation" Color="#E7EEFF"/>
+          <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="0%,100%">
+            <GradientStop Color="#FFE7F2" Offset="0"/>
+            <GradientStop Color="#FF9EC8" Offset="0.55"/>
+            <GradientStop Color="#A5CDFF" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="FullLyricBack" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#0E1422" Offset="0"/><GradientStop Color="#101828" Offset="0.5"/><GradientStop Color="#0E1422" Offset="1"/>
           </LinearGradientBrush>
         </ResourceDictionary>
       </ResourceDictionary.ThemeDictionaries>
@@ -193,8 +212,14 @@
   <Style Selector="StackPanel.row-actions"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15"/></Transitions></Setter></Style>
   <Style Selector="ListBoxItem:pointerover StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="ListBoxItem:focus-within StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
-  <Style Selector="Button.caption"><Setter Property="Width" Value="38"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/></Style>
+  <Style Selector="Button.caption"><Setter Property="Width" Value="38"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
+  <Style Selector="Button.caption /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="BorderBrush" Value="Transparent"/></Style>
+  <Style Selector="Button.caption:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/></Style>
+  <Style Selector="Button.caption PathIcon"><Setter Property="RenderTransform" Value="scale(1)"/><Setter Property="RenderTransformOrigin" Value="50%,50%"/><Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions></Setter></Style>
+  <Style Selector="Button.caption:pointerover PathIcon"><Setter Property="RenderTransform" Value="scale(1.12)"/></Style>
+  <Style Selector="Button.caption:pressed PathIcon"><Setter Property="RenderTransform" Value="scale(0.92)"/></Style>
   <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Accent}"/><Setter Property="Foreground" Value="White"/></Style>
+  <Style Selector="Button.close:pointerover PathIcon"><Setter Property="Foreground" Value="White"/><Setter Property="RenderTransform" Value="scale(1.12)"/></Style>
   <Style Selector="TextBox">
     <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/><Setter Property="PlaceholderForeground" Value="{DynamicResource R2Muted}"/>
     <Setter Property="Background" Value="{DynamicResource R2Side}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/>

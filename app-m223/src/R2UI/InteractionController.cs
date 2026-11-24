@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -17,6 +18,9 @@ public sealed class InteractionController:ObservableObject {
  public bool Editable=>!queue&&owner.Local&&owner.DetailPage!=null&&owner.Lists[owner.DetailPage]==list;public bool Dragging=>moved;public bool InsertionVisible=>line.IsVisible;public MenuFlyout? LastMenu {get;private set;}
  public string StatusText {get;private set;}="默认顺序 · 单击选择，双击播放";
  public ICommand SortTitleCommand {get;}public ICommand SortArtistCommand {get;}public ICommand SortAlbumCommand {get;}
+ public RelayCommand LocateCurrentCommand {get;}
+ private bool hasCurrentTrack;
+ public bool HasCurrentTrack {get=>hasCurrentTrack;private set=>SetProperty(ref hasCurrentTrack,value);}
  public static InteractionController Attach(ListBox list,WorkspaceState owner,CorePresentation player,bool queue){if(attached.TryGetValue(list,out var old))return old;var c=new InteractionController(list,owner,player,queue);attached.Add(list,c);return c;}
  public static InteractionController For(ListBox list)=>attached[list];
  internal static InteractionController? Find(ListBox list)=>attached.GetValueOrDefault(list);
@@ -24,6 +28,7 @@ public sealed class InteractionController:ObservableObject {
  internal void PlayRow(TrackRow row)=>player.PlayFromList(row,Items(),IsOnlineSearch);
  InteractionController(ListBox l,WorkspaceState o,CorePresentation p,bool q){list=l;owner=o;player=p;queue=q;SetStatus();l.SelectionMode=SelectionMode.Multiple;original=Items();
   SortTitleCommand=new RelayCommand(()=>Sort("title"));SortArtistCommand=new RelayCommand(()=>Sort("artist"));SortAlbumCommand=new RelayCommand(()=>Sort("album"));
+  LocateCurrentCommand=new RelayCommand(()=>LocateCurrent(),()=>HasCurrentTrack);
   l.PropertyChanged+=(_,e)=>{if(e.Property==ItemsControl.ItemsSourceProperty&&!publishing)original=Items();};
   l.DoubleTapped+=(_,e)=>{if(DateTime.UtcNow<ignoreDouble||FromButton(e.Source))return;var row=Hit(e.Source);if(row!=null&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;};
   l.KeyDown+=(_,e)=>{if(e.Key==Key.Escape){Cancel();e.Handled=true;}else if(e.Key==Key.A&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){l.SelectAll();e.Handled=true;}else if(e.Key==Key.Enter&&!FromButton(e.Source)){if(l.SelectedItem is TrackRow row&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;}else if(e.Key==Key.Delete&&(queue||Editable)){player.Remove(Selected());e.Handled=true;}else if(e.KeyModifiers.HasFlag(KeyModifiers.Control)&&e.Key is Key.Up or Key.Down&&(queue||Editable)){MoveSelected(e.Key==Key.Up?-1:1);e.Handled=true;}};
@@ -82,6 +87,29 @@ public sealed class InteractionController:ObservableObject {
  static TrackRow? Hit(object? source){if(source is not Control c)return null;return (c as ListBoxItem??c.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault())?.Content as TrackRow;}
  public void SetRows(TrackRow[] rows){if(original.SequenceEqual(rows))return;original=rows;Display(Sorted());}
  void Display(TrackRow[] rows){var selection=Selected().Select(r=>r.Identity).ToHashSet();var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();var offset=scroll?.Offset;publishing=true;try{list.ItemsSource=rows;}finally{publishing=false;}list.SelectedItems?.Clear();foreach(var r in rows)if(selection.Contains(r.Identity))list.SelectedItems?.Add(r);if(scroll!=null&&offset.HasValue)scroll.Offset=offset.Value;}
+ /// <summary>Recompute whether this list currently contains the playing track, and notify.</summary>
+ public void RefreshCurrentState(){HasCurrentTrack=Items().Any(r=>r.IsCurrent);LocateCurrentCommand.NotifyCanExecuteChanged();}
+ /// <summary>Find the row that matches the playing track and smooth-scroll it to the centre of the viewport.</summary>
+ public void LocateCurrent()
+ {
+  var rows=Items();
+  int index=Array.FindIndex(rows,row=>row.IsCurrent);
+  if(index<0)return;
+  var item=list.ContainerFromIndex(index) as ListBoxItem;
+  var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+  if(scroll==null)return;
+  if(item!=null) item.BringIntoView();
+  Dispatcher.UIThread.Post(()=>{
+   if(index>=0&&index<list.ItemCount){
+    var target=list.ContainerFromIndex(index) as ListBoxItem;
+    if(target!=null){ target.BringIntoView(); return; }
+   }
+   // Fallback: estimate row height and centre the offset (works with virtualization).
+   const double rowHeight=52;
+   var center=index*rowHeight - scroll.Viewport.Height/2 + rowHeight/2;
+   scroll.Offset=new Vector(scroll.Offset.X,Math.Max(0,center));
+  },DispatcherPriority.Loaded);
+ }
  TrackRow[] Sorted()=>sort==0?original:sort==1?original.OrderBy(r=>Value(r,field),StringComparer.CurrentCultureIgnoreCase).ToArray():original.OrderByDescending(r=>Value(r,field),StringComparer.CurrentCultureIgnoreCase).ToArray();
  static string Value(TrackRow r,string key)=>key=="artist"?r.Singer:key=="album"?r.AlbumName:r.Name;
  public void Sort(string key){sort=field==key?(sort+1)%3:1;field=key;Display(Sorted());SetStatus();}
