@@ -189,10 +189,14 @@
           <Grid>
           <r2:GlassOptics Radius="22" Frost="0.88" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
-            <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="3">
+            <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="3">
               <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center"/>
-              <Button Grid.Column="1" Foreground="{DynamicResource R2Ink}" Content="清空" Command="{Binding Player.ClearQueueCommand}" VerticalAlignment="Center"/>
-              <Button Grid.Column="2" AutomationProperties.Name="收起播放队列" Click="ToggleQueue" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
+              <Button Grid.Column="1" Name="QueueLocateButton" Classes="icon" Width="30" Height="30" Command="{Binding LocateCurrentCommand}"
+                      IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲" VerticalAlignment="Center">
+                <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
+              </Button>
+              <Button Grid.Column="2" Foreground="{DynamicResource R2Ink}" Content="清空" Command="{Binding Player.ClearQueueCommand}" VerticalAlignment="Center"/>
+              <Button Grid.Column="3" AutomationProperties.Name="收起播放队列" Click="ToggleQueue" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
             </Grid>
             <ListBox Grid.Row="1" Name="DrawerItems" ItemsSource="{Binding Player.DisplayPlaybackQueue}">
               <ListBox.ItemTemplate>
@@ -248,7 +252,7 @@
             </Grid>
             <Grid Name="DockTransport" Grid.Column="1" RowDefinitions="38,20" MaxWidth="540" VerticalAlignment="Center">
               <StackPanel Name="DockPlayButtons" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
-                <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="{Binding Player.ModeLabel}" ToolTip.Tip="{Binding Player.ModeLabel}"><PathIcon Width="16" Height="16" Data="M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12Z"/></Button>
+                <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="{Binding Player.ModeLabel}" ToolTip.Tip="{Binding Player.ModeLabel}"><PathIcon Width="16" Height="16" Data="{Binding Player.ModeIcon}"/></Button>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayPreviousCommand}" ToolTip.Tip="上一首" AutomationProperties.Name="上一首"><PathIcon Width="16" Height="16" Data="M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"/></Button>
                 <Grid Width="38" Height="38">
                   <Button Classes="primary" Width="38" Height="38" Command="{Binding Player.TogglePlayPauseCommand}" ToolTip.Tip="播放或暂停" AutomationProperties.Name="播放或暂停">

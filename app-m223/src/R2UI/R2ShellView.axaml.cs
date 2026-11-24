@@ -16,6 +16,7 @@ public partial class R2ShellView : UserControl
     private readonly DispatcherTimer drawerDelay = new() { Interval = TimeSpan.FromMilliseconds(255) };
     private readonly DispatcherTimer toastDelay = new() { Interval = TimeSpan.FromMilliseconds(2250) };
     private ShellModel? model;
+    private InteractionController? queueController;
     private bool queueOpen;
     private bool updatingFilter;
     private string? ignoredFilterText;
@@ -62,7 +63,8 @@ public partial class R2ShellView : UserControl
         VolumeSlider.Submit = model.Player.SetVolume;
         FullVolume.Submit = model.Player.SetVolume;
         FullProgress.Submit = model.Player.Seek;
-        InteractionController.Attach(DrawerItems, model.LocalWorkspace, model.Player, true);
+        queueController = InteractionController.Attach(DrawerItems, model.LocalWorkspace, model.Player, true);
+        QueueLocateButton.DataContext = queueController;
         UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
@@ -265,6 +267,20 @@ public partial class R2ShellView : UserControl
         DrawerLayer.IsHitTestVisible = open;
         DrawerShade.Opacity = open ? 1 : 0;
         QueueDrawer.RenderTransform = TransformOperations.Parse(open ? "translateX(0px)" : "translateX(380px)");
+        if (open) LocateQueueCurrent();
+    }
+
+    /// <summary>After the queue drawer is laid out, scroll the current track to the centre
+    /// without stealing the scroll position while the user is browsing the queue.</summary>
+    private void LocateQueueCurrent()
+    {
+        var controller = queueController;
+        if (controller == null) return;
+        controller.RefreshCurrentState();
+        Dispatcher.UIThread.Post(() =>
+        {
+            if (queueOpen && controller.HasCurrentTrack) controller.LocateCurrent();
+        }, DispatcherPriority.Loaded);
     }
 
     private void TransportKeyDown(object? sender, KeyEventArgs args)

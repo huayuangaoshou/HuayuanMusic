@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -94,6 +95,17 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  {
   PlayMode.RepeatOne => "单曲循环", PlayMode.Shuffle => "随机播放", PlayMode.Sequential => "顺序播放", _ => "列表循环"
  };
+ public Geometry ModeIcon => Geometry.Parse((PlayMode)State.Mode switch
+ {
+  // 列表循环: 首尾相接的循环箭头
+  PlayMode.Normal => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12Z",
+  // 顺序播放: 向右顺序箭头
+  PlayMode.Sequential => "M2 5H14L11 2L13 0L19 6L13 12L11 10L14 7H2Z M2 11H14L11 8L13 6L19 12L13 18L11 16L14 13H2Z",
+  // 随机播放: 交叉箭头
+  PlayMode.Shuffle => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12ZM15 2L16 3L15 4L14 3ZM1 16L2 17L1 18L0 17Z",
+  // 单曲循环: 循环箭头带 1
+  _ => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12ZM10 7H13V10H10Z"
+ });
  public bool IsBuffering { get; private set; }
  internal event Action<string>? Toast;
  internal void NotifyUnavailable(string? reason=null)
@@ -108,7 +120,16 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public ICommand ClearQueueCommand {get;}public ICommand PlaySongCommand {get;}public ICommand RemoveFromQueueCommand {get;}public ICommand PlayPreviousCommand {get;}public ICommand PlayNextCommand {get;}public ICommand TogglePlayPauseCommand {get;}public ICommand StopCommand {get;}
  public CorePresentation(INightflightPlayback core){this.core=core;state=core.State;
   FavoriteCurrentCommand=new RelayCommand(()=>{if(DisplayedPlayingSong is { } row)Favorite([row]);});
-  CycleModeCommand=new RelayCommand(()=>Submit("mode",()=>core.SetModeAsync((State.Mode+1)%4)));
+  CycleModeCommand=new RelayCommand(()=>Submit("mode",()=>{
+   // Match the core cycle order: 列表循环 → 顺序播放 → 随机播放 → 单曲循环 → 列表循环
+   var next=(PlayMode)State.Mode switch {
+    PlayMode.Normal=>PlayMode.Sequential,
+    PlayMode.Sequential=>PlayMode.Shuffle,
+    PlayMode.Shuffle=>PlayMode.RepeatOne,
+    _=>PlayMode.Normal
+   };
+   return core.SetModeAsync((int)next);
+  }));
   MuteCommand=new RelayCommand(()=>Submit("mute",core.MuteAsync));
   ClearQueueCommand=new RelayCommand(()=>Submit("clear",()=>core.QueueAsync("clear")));
   PlaySongCommand=new RelayCommand<TrackRow>(r=>{if(r!=null)Play(r);});RemoveFromQueueCommand=new RelayCommand<TrackRow>(r=>{if(r!=null)Remove([r]);});
@@ -125,7 +146,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
    DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();for(int i=0;i<DisplayPlaybackQueue.Length;i++){DisplayPlaybackQueue[i].Number=i+1;DisplayPlaybackQueue[i].Refresh();}OnPropertyChanged(nameof(DisplayPlaybackQueue));
   }
   OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(PositionText));OnPropertyChanged(nameof(DurationText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
-  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged)OnPropertyChanged(nameof(ModeLabel));if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged){OnPropertyChanged(nameof(ModeLabel));OnPropertyChanged(nameof(ModeIcon));}if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
  }
  void DemandResult(){if(core.State.Error.Length>0)throw new InvalidOperationException(core.State.Error);}
  void DemandTrack(TrackRow row){if(!row.Owner.Local||!state.Tracks.Any(t=>t.Id==row.Track.Id&&t.Key==row.Track.Key))throw new InvalidOperationException("P2A 平台曲目只读 · 播放仅限隔离本地曲目");}
