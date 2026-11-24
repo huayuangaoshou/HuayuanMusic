@@ -21,7 +21,7 @@
           <TextBlock Text="HuayuanMusic" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
-          <TextBlock Text="工作空间" Classes="muted" FontSize="11" Margin="10,2,0,4"/>
+          <TextBlock Text="工作空间" Classes="muted" FontSize="12" Margin="10,2,0,4"/>
           <Button Classes="nav" Classes.selected="{Binding Workspace.IsLocalFallbackSelected}" Command="{Binding SwitchLocalCommand}" AutomationProperties.Name="切换本地工作空间">本地音乐</Button>
           <Button Classes="nav" Classes.selected="{Binding Workspace.IsKugouFallbackSelected}" IsVisible="{Binding KugouEnabled}" Command="{Binding SwitchKugouCommand}" AutomationProperties.Name="切换概念版工作空间">酷狗概念版</Button>
         </StackPanel>
@@ -114,9 +114,9 @@
                 </StackPanel>
               </Border>
               <Grid ColumnDefinitions="43,*,43" ColumnSpacing="8" Margin="0,4,0,0">
-                <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center"/>
+                <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="13" FontWeight="Medium" VerticalAlignment="Center"/>
                 <local:CommitSlider Grid.Column="1" Name="FullProgress" Classes="progress" AutomationProperties.Name="歌词页播放进度"/>
-                <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Right"/>
               </Grid>
               <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
                 <Button Classes="glass-pill" Content="{Binding Player.ModeLabel}" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="播放模式"/>
@@ -155,7 +155,7 @@
                     <StackPanel Orientation="Horizontal" Spacing="8">
                       <TextBlock Text="评论"/>
                       <Border Name="CommentBadge" IsVisible="False" Background="{DynamicResource R2Tint}" CornerRadius="999" Padding="6,1">
-                        <TextBlock Name="CommentCount" FontSize="11" Foreground="{DynamicResource R2RedInk}"/>
+                        <TextBlock Name="CommentCount" FontSize="12" Foreground="{DynamicResource R2RedInk}"/>
                       </Border>
                     </StackPanel>
                   </Button>
@@ -168,7 +168,7 @@
                     <GradientStop Color="Black" Offset=".89"/><GradientStop Color="Transparent" Offset="1"/>
                   </LinearGradientBrush>
                 </Grid.OpacityMask>
-                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="18" TranslationFontSize="15" ActiveAnchorRatio="0.44"
+                <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="20" TranslationFontSize="15" ActiveAnchorRatio="0.44"
                                   PrimaryForeground="{DynamicResource FullLyricIdle}" PrimaryPlayedForeground="{DynamicResource FullLyricSung}"
                                   TranslationForeground="{DynamicResource FullLyricTranslation}" TranslationPlayedForeground="{DynamicResource FullLyricSung}"
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableScale="False"
@@ -219,8 +219,8 @@
                         <StackPanel VerticalAlignment="Center">
                           <TextBlock Text="{Binding Name}" Classes.current="{Binding IsCurrent}" TextTrimming="CharacterEllipsis"/>
                           <StackPanel Orientation="Horizontal" Spacing="5">
-                            <TextBlock Text="{Binding Singer}" MaxWidth="96" TextTrimming="CharacterEllipsis" Classes="muted" FontSize="11"/>
-                            <TextBlock Text="{Binding SourceLabel}" Classes="muted" FontSize="11"/>
+                            <TextBlock Text="{Binding Singer}" MaxWidth="96" TextTrimming="CharacterEllipsis" Classes="muted" FontSize="12"/>
+                            <TextBlock Text="{Binding SourceLabel}" Classes="muted" FontSize="12"/>
                           </StackPanel>
                         </StackPanel>
                       </Button>
@@ -251,7 +251,7 @@
               </Button>
               <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
                 <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
-                <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="11"/>
+                <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="12"/>
               </StackPanel>
               <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
                           DataContext="{Binding Player.DisplayedPlayingSong}" IsVisible="{Binding Player.HasCurrentSong}">
@@ -283,9 +283,9 @@
                 <Button Name="DesktopLyricToggle" Classes="glass-pill desktop-lyric" Click="ToggleDesktopLyrics" AutomationProperties.Name="桌面歌词开关"><PathIcon Width="16" Height="16" Data="M1 1H15V11H1Z M3 3V9H13V3Z M7 11H9V13H12V15H4V13H7Z"/></Button>
               </StackPanel>
               <Grid Grid.Row="1" ColumnDefinitions="38,*,38" VerticalAlignment="Center">
-                <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center" AutomationProperties.AutomationId="M223.Progress"/>
+                <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" AutomationProperties.AutomationId="M223.Progress"/>
                 <local:CommitSlider Grid.Column="1" Name="DesktopProgress" Classes="progress" Margin="10,0" AutomationProperties.Name="播放进度"/>
-                <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                <TextBlock Grid.Column="2" Text="{Binding Player.DurationText}" Classes="muted" FontFeatures="tnum" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" HorizontalAlignment="Right"/>
               </Grid>
             </Grid>
             <Grid Name="DockUtilities" Grid.Column="2" RowDefinitions="32,28" HorizontalAlignment="Right" VerticalAlignment="Center">
@@ -304,7 +304,7 @@
                   <StackPanel Orientation="Horizontal" Spacing="6">
                     <PathIcon Width="16" Height="16" Data="M1 2H15V4H1Z M1 7H11V9H1Z M1 12H9V14H1Z M12 10L16 12.5L12 15Z"/>
                     <Border Name="DockQueueBadge" MinWidth="24" Height="20" Padding="8,0" CornerRadius="999" HorizontalAlignment="Right" Background="{DynamicResource R2Tint}">
-                      <TextBlock Text="{Binding Player.QueueBadgeText}" FontFeatures="tnum" Foreground="{DynamicResource R2RedInk}" FontSize="11" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                      <TextBlock Text="{Binding Player.QueueBadgeText}" FontFeatures="tnum" Foreground="{DynamicResource R2RedInk}" FontSize="13" FontWeight="Medium" TextWrapping="NoWrap" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Border>
                   </StackPanel>
                 </Button>

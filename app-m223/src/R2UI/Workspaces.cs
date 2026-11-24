@@ -49,6 +49,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   Navigation = nav;
   heading.FontSize = 27;
   heading.FontWeight = FontWeight.SemiBold;
+  heading.LineHeight = 27 * DesignTokens.LineHeightTitle; // R11 大标题行高 1.08
   status.Classes.Add("muted");
   status.IsVisible = !Program.Desktop;
   status.Margin = new Thickness(0,0,0,4);

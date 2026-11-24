@@ -201,7 +201,7 @@
                             Padding="7,2"
                             VerticalAlignment="Center">
                         <TextBlock Text="{Binding Player.DisplayPlaybackQueueCount}"
-                                   FontSize="11"
+                                   FontSize="13"
                                    FontWeight="Medium"
                                    Foreground="{StaticResource TextMuted}" />
                     </Border>

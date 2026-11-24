@@ -82,6 +82,21 @@ public static class DesignTokens
     // ── 行高系数 ─────────────────────────────────────────────
     public const double LineHeightRatio = 1.45;
 
+    // R11 行高三档：大标题/区块 1.05~1.1，正文与列表行 1.5，歌词 1.6
+    public const double LineHeightTitle = 1.08;
+    public const double LineHeightBody  = 1.5;
+    public const double LineHeightLyric = 1.6;
+
+    // R11 字重语义：Demibold=大标题，Medium=区块标题/歌名/时间轴，Regular=正文/辅助。禁用 Light。
+    public const string FontWeightHeading = "SemiBold"; // MiSans Demibold ≈ SemiBold
+    public const string FontWeightBlock   = "Medium";
+    public const string FontWeightBody    = "Regular";
+
+    // R11 辅助文本：12px + alpha 0.62；数字等宽 13px Medium
+    public const double FontAux    = 12;
+    public const double FontMono   = 13;
+    public const double AuxOpacity = 0.62;
+
     // ── 动效时长（R11 三档：微反馈 / 组件开合 / 视图切换）────
     public const int QuickMs   = 140;
     public const int NormalMs  = 200;

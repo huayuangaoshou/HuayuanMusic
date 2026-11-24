@@ -7,7 +7,7 @@
       </Button>
       <Button Classes="primary card-play" Width="38" Height="38" Margin="0,0,9,9" HorizontalAlignment="Right" VerticalAlignment="Bottom" Command="{Binding PlayCommand}" IsVisible="{Binding CanPlay}" AutomationProperties.Name="播放歌单"><PathIcon Width="14" Height="14" Data="M3 1L15 8L3 15Z"/></Button>
       <Button Grid.Row="1" Command="{Binding OpenCommand}" Content="{Binding Title}" FontSize="14" FontWeight="SemiBold" Padding="1,8,1,1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Left"/>
-      <TextBlock Grid.Row="2" Text="{Binding Description}" Classes="muted" FontSize="11" Margin="2,2,0,2" TextTrimming="CharacterEllipsis"/>
+      <TextBlock Grid.Row="2" Text="{Binding Description}" Classes="muted" FontSize="12" Margin="2,2,0,2" TextTrimming="CharacterEllipsis"/>
     </Grid>
   </Border>
 </UserControl>
