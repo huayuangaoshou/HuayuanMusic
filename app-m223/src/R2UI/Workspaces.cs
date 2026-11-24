@@ -75,13 +75,13 @@ public sealed partial class WorkspaceState:ObservableObject {
    };
    nav.Children.Add(import);
   }
-  CatalogPage=SongPage(Local?"本地曲库":"已同步曲目",CatalogRows);AddNav(nav,CatalogPage);
+  CatalogPage=SongPage(Local?"本地曲库":"已同步曲目",CatalogRows,Local);AddNav(nav,CatalogPage);
   var cardBody=new StackPanel{Spacing=8};
   if(Local&&Program.Desktop)cardBody.Children.Add(NewPlaylistButton());
   cardBody.Children.Add(gallery);
   cardBody.Children.Add(galleryEmpty);
   galleryPage=new R2Page("歌单",new ScrollViewer{Content=cardBody});AddNav(nav,galleryPage);
-  DetailPage=SongPage("歌单详情",[]);Pages.Add(DetailPage);var panel=(Grid)DetailPage.View;panel.RowDefinitions.Insert(0,new RowDefinition(GridLength.Auto));foreach(var child in panel.Children)Grid.SetRow(child,Grid.GetRow(child)+1);panel.Children.Add(hero);panel.RowDefinitions.Add(new RowDefinition(GridLength.Auto));var paging=new StackPanel{Orientation=Orientation.Horizontal,Spacing=8};prevPage.Click+=(_,_)=>SetPage(PageNumber-1);nextPage.Click+=(_,_)=>SetPage(PageNumber+1);paging.Children.Add(prevPage);paging.Children.Add(nextPage);
+  DetailPage=SongPage("歌单详情",[],Local);Pages.Add(DetailPage);var panel=(Grid)DetailPage.View;panel.RowDefinitions.Insert(0,new RowDefinition(GridLength.Auto));foreach(var child in panel.Children)Grid.SetRow(child,Grid.GetRow(child)+1);panel.Children.Add(hero);panel.RowDefinitions.Add(new RowDefinition(GridLength.Auto));var paging=new StackPanel{Orientation=Orientation.Horizontal,Spacing=8};prevPage.Click+=(_,_)=>SetPage(PageNumber-1);nextPage.Click+=(_,_)=>SetPage(PageNumber+1);paging.Children.Add(prevPage);paging.Children.Add(nextPage);
   if(P2AWorkspace.M212SnapshotPreview&&!Local){
    var jumpBox=new TextBox{PlaceholderText="歌单成员序号",Width=128};
    Avalonia.Automation.AutomationProperties.SetName(jumpBox,"歌单成员序号");
@@ -117,7 +117,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   Navigate(Local?CatalogPage:Host.Concept.Snapshot!=null?galleryPage:Pages.Single(p=>p.DisplayName=="我的账号"),false);Refresh();
  }
  TrackRow Row(CoreTrack track,long member=0,long list=0){string key=member>0?$"m:{list}:{member}":"t:"+track.Id;if(!rowViews.TryGetValue(key,out var row)||row.Track!=track){row=new TrackRow(track,this,memberId:member,listId:list);rowViews[key]=row;}return row;}
- R2Page SongPage(string title,IEnumerable<TrackRow> rows){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);header.DataContext=interactions;var empty = MakeSongEmptyState(title);
+ R2Page SongPage(string title,IEnumerable<TrackRow> rows,bool batchDeletable=false){var list=new ListBox{ItemTemplate=new FuncDataTemplate<TrackRow>((row,_)=>new SongRowView(),supportsRecycling:true),ItemsPanel=new FuncTemplate<Panel?>(()=>new VirtualizingStackPanel())};list.Classes.Add("songs");list.Styles.Add(new Style(s=>s.OfType<ListBoxItem>()){Setters={new Setter(ListBoxItem.HorizontalContentAlignmentProperty,HorizontalAlignment.Stretch)}});var grid=new Grid{RowDefinitions=new RowDefinitions("Auto,*")};var header=new SongTableHeader();grid.Children.Add(header);Grid.SetRow(list,1);grid.Children.Add(list);var page=new R2Page(title,grid);Lists.Add(page,list);var interactions=InteractionController.Attach(list,this,Host.Player,false);interactions.BatchDeletable=batchDeletable;header.DataContext=interactions;var empty = MakeSongEmptyState(title);
  grid.Children.Add(empty); Grid.SetRow(empty,1); emptySongPages.Add(page,(header,empty));
  Fill(page,rows);return page;}
  void AddNav(StackPanel nav,R2Page page)
@@ -205,6 +205,12 @@ public sealed partial class WorkspaceState:ObservableObject {
    new SelectableTextBlock{Text=Local?"本地歌单":"在线歌单",Classes={"muted"},FontSize=11},
    new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
+  if(Local&&Program.Desktop&&Host.Player.State.Lists.FirstOrDefault(list=>list.Id==SelectedPlaylistId) is { IsCustom:true } customList)
+  {
+   var deletePlaylist=new Button{Content="删除歌单",Classes={"glass-pill"},HorizontalAlignment=HorizontalAlignment.Left};
+   deletePlaylist.Click+=async (_,_)=>await EditLocalPlaylistAsync(deletePlaylist,customList.Id,true);
+   meta.Children.Add(deletePlaylist);
+  }
   var grid=new Grid{ColumnDefinitions=new ColumnDefinitions("172,*"),ColumnSpacing=24,Margin=new Thickness(0,4,0,16)};
   grid.Children.Add(cover);Grid.SetColumn(meta,1);grid.Children.Add(meta);hero.Content=grid;
   playlistIntroRequest?.Cancel();

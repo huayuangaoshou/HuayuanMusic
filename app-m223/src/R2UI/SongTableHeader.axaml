@@ -1,17 +1,32 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HuayuanPreview.R2.SongTableHeader" x:CompileBindings="False">
   <Border BorderBrush="{DynamicResource R2Edge}" BorderThickness="0,0,0,1">
-    <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,68,56" ColumnSpacing="7" Margin="7,0" Height="39">
-      <TextBlock Text="#" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-      <Button Grid.Column="2" Content="音乐标题" Classes="nav" Command="{Binding SortTitleCommand}"/>
-      <Button Grid.Column="3" Content="歌手" Classes="nav" Command="{Binding SortArtistCommand}"/>
-      <Button Grid.Column="4" Content="专辑" Classes="nav" Command="{Binding SortAlbumCommand}"/>
-      <TextBlock Grid.Column="6" Text="时长" Classes="muted" VerticalAlignment="Center"/>
-      <Button Grid.Column="6" Classes="icon" Width="30" Height="30" HorizontalAlignment="Right" Margin="0,0,38,0"
-              VerticalAlignment="Center" Command="{Binding LocateCurrentCommand}"
-              IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲">
-        <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
-      </Button>
+    <Grid RowDefinitions="Auto,Auto">
+      <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,68,64" ColumnSpacing="7" Margin="7,0" Height="39">
+        <TextBlock Text="#" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <Button Grid.Column="2" Content="音乐标题" Classes="nav" Command="{Binding SortTitleCommand}"/>
+        <Button Grid.Column="3" Content="歌手" Classes="nav" Command="{Binding SortArtistCommand}"/>
+        <Button Grid.Column="4" Content="专辑" Classes="nav" Command="{Binding SortAlbumCommand}"/>
+        <TextBlock Grid.Column="5" Text="时长" Classes="muted" VerticalAlignment="Center"/>
+        <StackPanel Grid.Column="6" Orientation="Horizontal" Spacing="3" HorizontalAlignment="Right" VerticalAlignment="Center">
+          <Button Classes="icon" Width="30" Height="30" Command="{Binding LocateCurrentCommand}"
+                  IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲">
+            <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
+          </Button>
+          <Button Classes="icon" Width="30" Height="30" Command="{Binding ToggleBatchModeCommand}"
+                  IsVisible="{Binding BatchAvailable}" ToolTip.Tip="批量管理" AutomationProperties.Name="批量管理">
+            <PathIcon Width="15" Height="15" Data="M3 5H21V7H3V5ZM3 11H21V13H3V11ZM3 17H21V19H3V17Z"/>
+          </Button>
+        </StackPanel>
+      </Grid>
+      <Border Grid.Row="1" Classes="glass" Margin="7,6,7,6" Padding="10,6" IsVisible="{Binding BatchMode}">
+        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
+          <Button Classes="glass-pill" Content="{Binding SelectAllLabel}" Command="{Binding SelectAllCommand}"/>
+          <TextBlock Text="{Binding SelectedCountLabel}" Classes="muted" VerticalAlignment="Center" FontFeatures="tnum"/>
+          <Button Classes="primary" Content="删除选中" Command="{Binding DeleteSelectedCommand}"/>
+          <Button Classes="glass-pill" Content="完成" Command="{Binding ExitBatchCommand}"/>
+        </StackPanel>
+      </Border>
     </Grid>
   </Border>
 </UserControl>

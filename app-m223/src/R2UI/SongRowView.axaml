@@ -2,8 +2,13 @@
              x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="52">
   <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}" CornerRadius="7">
   <Grid ColumnDefinitions="33,44,3*,1.25*,1.20*,68,56" ColumnSpacing="7" Margin="7,0">
-    <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
-    <vm:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <Border Width="18" Height="18" CornerRadius="5" HorizontalAlignment="Center" VerticalAlignment="Center"
+            IsVisible="{Binding IsBatchMode}" BorderThickness="1.5"
+            BorderBrush="{DynamicResource R2Muted}" Background="Transparent">
+      <PathIcon Width="12" Height="12" IsVisible="{Binding IsSelected}" Data="M2 8L6 12L14 4L15.5 5.5L6 15L0.5 9.5Z" Foreground="{DynamicResource R2RedInk}"/>
+    </Border>
+    <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsNumberVisible}"/>
+    <vm:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsWaveVisible}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     <vm:TrackArtwork Grid.Column="1" DisplaySize="38" VerticalAlignment="Center"/>
     <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="5">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="3">
@@ -22,6 +27,7 @@
           <PathIcon Width="15" Height="15" Data="M2,4 H13 V6 H2 Z M2,9 H9 V11 H2 Z M2,14 H9 V16 H2 Z M11,9 L18,13 L11,17 Z"/>
         </Button>
         <Button Classes="icon" Width="28" Height="28" Padding="0" IsVisible="{Binding CanUseOnlineActions}" Click="CommentInline" AutomationProperties.Name="查看评论" ToolTip.Tip="查看评论"><PathIcon Width="15" Height="15" Data="M1 2H15V12H8L4 16V12H1Z M3 4V10H6V12L8 10H13V4Z M5 6H11V8H5Z"/></Button>
+        <Button Classes="icon" Width="28" Height="28" Padding="0" IsVisible="{Binding CanRemoveLocally}" Command="{Binding RemoveLocalCommand}" AutomationProperties.Name="{Binding RemoveLocalLabel}" ToolTip.Tip="{Binding RemoveLocalLabel}"><PathIcon Width="14" Height="14" Data="M3 6H17V18H3V6ZM5 8V16H15V8H5ZM7 2H13V4H7V2ZM9 10H11V14H9V10Z"/></Button>
       </StackPanel>
       <Button Grid.Column="1" Content="查看" Command="{Binding InspectCommand}" IsVisible="{Binding CanInspectOffline}" AutomationProperties.Name="{Binding InspectLabel}"/>
     </Grid>

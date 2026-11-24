@@ -252,7 +252,13 @@
             </Grid>
             <Grid Name="DockTransport" Grid.Column="1" RowDefinitions="38,20" MaxWidth="540" VerticalAlignment="Center">
               <StackPanel Name="DockPlayButtons" Orientation="Horizontal" Spacing="16" HorizontalAlignment="Center">
-                <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="{Binding Player.ModeLabel}" ToolTip.Tip="{Binding Player.ModeLabel}"><PathIcon Width="16" Height="16" Data="{Binding Player.ModeIcon}"/></Button>
+                <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.CycleModeCommand}" AutomationProperties.Name="{Binding Player.ModeLabel}" ToolTip.Tip="{Binding Player.ModeLabel}">
+                  <Viewbox Height="18" Stretch="Uniform" Width="18">
+                    <Canvas Height="24" Width="24">
+                      <Path Data="{Binding Player.ModeIcon}" Fill="{DynamicResource R2Ink}"/>
+                    </Canvas>
+                  </Viewbox>
+                </Button>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayPreviousCommand}" ToolTip.Tip="上一首" AutomationProperties.Name="上一首"><PathIcon Width="16" Height="16" Data="M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"/></Button>
                 <Grid Width="38" Height="38">
                   <Button Classes="primary" Width="38" Height="38" Command="{Binding Player.TogglePlayPauseCommand}" ToolTip.Tip="播放或暂停" AutomationProperties.Name="播放或暂停">

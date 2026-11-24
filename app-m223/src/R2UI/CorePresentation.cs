@@ -21,6 +21,14 @@ public sealed class TrackRow:ObservableObject {
  public bool IsDownloaded => Program.Desktop && Owner.Host.IsDownloaded(this);
  public TrackRow Song=>this;public string Name=>Track.Title;public string Singer=>Track.Artist;public string AlbumName=>Track.Album;public string Duration=>Track.Duration<=0?"—":$"{(int)Track.Duration/60:00}:{(int)Track.Duration%60:00}";
  public int Number { get; internal set; }
+ private bool isSelected;
+ public bool IsSelected { get => isSelected; set => SetProperty(ref isSelected, value); }
+ private bool isBatchMode;
+ public bool IsBatchMode { get => isBatchMode; internal set { if (SetProperty(ref isBatchMode, value)) { OnPropertyChanged(nameof(IsNumberVisible)); OnPropertyChanged(nameof(IsWaveVisible)); } } }
+ public bool IsNumberVisible => !isBatchMode && !IsCurrent;
+ public bool IsWaveVisible => !isBatchMode && IsCurrent;
+ public bool IsLocalTrack => Owner.Local && !IsProviderTrack;
+ public bool IsPlaylistMember => Owner.Local && MemberId > 0;
  public bool IsCurrent => QueueId != Guid.Empty
      ? Owner.Host.Player.State.CurrentEntryId == QueueId
      : Owner.Host.Player.DisplayedPlayingSong is { } playing &&
@@ -49,6 +57,9 @@ public sealed class TrackRow:ObservableObject {
  public string InspectLabel=>"核验歌单第"+MemberId+"条";
  public ICommand InspectCommand {get;}
  public ICommand PlayCommand {get;}public ICommand AddCommand {get;}
+ public bool CanRemoveLocally => IsLocalTrack || IsPlaylistMember;
+ public string RemoveLocalLabel => IsPlaylistMember ? "从歌单移除" : "从列表移除";
+ public ICommand RemoveLocalCommand {get;}
  public TrackRow(CoreTrack track,WorkspaceState owner,Guid queueId=default,long memberId=0,long listId=0){Track=track;Owner=owner;QueueId=queueId;MemberId=memberId;ListId=listId;
   var key=track.Key;
   var accountEnd=IsProviderTrack?key.IndexOf(':',"kugou-concept:".Length):-1;
@@ -62,8 +73,9 @@ public sealed class TrackRow:ObservableObject {
  FavoriteCommand=new RelayCommand(()=>Owner.Host.Player.Favorite([this]));
  NextCommand=new RelayCommand(()=>Owner.Host.Player.Next([this]));
  RemoveCommand=new RelayCommand(()=>Owner.Host.Player.Remove([this]));
+ RemoveLocalCommand=new RelayCommand(()=>_ = Owner.RequestRemoveTracksAsync([this]));
  InspectCommand=new RelayCommand(()=>Owner.Host.Concept.M212InspectMember(ListId,MemberId,Track.Key));}
- public void Refresh(){OnPropertyChanged(nameof(IsDownloaded));OnPropertyChanged(nameof(Number));OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));OnPropertyChanged(nameof(IsUnavailable));OnPropertyChanged(nameof(UnavailableReason));}
+ public void Refresh(){OnPropertyChanged(nameof(IsDownloaded));OnPropertyChanged(nameof(Number));OnPropertyChanged(nameof(IsCurrent));OnPropertyChanged(nameof(IsPlaying));OnPropertyChanged(nameof(IsUnavailable));OnPropertyChanged(nameof(UnavailableReason));OnPropertyChanged(nameof(IsNumberVisible));OnPropertyChanged(nameof(IsWaveVisible));}
  public void RefreshFavorite(){OnPropertyChanged(nameof(IsFavorite));OnPropertyChanged(nameof(FavoriteLabel));}
  public void RefreshAccess(){OnPropertyChanged(nameof(CanUsePlatform));OnPropertyChanged(nameof(CanUseOnlineActions));RefreshFavorite();}
 }
@@ -98,13 +110,13 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public Geometry ModeIcon => Geometry.Parse((PlayMode)State.Mode switch
  {
   // 列表循环: 首尾相接的循环箭头
-  PlayMode.Normal => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12Z",
-  // 顺序播放: 向右顺序箭头
-  PlayMode.Sequential => "M2 5H14L11 2L13 0L19 6L13 12L11 10L14 7H2Z M2 11H14L11 8L13 6L19 12L13 18L11 16L14 13H2Z",
-  // 随机播放: 交叉箭头
-  PlayMode.Shuffle => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12ZM15 2L16 3L15 4L14 3ZM1 16L2 17L1 18L0 17Z",
+  PlayMode.Normal => "M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z",
   // 单曲循环: 循环箭头带 1
-  _ => "M4 4H12V1L16 5L12 9V6H4A2 2 0 0 0 2 8H0A4 4 0 0 1 4 4ZM12 12H4V15L0 11L4 7V10H12A2 2 0 0 0 14 8H16A4 4 0 0 1 12 12ZM10 7H13V10H10Z"
+  PlayMode.RepeatOne => "M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4zm-4-2V9h-1l-2 1v1h1.5v4H13z",
+  // 随机播放: 交叉箭头
+  PlayMode.Shuffle => "M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z",
+  // 顺序播放: 右箭头 + 终止线
+  _ => "M3 11h10.17l-3.58-3.59L11 6l6 6-6 6-1.41-1.41L13.17 13H3v-2zM19 6h2v12h-2V6z"
  });
  public bool IsBuffering { get; private set; }
  internal event Action<string>? Toast;

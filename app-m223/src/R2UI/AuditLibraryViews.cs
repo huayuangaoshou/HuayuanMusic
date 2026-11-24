@@ -65,4 +65,49 @@ public sealed partial class WorkspaceState
         if (Host.Adapter.State.Error.Length>0) Host.Player.Notify("未能保存歌单，请检查名称后重试");
         else if(remove && CurrentPage==DetailPage && SelectedPlaylistId==id) Navigate(galleryPage);
     }
+
+    /// <summary>Delete local tracks (from the library) or playlist members (from the playlist)
+    /// with a glass-style confirmation dialog. Never touches files on disk.</summary>
+    internal async Task<bool> RequestRemoveTracksAsync(TrackRow[] rows, Control? anchor = null)
+    {
+        if (!Local || rows.Length == 0) return false;
+        rows = rows.Where(r => r.CanRemoveLocally).DistinctBy(r => r.Identity).ToArray();
+        if (rows.Length == 0) return false;
+
+        var fromPlaylist = rows.All(r => r.IsPlaylistMember);
+        var fromLibrary = rows.All(r => r.IsLocalTrack && !r.IsPlaylistMember);
+        if (!fromPlaylist && !fromLibrary) return false;
+
+        var owner = anchor == null ? TopLevel.GetTopLevel(Root) as Window : TopLevel.GetTopLevel(anchor) as Window;
+        if (owner == null) return false;
+
+        var single = rows.Length == 1;
+        var scopeLabel = fromPlaylist ? "歌单" : "本地曲库";
+        var title = single ? $"{(fromPlaylist ? "从歌单移除" : "从列表移除")}「{rows[0].Name}」" : $"删除选中的 {rows.Length} 首歌曲";
+        var message = new TextBlock
+        {
+            Text = $"仅从{scopeLabel}移除，不会删除硬盘上的本地音频原文件。",
+            TextWrapping = TextWrapping.Wrap
+        };
+        var confirm = new Button { Classes = { "primary" }, Content = "确认移除", IsDefault = true };
+        var cancel = new Button { Content = "取消", IsCancel = true };
+        var panel = new StackPanel { Spacing = 12 };
+        panel.Children.Add(message);
+        panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { confirm, cancel } });
+        var dialog = new Window
+        {
+            Title = title, Width = 400, SizeToContent = SizeToContent.Height, CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner, RequestedThemeVariant = owner.ActualThemeVariant,
+            Content = new Border { Classes = { "glass", "glass-float" }, Margin = new Thickness(12), Padding = new Thickness(14), Child = panel }
+        };
+        var result = false;
+        confirm.Click += (_, _) => { result = true; dialog.Close(); };
+        cancel.Click += (_, _) => dialog.Close();
+        await dialog.ShowDialog(owner);
+        if (!result) return false;
+
+        if (fromPlaylist) Host.Player.Remove(rows);
+        else await Host.Adapter.RemoveLocalTracksAsync(rows.Select(r => r.Track.Id).ToArray());
+        return Host.Adapter.State.Error.Length == 0;
+    }
 }
