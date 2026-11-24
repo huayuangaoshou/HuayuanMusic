@@ -13,7 +13,9 @@ namespace HuayuanPreview
         {
             await using var db=await AppDatabase.CreateConnectionAsync();
             await using var query=db.CreateCommand();
-            query.CommandText="SELECT id FROM playlists WHERE kind = 'Manual'";
+            // 精准黑名单保护：仅排除在线同步歌单(JellyfinLibrary)，
+            // 手动新建(Manual)与本地导入文件夹(ImportedFolder)等本地歌单均允许删除。
+            query.CommandText="SELECT id FROM playlists WHERE kind <> 'JellyfinLibrary'";
             await using var rows=await query.ExecuteReaderAsync();
             var ids=new HashSet<long>();
             while(await rows.ReadAsync())ids.Add(rows.GetInt64(0));
