@@ -56,9 +56,12 @@
           <LinearGradientBrush x:Key="FullLyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#28FFFFFF" Offset="0"/><GradientStop Color="#4DFFFFFF" Offset="0.5"/><GradientStop Color="#28FFFFFF" Offset="1"/>
           </LinearGradientBrush>
-          <SolidColorBrush x:Key="FullLyricIdle" Color="{x:Static tok:DesignTokens.LightText}"/>
-          <SolidColorBrush x:Key="FullLyricTranslation" Color="{x:Static tok:DesignTokens.LightSub}"/>
-          <SolidColorBrush x:Key="FullLyricSung" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+          <!-- R7补丁1：浅色歌词显形。Idle/Translation 用 Text/Sub 半透明，Sung 用饱和深粉渐变，浅底上卡拉OK扫动可见。 -->
+          <SolidColorBrush x:Key="FullLyricIdle" Color="#992A2530"/>
+          <SolidColorBrush x:Key="FullLyricTranslation" Color="#887A7385"/>
+          <LinearGradientBrush x:Key="FullLyricSung" StartPoint="0%,0%" EndPoint="100%,100%">
+            <GradientStop Color="#E88AB8" Offset="0"/><GradientStop Color="#E86FA5" Offset="0.5"/><GradientStop Color="#8FA8E8" Offset="1"/>
+          </LinearGradientBrush>
           <LinearGradientBrush x:Key="FullLyricBack" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="{x:Static tok:DesignTokens.LightBase}" Offset="0"/><GradientStop Color="{x:Static tok:DesignTokens.LightSurface}" Offset="0.5"/><GradientStop Color="{x:Static tok:DesignTokens.LightBase}" Offset="1"/>
           </LinearGradientBrush>
