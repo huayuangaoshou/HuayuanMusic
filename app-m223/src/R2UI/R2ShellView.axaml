@@ -99,12 +99,16 @@
               <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="19" Padding="1" BoxShadow="{DynamicResource GlassLift}">
                 <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
-              <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9" Margin="0,6,0,0">
-                <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="28" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center"/>
-                <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
-                <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
-              </StackPanel>
-              <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
+              <Border Padding="16,0" HorizontalAlignment="Stretch">
+                <StackPanel HorizontalAlignment="Center" Spacing="0" Margin="0,6,0,0">
+                  <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="9">
+                    <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="20" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource R2Ink}"/>
+                    <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
+                    <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
+                  </StackPanel>
+                  <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" FontSize="14" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
+                </StackPanel>
+              </Border>
               <Grid ColumnDefinitions="43,*,43" ColumnSpacing="7" Margin="0,3,0,0">
                 <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="11" VerticalAlignment="Center"/>
                 <local:CommitSlider Grid.Column="1" Name="FullProgress" Classes="progress" AutomationProperties.Name="歌词页播放进度"/>

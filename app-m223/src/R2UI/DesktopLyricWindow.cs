@@ -18,8 +18,8 @@ namespace HuayuanPreview.R2;
 internal sealed class DesktopLyricWindow : Window
 {
     private readonly DesktopLyricLine current = CreateLine(Brushes.White);
-    private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(Color.Parse("#E7EEFF")));
-    private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(Color.Parse("#DADFFF")));
+    private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(DesignTokens.DarkSub));
+    private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(DesignTokens.DarkText));
     private readonly Button translationButton;
     private int renderedLine = -1;
     private bool showTranslation;
@@ -66,8 +66,8 @@ internal sealed class DesktopLyricWindow : Window
             var button = new Button
             {
                 Content = label, Padding = new Thickness(8, 3), MinHeight = 28,
-                Foreground = new SolidColorBrush(Color.Parse("#223954")),
-                Background = new SolidColorBrush(Color.Parse("#38BADBFF"))
+                Foreground = new SolidColorBrush(DesignTokens.DarkText),
+                Background = new SolidColorBrush(Color.FromArgb(0x38, DesignTokens.BlueMid.R, DesignTokens.BlueMid.G, DesignTokens.BlueMid.B))
             };
             AutomationProperties.SetName(button, accessible);
             ToolTip.SetTip(button, accessible);
@@ -75,7 +75,7 @@ internal sealed class DesktopLyricWindow : Window
             commands.Children.Add(button);
             return button;
         }
-        static PathIcon Icon(string path) => new() { Width = 13, Height = 13, Data = Geometry.Parse(path), Foreground = new SolidColorBrush(Color.Parse("#223954")) };
+        static PathIcon Icon(string path) => new() { Width = 13, Height = 13, Data = Geometry.Parse(path), Foreground = new SolidColorBrush(DesignTokens.DarkText) };
         var grip = Icon("M1,3 H17 V5 H1 Z M1,8 H17 V10 H1 Z M1,13 H17 V15 H1 Z");
         grip.Margin = new Thickness(7,0,6,0);
         grip.Cursor = new Cursor(StandardCursorType.SizeAll);
@@ -98,11 +98,8 @@ internal sealed class DesktopLyricWindow : Window
         {
             Child = commands, Padding = new Thickness(7, 4), CornerRadius = new CornerRadius(22),
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Center,
-            Background = new SolidColorBrush(Color.Parse("#F7FFFFFF")),
-            BorderBrush = new LinearGradientBrush
-            {
-                GradientStops = [new(Color.Parse("#E6EEF8"),0), new(Color.Parse("#CFEEF5FF"),1)]
-            },
+            Background = new SolidColorBrush(DesignTokens.LightSurface),
+            BorderBrush = new SolidColorBrush(DesignTokens.LightLine),
             BorderThickness = new Thickness(1), BoxShadow = BoxShadows.Parse("0 8 24 0 #140F172A"),
             Opacity = 0, IsHitTestVisible = false
         };
@@ -147,14 +144,10 @@ internal sealed class DesktopLyricWindow : Window
         void RefreshToolbarTheme()
         {
             var dark = ActualThemeVariant == ThemeVariant.Dark;
-            tools.Background = new SolidColorBrush(Color.Parse(dark ? "#EF1B263B" : "#F7FFFFFF"));
-            tools.BorderBrush = new LinearGradientBrush
-            {
-                GradientStops = dark ? [new(Color.Parse("#ADC4E0FF"), 0), new(Color.Parse("#5B7A9ECC"), 1)] :
-                    [new(Color.Parse("#E6EEF8"), 0), new(Color.Parse("#CFEEF5FF"), 1)]
-            };
+            tools.Background = new SolidColorBrush(dark ? DesignTokens.DarkSurface : DesignTokens.LightSurface);
+            tools.BorderBrush = new SolidColorBrush(dark ? DesignTokens.DarkLine : DesignTokens.LightLine);
             tools.BoxShadow = BoxShadows.Parse(dark ? "0 8 24 0 #50101726" : "0 8 24 0 #140F172A");
-            var foreground = new SolidColorBrush(Color.Parse(dark ? "#E6F0FF" : "#1F2329"));
+            var foreground = new SolidColorBrush(dark ? DesignTokens.DarkText : DesignTokens.LightText);
             foreach (var button in commands.Children.OfType<Button>())
             {
                 button.Foreground = foreground;

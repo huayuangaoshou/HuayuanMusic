@@ -10,12 +10,8 @@ namespace HuayuanPreview.R2;
 // The two brushes share one shaped line and one viewport position.
 internal sealed class DesktopLyricLine : Control
 {
-    private static readonly IBrush SungBrush = new LinearGradientBrush
-    {
-        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-        GradientStops = [new(Color.Parse("#FFE7F2"), 0), new(Color.Parse("#FF9EC8"), .55), new(Color.Parse("#A5CDFF"), 1)]
-    };
+    // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
+    private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
     private static readonly IBrush HitArea = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
     private readonly IBrush foreground;
     private string text = "";
