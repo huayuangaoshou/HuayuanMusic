@@ -3,6 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.LogicalTree;
 using Avalonia.Interactivity;
+using Avalonia.Media;
+using Avalonia.Media.Imaging;
 using Avalonia.Media.Transformation;
 using Avalonia.Styling;
 using Avalonia.Threading;
@@ -145,6 +147,42 @@ public partial class R2ShellView : UserControl
             FullProgress.Sync(state.Position);
         }
         UpdateLyricOverlay();
+        UpdateCoverTint();
+    }
+
+    // R5: 封面主色染背景——随当前曲目切换，取色在后台线程，UI 只收结果，400ms 过渡，无封面回退 GlassBase。
+    private string? tintTrackKey;
+    private CancellationTokenSource? tintRequest;
+    private async void UpdateCoverTint()
+    {
+        if (model == null) return;
+        var row = model.Player.DisplayedPlayingSong;
+        var key = row?.Track.Key;
+        if (key == tintTrackKey) return;
+        tintTrackKey = key;
+        tintRequest?.Cancel();
+        var request = new CancellationTokenSource();
+        tintRequest = request;
+        var target = CoverTint;
+        if (row == null || row.Track.Cover == null)
+        {
+            target.Background = (IBrush)Application.Current!.Resources["GlassBase"]!;
+            return;
+        }
+        try
+        {
+            if (row.IsProviderTrack) { return; } // 在线曲目封面走 Control，本地取色仅覆盖本地封面
+            Bitmap? bitmap = await model.Concept.LoadLocalCover(row.Track.Cover!);
+            if (request.IsCancellationRequested || tintTrackKey != key) { bitmap?.Dispose(); return; }
+            var main = await CoverColorExtractor.ExtractAsync(bitmap, request.Token);
+            bitmap?.Dispose();
+            if (request.IsCancellationRequested || tintTrackKey != key || main is not { } color) return;
+            var dark = ActualThemeVariant == ThemeVariant.Dark;
+            var tint = CoverColorExtractor.TintForBackground(color, dark);
+            target.Background = new SolidColorBrush(tint);
+        }
+        catch (OperationCanceledException) { }
+        catch { /* 取色失败回退，不报错 */ }
     }
     private Window? Window => TopLevel.GetTopLevel(this) as Window;
 

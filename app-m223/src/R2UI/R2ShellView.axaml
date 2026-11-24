@@ -5,6 +5,9 @@
     <StyleInclude Source="avares://AvaloniaLyrics/Themes/AvaloniaLyrics.axaml"/>
   </UserControl.Styles>
   <Grid RowDefinitions="*,100" ColumnDefinitions="224,*" Background="{DynamicResource GlassBase}">
+    <Border Name="CoverTint" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBase}" IsHitTestVisible="False">
+      <Border.Transitions><Transitions><BrushTransition Property="Background" Duration="0:0:0.4" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+    </Border>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassPinkGlow}" IsHitTestVisible="False"/>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBlueGlow}" IsHitTestVisible="False"/>
     <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False"/>
