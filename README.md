@@ -1,7 +1,7 @@
 <div align="center">
   <img src="app-m223/src/Assets/icon-1024.png" alt="HuayuanMusic Logo" width="128" />
 
-  <h1>HuayuanMusic · 花苑音乐</h1>
+  <h1>HuayuanMusic</h1>
 
   <p>
     <a href="https://dotnet.microsoft.com"><img src="https://img.shields.io/badge/.NET-10.0-blue.svg" alt=".NET 10.0" /></a>
@@ -36,7 +36,7 @@
 
 ## 粉蓝白液态玻璃特性
 
-花苑音乐的核心视觉由一套共享的程序化氛围系统驱动：
+HuayuanMusic 的核心视觉由一套共享的程序化氛围系统驱动：
 
 - **粉蓝白渐变氛围**：左上粉、右下蓝、中央柔白的三向渐变场，随浅色/深色主题自动切换明度。
 - **白瓷玻璃质感**：玻璃面板通过程序化折射采样 + 磨砂（frost）混合，边缘高光与斜切 bevel 呈现白瓷般的通透感。
@@ -46,7 +46,7 @@
 
 ### 可插拔 DLC 架构
 
-花苑音乐采用「核心 + DLC」的可插拔设计，将平台能力与主程序解耦：
+HuayuanMusic 采用「核心 + DLC」的可插拔设计，将平台能力与主程序解耦：
 
 - **核心（Core）**：本地音乐库、播放队列、BASS 音频核心、HTTP 206 媒体网关与桌面歌词等基础能力，始终随主程序运行。
 - **DLC（平台扩展）**：酷狗概念版等平台接入以独立 DLC 形式存在，支持动态启停、独立授权与完整卸载，不影响核心本地播放。

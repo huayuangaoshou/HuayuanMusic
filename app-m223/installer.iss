@@ -1,7 +1,7 @@
-; Inno Setup script for HuayuanMusic (花苑音乐)
+﻿; Inno Setup script for HuayuanMusic
 ; Build with Inno Setup 6 (ISCC.exe), or via app-m223/bundle.ps1.
 
-#define MyAppName "HuayuanMusic (花苑音乐)"
+#define MyAppName "HuayuanMusic"
 #define MyAppVersion "1.0.0"
 #define MyAppPublisher "HuayuanMusic"
 #define MyAppExeName "HuayuanMusic.P17.Nightflight.exe"
@@ -29,19 +29,20 @@ CloseApplications=yes
 CloseApplicationsFilter=*.exe
 ; Single-instance mutex matches Program.cs ("Local\HuayuanMusic.M223.Desktop").
 AppMutex=Local\HuayuanMusic.M223.Desktop
-; Chinese installer wizard
+; Simplified Chinese installer wizard (single language, no language dialog)
+ShowLanguageDialog=no
 [Languages]
-Name: "chinesesimp"; MessagesFile: "compiler:Default.isl"
+Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
 Source: "artifacts\release-build\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{group}\HuayuanMusic"; Filename: "{app}\{#MyAppExeName}"
-Name: "{group}\卸载 HuayuanMusic"; Filename: "{uninstallexe}"
+Name: "{group}\Uninstall HuayuanMusic"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\HuayuanMusic"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]

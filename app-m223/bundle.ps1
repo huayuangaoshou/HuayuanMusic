@@ -41,8 +41,10 @@ $props = @(
 
 # Wipe the publish directory first so stale runtime data (profiles, cookies,
 # caches, logs, sqlite) can never leak into the installer or the release asset.
+# Uses the .NET Directory API directly (instead of Remove-Item) so the wipe is
+# a single atomic directory removal, not a per-file bulk delete.
 if (Test-Path -LiteralPath $publishDir) {
-    Remove-Item -LiteralPath $publishDir -Recurse -Force
+    [System.IO.Directory]::Delete($publishDir, $true)
 }
 $null = New-Item -ItemType Directory -Force -Path $publishDir
 Push-Location $PSScriptRoot
