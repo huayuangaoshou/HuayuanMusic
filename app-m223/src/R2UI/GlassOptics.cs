@@ -124,7 +124,7 @@ public sealed class GlassOptics : Control
             // R9-a 柔化采样：12 tap（中心 + 十字 8 + 对角 3 权重均匀），过渡奶油化无颗粒。
             // degrade 时退化为单点采样，跳过模糊。
             half3 blurSample(float2 sampleAt) {
-                half3 acc = field(sampleAt) * .30;
+                half3 acc = field(sampleAt) * .18;
                 acc += .10 * (field(sampleAt + float2( 7, 0)) + field(sampleAt + float2(-7, 0)) +
                               field(sampleAt + float2( 0, 7)) + field(sampleAt + float2( 0,-7)));
                 acc += .06 * (field(sampleAt + float2(16, 0)) + field(sampleAt + float2(-16, 0)) +
@@ -151,8 +151,8 @@ public sealed class GlassOptics : Control
                 if (degrade > .5) {
                     blurred = field(sampleAt); // 降级：跳过采样与色散，单点直采
                 } else {
-                    // 边缘带权重：距边 0~6px 线性衰减，>6px 为 0（中心无色散）
-                    float edgeW = 1.0 - saturate(max(0.0, distance + 6.0) / 6.0);
+                    // 边缘带权重：边缘(distance=0)=1，向内 6px 线性衰减到 0（中心无色散）
+                    float edgeW = saturate(1.0 + distance / 6.0);
                     half3 center = blurSample(sampleAt);
                     half3 r = blurSample(sampleAt + float2( 1.5, 0));
                     half3 b = blurSample(sampleAt + float2(-1.5, 0));
@@ -168,7 +168,7 @@ public sealed class GlassOptics : Control
                 float shine = bevel * (.05 + .19 * incidence);
 
                 // R9-c 边缘 specular 高光：1.5px 亮线（白 alpha ~0.35，角部略强），给玻璃厚度感。
-                float spec = (1.0 - smoothstep(0.0, 1.5, max(0.0, distance + 1.5)));
+                float spec = 1.0 - smoothstep(0.0, 1.5, -distance);
                 float cornerBoost = 1.0 + .55 * smoothstep(.85, 1.0, max(q.x,q.y) / max(extent.x,extent.y) * 2.0);
                 float specStrength = spec * cornerBoost;
                 color = mix(color, mix(half3(1),half3(.68,.81,1),night), shine + specStrength * .35);
