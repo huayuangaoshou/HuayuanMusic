@@ -22,10 +22,26 @@ internal sealed partial class CorePlaybackAdapter
     }
     internal bool IsUnavailable(TrackRow row)=>unavailable.ContainsKey(row.CatalogIdentity);
     internal string? UnavailableReason(TrackRow row)=>unavailable.GetValueOrDefault(row.CatalogIdentity);
+
+    // R12-2 失败原因分类（五桶）。core DesktopSourceUnavailable 事件仅传 deviceFailure bool，
+    // 不携带 PlaybackSourceFailureReason 细分，故 VIP_ONLY / COPYRIGHT_REMOVED / AUTH_REQUIRED
+    // 在事件型路径无法可靠区分——诚实降为 UNKNOWN 兜底，绝不编造分类。
+    // 能可靠区分的仅：Device（deviceFailure=true）、NetworkTimeout（看门狗判定假死）。
+    internal enum PlayFailureBucket { Unknown, Device, VipOnly, CopyrightRemoved, AuthRequired, NetworkTimeout }
+    private static string BucketText(PlayFailureBucket bucket)=>bucket switch
+    {
+        PlayFailureBucket.Device => "无法播放，请检查音频输出设备",
+        PlayFailureBucket.VipOnly => "VIP 专享歌曲，需要会员权限",
+        PlayFailureBucket.CopyrightRemoved => "版权限制，暂无法播放",
+        PlayFailureBucket.AuthRequired => "酷狗登录已失效，请重新登录",
+        PlayFailureBucket.NetworkTimeout => "网络异常，稍后自动重试或手动重试",
+        _ => "暂时无法播放该歌曲，请稍后重试"
+    };
     private void TrackUnavailable(SongItem song,bool deviceFailure)
     {
-        var reason=deviceFailure?"无法播放，请检查音频输出设备":
-            song.LocalSourceType=="ProviderStream"?"暂时无法播放该歌曲，请稍后重试":"无法播放，音频文件可能已移动或损坏";
+        // R12-2：设备问题归 Device；其余因 core 事件不传细分原因，归 UNKNOWN 兜底。
+        var bucket=deviceFailure?PlayFailureBucket.Device:PlayFailureBucket.Unknown;
+        var reason=BucketText(bucket);
         if(!deviceFailure)unavailable[AvailabilityKey(song)]=reason;
         DesktopUnavailableChanged?.Invoke(reason);
         // R12-1 A：事件型自动跳歌。设备问题绝不跳（跳谁都失败）。
@@ -144,7 +160,8 @@ internal sealed partial class CorePlaybackAdapter
                 if(watchdogStallCount>=3)
                 {
                     watchdogStallCount=0;
-                    TrackUnavailableWithReason(current,"连接超时，无法获取音频数据");
+                    // R12-2：假死归 NetworkTimeout 桶，文案与分类体系一致。
+                    TrackUnavailableWithReason(current,BucketText(PlayFailureBucket.NetworkTimeout));
                 }
             }
             else
