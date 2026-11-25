@@ -203,9 +203,9 @@ public partial class R2ShellView
         desktopLyrics = lyrics;
         lyrics.LockChanged += UpdateDesktopLyricButtons;
         lyrics.PreferencesChanged += QueueLyricPreferences;
+        lyrics.Closing += (_, _) => QueueLyricPreferences(lyrics.Capture(closingLyricsForExit));
         lyrics.Closed += (_, _) =>
         {
-            QueueLyricPreferences(lyrics.Capture(closingLyricsForExit));
             desktopLyrics = null;
             UpdateDesktopLyricButtons();
             ReleaseLyricsIfHidden();
