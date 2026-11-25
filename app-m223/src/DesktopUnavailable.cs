@@ -45,13 +45,18 @@ internal sealed partial class CorePlaybackAdapter
         if(!deviceFailure)unavailable[AvailabilityKey(song)]=reason;
         DesktopUnavailableChanged?.Invoke(reason);
         // R12-1 A：事件型自动跳歌。设备问题绝不跳（跳谁都失败）。
-        if(!deviceFailure)AutoSkipToNext(song);
+        if(!deviceFailure)
+        {
+            var observed=root.Player.CurrentPlayingSong;
+            AutoSkipToNext(song,observed);
+        }
     }
     private void TrackUnavailableWithReason(SongItem song,string reason)
     {
         unavailable[AvailabilityKey(song)]=reason;
         DesktopUnavailableChanged?.Invoke(reason);
-        AutoSkipToNext(song);
+        var observed=root.Player.CurrentPlayingSong;
+        AutoSkipToNext(song,observed);
     }
     private void TrackRecovered(SongItem song)
     {
@@ -61,7 +66,7 @@ internal sealed partial class CorePlaybackAdapter
         ResetWatchdog();
     }
     // R12-1 A：定位失败歌的下一个可用位置，直接 PlaySongAsync，不走 PlayNext/GetNext(null) 路径。
-    private void AutoSkipToNext(SongItem failedSong)
+    private void AutoSkipToNext(SongItem failedSong,SongItem? observed)
     {
         if(!Program.Desktop)return;
         var queue=root.Player.PlaybackQueue;
@@ -78,8 +83,9 @@ internal sealed partial class CorePlaybackAdapter
         {
             try
             {
-                // 竞态防护：执行前复核当前选择仍是失败歌（用户已手动点别的歌就不跳）。
-                if(!Equals(root.Player.CurrentPlayingSong,failedSong))return;
+                // 允许 core 清空选择或仍处于失败歌；仅当用户已切到第三首歌时让位。
+                var now=root.Player.CurrentPlayingSong;
+                if(now!=null&&!Equals(now,failedSong)&&!Equals(now,observed))return;
                 var idx=queue.IndexOf(failedSong);
                 if(idx<0)return;
                 // 从下一位置循环找第一个未标 unavailable 的歌。
