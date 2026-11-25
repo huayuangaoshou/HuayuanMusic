@@ -13,13 +13,16 @@ namespace HuayuanPreview.Services;
 public static class UpdateManager
 {
     /// <summary>
-    /// Repository owner/name. Replace "Owner" with the real GitHub account before
-    /// publishing. Keeping it as a single constant makes that swap trivial.
+    /// Repository owner/name used for release checks.
     /// </summary>
     public const string GitHubRepo = "huayuangaoshou/HuayuanMusic";
 
-    /// <summary>The local application version, matching the csproj version.</summary>
-    public static readonly Version CurrentVersion = new(1, 0, 0);
+    /// <summary>The application's assembly version normalized to a three-part release version.</summary>
+    public static readonly Version CurrentVersion = NormalizeVersion(
+        typeof(UpdateManager).Assembly.GetName().Version!);
+
+    private static Version NormalizeVersion(Version version) =>
+        new(version.Major, version.Minor, Math.Max(0, version.Build));
 
     private static readonly HttpClient Client = CreateClient();
 
@@ -33,14 +36,14 @@ public static class UpdateManager
             Timeout = TimeSpan.FromSeconds(20)
         };
         // GitHub requires a User-Agent; without it requests are rejected with 403.
-        client.DefaultRequestHeaders.UserAgent.ParseAdd("HuayuanMusic/1.0.0 (+https://github.com/Owner/HuayuanMusic)");
+        client.DefaultRequestHeaders.UserAgent.ParseAdd($"HuayuanMusic/{CurrentVersion} (+https://github.com/{GitHubRepo})");
         return client;
     }
 
     /// <summary>Latest release payload parsed from the GitHub API.</summary>
     public sealed record ReleaseInfo(string TagName, string Name, string Body, string? SetupUrl, Version Version)
     {
-        public bool IsNewer => Version > CurrentVersion;
+        public bool IsNewer => NormalizeVersion(Version) > CurrentVersion;
     }
 
     /// <summary>Result of a lookup. <see cref="Release"/> is null when nothing actionable was found.</summary>
