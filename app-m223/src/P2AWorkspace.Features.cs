@@ -6,6 +6,8 @@ internal sealed partial class P2AWorkspace
 {
     internal DesktopAccount? Profile { get; private set; }
     internal HashSet<string> DesktopFavorites { get; } = new(StringComparer.OrdinalIgnoreCase);
+    // R12-4 红心点击节流：记录正在切换收藏的歌曲 key，防连点风暴（同歌重入直接忽略）。
+    private readonly HashSet<string> favoriteInFlight = new(StringComparer.OrdinalIgnoreCase);
 
     internal async Task LoadDesktopProfileAsync(CancellationToken ct)
     {
@@ -61,10 +63,22 @@ internal sealed partial class P2AWorkspace
         var id = trackKey[(trackKey.LastIndexOf(':') + 1)..];
         if (key == null || !trackKey.StartsWith("kugou-concept:" + key + ":", StringComparison.Ordinal))
             throw new UnauthorizedAccessException("歌曲不属于当前酷狗账号");
-        var liked = await DesktopCall((gateway, token) => gateway.ToggleDesktopFavoriteAsync(id, token), ct);
-        if (key != AccountKey) return;
-        if (liked) DesktopFavorites.Add(id); else DesktopFavorites.Remove(id);
-        Changed?.Invoke();
+        // R12-4 节流：同歌收藏切换进行中，直接忽略（防连点风暴）。
+        lock (favoriteInFlight)
+        {
+            if (!favoriteInFlight.Add(id)) return;
+        }
+        try
+        {
+            var liked = await DesktopCall((gateway, token) => gateway.ToggleDesktopFavoriteAsync(id, token), ct);
+            if (key != AccountKey) return;
+            if (liked) DesktopFavorites.Add(id); else DesktopFavorites.Remove(id);
+            Changed?.Invoke();
+        }
+        finally
+        {
+            lock (favoriteInFlight) favoriteInFlight.Remove(id);
+        }
     }
 
     internal bool IsDesktopFavorite(string trackKey) =>
