@@ -18,6 +18,8 @@ namespace HuayuanPreview.R2;
 
 internal sealed class DesktopLyricWindow : Window
 {
+    internal const double ShadowGutter = 12;
+
     private readonly DesktopLyricLine current = CreateLine(Brushes.White);
     private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(DesignTokens.DarkSub));
     private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(DesignTokens.DarkText));
@@ -112,7 +114,7 @@ internal sealed class DesktopLyricWindow : Window
         labels = new StackPanel
         {
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
-            Margin = new Thickness(2), Background = null, Spacing = 4
+            Margin = new Thickness(ShadowGutter), Background = null, Spacing = 4
         };
         labels.Children.Add(current); labels.Children.Add(translation); labels.Children.Add(next);
         Grid.SetRow(labels, 1);
@@ -348,10 +350,12 @@ internal sealed class DesktopLyricWindow : Window
             tools.InvalidateMeasure();
             tools.Measure(Size.Infinity);
         }
-        double newLyricWidth = Math.Max(4, Math.Ceiling(labels.DesiredSize.Width));
+        const double gutter = 2 * ShadowGutter;
+        // The label stack's DesiredSize already includes its margin.
+        double newLyricWidth = Math.Max(gutter, Math.Ceiling(labels.DesiredSize.Width));
         double newToolbarHeight = tools.IsVisible ? Math.Ceiling(tools.DesiredSize.Height) : 0;
-        double width = Math.Max(newLyricWidth, tools.IsVisible ? Math.Ceiling(tools.DesiredSize.Width) : 0);
-        double height = Math.Max(4, Math.Ceiling(labels.DesiredSize.Height)) + newToolbarHeight;
+        double width = Math.Max(newLyricWidth, tools.IsVisible ? Math.Ceiling(tools.DesiredSize.Width) + gutter : gutter);
+        double height = Math.Max(gutter, Math.Ceiling(labels.DesiredSize.Height)) + newToolbarHeight;
         if (width == Width && height == Height && newToolbarHeight == toolbarHeight)
         {
             lyricWidth = newLyricWidth;

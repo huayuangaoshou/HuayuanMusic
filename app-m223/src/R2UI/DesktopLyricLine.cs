@@ -37,7 +37,6 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
         this.foreground = foreground;
         HorizontalAlignment = HorizontalAlignment.Center;
         MaxWidth = ViewportLimit;
-        ClipToBounds = true;
     }
 
     internal bool HasText => text.Length > 0;
@@ -155,11 +154,12 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     {
         if (normal == null) return;
         var viewport = new Rect(Bounds.Size);
+        var shadowViewport = viewport.Inflate(DesktopLyricWindow.ShadowGutter);
         var origin = TextOrigin;
         // 双层阴影：宽影保任意背景可读（BlurRadius 10 / Opacity 0.5），细影保锐度（BlurRadius 2 / Opacity 0.9）。
-        using (context.PushEffect(WideShadow, viewport))
+        using (context.PushEffect(WideShadow, shadowViewport))
             normal.Draw(context, origin);
-        using (context.PushEffect(SharpShadow, viewport))
+        using (context.PushEffect(SharpShadow, shadowViewport))
             normal.Draw(context, origin);
         normal.Draw(context, origin);
         if (sung != null)
