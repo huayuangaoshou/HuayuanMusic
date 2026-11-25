@@ -60,7 +60,7 @@ public sealed partial class WorkspaceState
             {
                 var result = await Host.Concept.FindDesktopSongs(onlineQuery, ct);
                 ct.ThrowIfCancellationRequested();
-                ShowSongs(result.Tracks, search: true);
+                ShowSongs(result.Tracks, "search:" + onlineQuery, search: true);
             }
             else
             {
@@ -104,6 +104,8 @@ public sealed partial class WorkspaceState
     private async Task RunCatalogAsync(Func<CancellationToken, Task> operation)
     {
         CancelCatalog();
+        if (CurrentPage == onlinePage) Save();
+        onlineListKey = null;
         onlineStatus!.Text = "正在加载…";
         onlineResults!.Content = null;
         if (!Host.Concept.Connected)
@@ -138,7 +140,7 @@ public sealed partial class WorkspaceState
         {
             var rows = await Host.Concept.DesktopCall((g, t) => g.ReadDesktopRecommendationsAsync(t), ct);
             ct.ThrowIfCancellationRequested();
-            ShowSongs(rows);
+            ShowSongs(rows, "recommendations");
             Program.Log("R2_DAILY_RECOMMEND", new { count = rows.Length });
         });
     }
@@ -164,7 +166,7 @@ public sealed partial class WorkspaceState
         Navigate(onlinePage!);
     }
 
-    private void ShowSongs(IEnumerable<CatalogTrack> tracks, bool detail = false, bool search = false)
+    private void ShowSongs(IEnumerable<CatalogTrack> tracks, string collectionId, bool detail = false, bool search = false)
     {
         var rows = tracks.Select(track => new TrackRow(new CoreTrack(-1,
             "kugou-concept:" + Host.Concept.AccountKey + ":" + track.Id, track.Title,
@@ -175,6 +177,8 @@ public sealed partial class WorkspaceState
         onlineStatus!.Text = rows.Length == 0 ? "" :
             detail && !string.IsNullOrWhiteSpace(detailSubtitle) ? $"{detailSubtitle}  ·  {rows.Length} 首曲目" : $"{rows.Length} 首曲目";
         onlineResults!.Content = page.View;
+        onlineListKey = new SongViewKey(page, collectionId);
+        if (CurrentPage == onlinePage) Restore();
     }
 
     private void ShowCollections(DesktopCatalogItem[] results)
@@ -199,7 +203,7 @@ public sealed partial class WorkspaceState
         {
             var rows = await Host.Concept.DesktopCall((g, t) => g.ReadDesktopCollectionAsync(item, t), ct);
             ct.ThrowIfCancellationRequested();
-            ShowSongs(rows, detail: true);
+            ShowSongs(rows, $"collection:{item.Kind}:{item.Id}", detail: true);
             if (item.Kind is DesktopCatalogKind.Playlist or DesktopCatalogKind.Album)
             {
                 try

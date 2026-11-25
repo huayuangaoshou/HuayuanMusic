@@ -78,6 +78,7 @@ public static class DesignTokens
     public const double BlockTitleSize    = 18;   // 区块标题
     public const double SongRowCover      = 46;   // 歌曲行内封面
     public const double SongRowHeight     = 62;   // 歌曲行自然高度
+    public const double QueueRowHeight    = 56;
     public const double SongRowPad        = 8;    // 歌曲行 padding
 
     // ── 字号（阶梯）──────────────────────────────────────────

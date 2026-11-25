@@ -11,17 +11,20 @@ public sealed class PlaybackWave : Control
 {
     public static readonly StyledProperty<bool> IsPlayingProperty =
         AvaloniaProperty.Register<PlaybackWave, bool>(nameof(IsPlaying));
+    public static readonly StyledProperty<IBrush?> FillProperty =
+        AvaloniaProperty.Register<PlaybackWave, IBrush?>(nameof(Fill));
 
     private readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromMilliseconds(32) };
     private long started;
     private long stopped;
     private bool attached;
-    private static readonly IBrush Gradient = new LinearGradientBrush
+    public IBrush? Fill
     {
-        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
-        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
-        GradientStops = [new(Color.Parse("#F884B2"), 0), new(Color.Parse("#549AFF"), 1)]
-    };
+        get => GetValue(FillProperty);
+        set => SetValue(FillProperty, value);
+    }
+
+    static PlaybackWave() => AffectsRender<PlaybackWave>(FillProperty);
 
     public PlaybackWave()
     {
@@ -78,7 +81,7 @@ public sealed class PlaybackWave : Control
         {
             var phase = (activeTime - bar * .14) * (Math.Tau / .88);
             var height = 4 + 12 * amplitude * (.5 + .5 * Math.Cos(phase));
-            context.DrawRectangle(Gradient, null, new Rect(bar * 5, Bounds.Height - height, 3, height), 1.5, 1.5);
+            context.DrawRectangle(Fill, null, new Rect(bar * 5, Bounds.Height - height, 3, height), 1.5, 1.5);
         }
     }
 }

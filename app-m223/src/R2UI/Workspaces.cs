@@ -20,7 +20,9 @@ public sealed record R2Page(string DisplayName,Control View);
 public sealed partial class WorkspaceState:ObservableObject {
  public ShellModel Host {get;}public bool Local {get;}public bool Allowed=>Local;public bool IsKugou=>!Local;public string Name=>Local?"本地音乐":"酷狗概念版";
  public List<R2Page> Pages {get;}=[];public Dictionary<R2Page,ListBox> Lists {get;}=[];private readonly Stack<BrowsePoint> back = new();
- public Dictionary<R2Page,(Vector Offset,string[] Selected)> Positions {get;}=[];
+ private readonly record struct SongViewKey(R2Page Page, string? CollectionId);
+ private readonly Dictionary<SongViewKey,InteractionController.ViewState> positions=[];
+ private SongViewKey? onlineListKey;
  public R2Page CurrentPage {get;private set;}=null!;public R2Page DetailPage {get;}public R2Page SearchPage {get;}public R2Page QueuePage {get;}public R2Page CatalogPage {get;}
  public long SelectedPlaylistId {get;private set;}public int PageNumber {get;private set;}
  string search="";public string SearchTerm {get=>search;set=>SetProperty(ref search,value);}
@@ -302,7 +304,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    return;
   }
   var accountChanged=displayedSnapshot?.AccountKey!=next?.AccountKey;
-  if(accountChanged){providerPlaylistId=null;SelectedPlaylistId=0;PageNumber=0;SearchTerm="";Positions.Clear();back.Clear();forward.Clear();Fill(SearchPage,[]);if(CurrentPage==DetailPage||CurrentPage==SearchPage)Navigate(galleryPage,false);}
+  if(accountChanged){providerPlaylistId=null;SelectedPlaylistId=0;PageNumber=0;SearchTerm="";positions.Clear();onlineListKey=null;back.Clear();forward.Clear();Fill(SearchPage,[]);if(CurrentPage==DetailPage||CurrentPage==SearchPage)Navigate(galleryPage,false);}
   displayedSnapshot=next;
   gallery.Children.Clear();playlistNav.Children.Clear();navPlaylists.Clear();
   var playlists=next?.Playlists??[];
@@ -363,13 +365,13 @@ public sealed partial class WorkspaceState:ObservableObject {
   {
    var lists=displayedSnapshot?.Playlists;
    if(lists==null||id<1||id>lists.Count)return;
-   providerPlaylistId=lists[(int)id-1].ProviderPlaylistId;
   }
   if(CurrentPage!=null && (CurrentPage!=DetailPage || SelectedPlaylistId!=id)){back.Push(Here());forward.Clear();}
   PresentPlaylist(id,"");
  }
  private void PresentPlaylist(long id,string filter)
  {
+  Save();
   if(!Local&&displayedSnapshot is { } current && id>=1&&id<=current.Playlists.Count)
    providerPlaylistId=current.Playlists[(int)id-1].ProviderPlaylistId;
   SelectedPlaylistId=id;
@@ -379,7 +381,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   var title=Local?Host.Player.State.Lists.FirstOrDefault(list=>list.Id==id)?.Name:
    displayedSnapshot?.Playlists[(int)id-1].Name;
   UpdateHero(title??"歌单",Members().Length);
-  Navigate(DetailPage,false);
+  Navigate(DetailPage,false,saveCurrent:false);
  }
  private bool MatchesFilter(TrackRow row)=>
   row.Name.Contains(FilterText,StringComparison.OrdinalIgnoreCase)||
@@ -415,11 +417,41 @@ public sealed partial class WorkspaceState:ObservableObject {
    Navigate(SearchPage);
   });
  }
- public void Save(){if(CurrentPage!=null&&Lists.TryGetValue(CurrentPage,out var list)){var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();Positions[CurrentPage]=(scroll?.Offset??default,list.SelectedItems?.Cast<TrackRow>().Select(r=>r.Identity).ToArray()??[]);}}
- public void Restore(){if(CurrentPage!=null&&Positions.TryGetValue(CurrentPage,out var value)&&Lists.TryGetValue(CurrentPage,out var list)){list.SelectedItems?.Clear();foreach(var row in list.Items.OfType<TrackRow>())if(value.Selected.Contains(row.Identity))list.SelectedItems?.Add(row);Dispatcher.UIThread.Post(()=>{var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();if(scroll!=null)scroll.Offset=value.Offset;},DispatcherPriority.Loaded);}}
- public void Navigate(R2Page page,bool push=true)
+ private SongViewKey? CurrentSongView()
  {
-  Save();
+  if(CurrentPage==null)return null;
+  if(CurrentPage==onlinePage)return onlineListKey;
+  if(!Lists.ContainsKey(CurrentPage))return null;
+  if(CurrentPage!=DetailPage)return new(CurrentPage,null);
+  if(SelectedPlaylistId==0)return null;
+  return new(CurrentPage,Local?SelectedPlaylistId.ToString(System.Globalization.CultureInfo.InvariantCulture):providerPlaylistId);
+ }
+ public void Save()
+ {
+  if(CurrentSongView() is not { } key)return;
+  var controller=InteractionController.For(Lists[key.Page]);
+  positions[key]=controller.CaptureView();
+  controller.CancelFollow();
+ }
+ public void Restore()
+ {
+  if(CurrentSongView() is not { } key)return;
+  var controller=InteractionController.For(Lists[key.Page]);
+  if(positions.TryGetValue(key,out var state))controller.RestoreView(state);
+  else
+  {
+   controller.RestoreView(new(default,[]));
+   controller.FollowCurrent(firstOpen:true);
+  }
+ }
+ internal void FollowPlayback()
+ {
+  if(CurrentSongView() is { } key)
+   InteractionController.For(Lists[key.Page]).FollowCurrent();
+ }
+ public void Navigate(R2Page page,bool push=true,bool saveCurrent=true)
+ {
+  if(saveCurrent)Save();
   if(push&&CurrentPage!=null&&CurrentPage!=page){back.Push(Here());forward.Clear();}
   CurrentPage=page;
   // R11 进场编排：标题先到（0ms）→ 内容卡 +60ms 后 12px 上移淡入；切走瞬时（比切来快，退场≈进场 60% 以内）。
@@ -438,20 +470,6 @@ public sealed partial class WorkspaceState:ObservableObject {
   status.Text=Local?"":Host.Concept.Summary;
   HighlightNavigation();
   Restore();
-  AutoLocateCurrent(page);
- }
- /// <summary>When a list page is entered, centre the currently-playing row once so the
- /// user can see where it is — without fighting manual scrolling afterwards.</summary>
- private void AutoLocateCurrent(R2Page page)
- {
-  if(!Lists.TryGetValue(page,out var list))return;
-  var controller=InteractionController.Find(list);
-  if(controller==null)return;
-  Dispatcher.UIThread.Post(()=>{
-   if(CurrentPage!=page)return;
-   if(list.Items.OfType<TrackRow>().Any(row=>row.IsCurrent))
-    controller.LocateCurrent();
-  },DispatcherPriority.Loaded);
  }
  private void HighlightNavigation()
  {
@@ -511,8 +529,10 @@ public sealed partial class ShellModel:ObservableObject,IDisposable {
  {
   LocalWorkspace.Refresh();KugouConceptWorkspace.Refresh();
   if(lastEntry==Player.State.CurrentEntryId&&lastPlaying==Player.State.Playing)return;
+  var entryChanged=lastEntry!=Player.State.CurrentEntryId;
   lastEntry=Player.State.CurrentEntryId;lastPlaying=Player.State.Playing;
   LocalWorkspace.RefreshPlayingRows();KugouConceptWorkspace.RefreshPlayingRows();
+  if(entryChanged)workspace?.FollowPlayback();
   OnPropertyChanged(nameof(SourceLabel));
  }
  public void Switch(WorkspaceState next){if(next.IsKugou&&!KugouEnabled)return;workspace?.Save();workspace?.PauseOnlineWork();workspace=next;OnPropertyChanged(nameof(Workspace));OnPropertyChanged(nameof(WorkspaceRoot));next.Restore();}

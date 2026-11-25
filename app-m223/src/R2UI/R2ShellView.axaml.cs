@@ -19,6 +19,9 @@ public partial class R2ShellView : UserControl
     private readonly DispatcherTimer toastDelay = new() { Interval = TimeSpan.FromMilliseconds(2250) };
     private ShellModel? model;
     private InteractionController? queueController;
+    private InteractionController.ViewState? queueViewState;
+    private TrackRow[]? queueRows;
+    private Guid queueEntry;
     private bool queueOpen;
     private bool updatingFilter;
     private string? ignoredFilterText;
@@ -148,6 +151,25 @@ public partial class R2ShellView : UserControl
         }
         UpdateLyricOverlay();
         UpdateCoverTint();
+        if (model != null && queueController is { } controller)
+        {
+            if (!ReferenceEquals(queueRows, model.Player.DisplayPlaybackQueue))
+            {
+                queueRows = model.Player.DisplayPlaybackQueue;
+                controller.SetRows(queueRows);
+                controller.RefreshCurrentState();
+            }
+            var entry = model.Player.State.CurrentEntryId;
+            if (queueEntry != entry)
+            {
+                queueEntry = entry;
+                if (queueOpen)
+                {
+                    controller.RefreshCurrentState();
+                    controller.FollowCurrent();
+                }
+            }
+        }
     }
 
     // R5: 封面主色染背景——随当前曲目切换，取色在后台线程，UI 只收结果，400ms 过渡，无封面回退 GlassBase。
@@ -318,27 +340,25 @@ public partial class R2ShellView : UserControl
 
     private void SetQueueOpen(bool open)
     {
+        if (!open && queueOpen && queueController is { } closing)
+        {
+            queueViewState = closing.CaptureView();
+            closing.CancelFollow();
+        }
         queueOpen = open;
         drawerDelay.Stop();
         if (open) DrawerLayer.IsVisible = true; else drawerDelay.Start();
         DrawerLayer.IsHitTestVisible = open;
         DrawerShade.Opacity = open ? 1 : 0;
         QueueDrawer.RenderTransform = TransformOperations.Parse(open ? "translateX(0px)" : "translateX(380px)");
-        if (open) LocateQueueCurrent();
-    }
-
-    /// <summary>After the queue drawer is laid out, scroll the current track to the centre
-    /// without stealing the scroll position while the user is browsing the queue.</summary>
-    private void LocateQueueCurrent()
-    {
-        var controller = queueController;
-        if (controller == null) return;
-        controller.RefreshCurrentState();
-        Dispatcher.UIThread.Post(() =>
+        if (open && queueController is { } opening)
         {
-            if (queueOpen && controller.HasCurrentTrack) controller.LocateCurrent();
-        }, DispatcherPriority.Loaded);
+            opening.RefreshCurrentState();
+            if (queueViewState is { } saved) opening.RestoreView(saved);
+            else opening.FollowCurrent(firstOpen: true);
+        }
     }
+    internal bool IsPlaybackListExposed(bool queue) => queue ? queueOpen : !lyricOpen && !queueOpen;
 
     private void TransportKeyDown(object? sender, KeyEventArgs args)
     {

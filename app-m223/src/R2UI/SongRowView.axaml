@@ -8,7 +8,7 @@
       <PathIcon Width="12" Height="12" IsVisible="{Binding IsSelected}" Data="M2 8L6 12L14 4L15.5 5.5L6 15L0.5 9.5Z" Foreground="{DynamicResource R2RedInk}"/>
     </Border>
     <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" HorizontalAlignment="Center" VerticalAlignment="Center" IsVisible="{Binding IsNumberVisible}"/>
-    <vm:PlaybackWave IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsWaveVisible}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    <vm:PlaybackWave Fill="{DynamicResource R2RedInk}" IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsWaveVisible}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
     <vm:TrackArtwork Grid.Column="1" DisplaySize="{x:Static tok:DesignTokens.SongRowCover}" VerticalAlignment="Center"/>
     <Grid Grid.Column="2" ColumnDefinitions="*,Auto" ColumnSpacing="5">
       <Grid ColumnDefinitions="*,Auto" ColumnSpacing="3">

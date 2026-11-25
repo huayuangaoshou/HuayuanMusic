@@ -1,4 +1,5 @@
 using Avalonia;
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
 using Avalonia.Input;
@@ -20,6 +21,13 @@ public sealed class InteractionController:ObservableObject {
  public ICommand SortTitleCommand {get;}public ICommand SortArtistCommand {get;}public ICommand SortAlbumCommand {get;}
  public RelayCommand LocateCurrentCommand {get;}
  private bool hasCurrentTrack;
+ private static readonly TimeSpan ManualScrollPause = TimeSpan.FromSeconds(3);
+ private readonly DispatcherTimer followTimer = new() { Interval = TimeSpan.FromMilliseconds(16) };
+ private long? lastManualScroll;
+ private int scrollRequest;
+ private Vector? pendingOffset;
+ private Action? scrollStep;
+ internal sealed record ViewState(Vector Offset, HashSet<string> Selected);
  public bool HasCurrentTrack {get=>hasCurrentTrack;private set=>SetProperty(ref hasCurrentTrack,value);}
  private bool batchMode;
  public bool BatchMode {get=>batchMode;private set=>SetProperty(ref batchMode,value);}
@@ -39,7 +47,7 @@ public sealed class InteractionController:ObservableObject {
  internal static InteractionController? Find(ListBox list)=>attached.GetValueOrDefault(list);
  internal bool IsOnlineSearch {get;set;}
  internal void PlayRow(TrackRow row)=>player.PlayFromList(row,Items(),IsOnlineSearch);
- InteractionController(ListBox l,WorkspaceState o,CorePresentation p,bool q){list=l;owner=o;player=p;queue=q;SetStatus();l.SelectionMode=SelectionMode.Multiple;original=Items();
+ InteractionController(ListBox l,WorkspaceState o,CorePresentation p,bool q){list=l;owner=o;player=p;queue=q;SetStatus();l.SelectionMode=SelectionMode.Multiple;l.AutoScrollToSelectedItem=false;original=Items();
   SortTitleCommand=new RelayCommand(()=>Sort("title"));SortArtistCommand=new RelayCommand(()=>Sort("artist"));SortAlbumCommand=new RelayCommand(()=>Sort("album"));
   LocateCurrentCommand=new RelayCommand(()=>LocateCurrent(),()=>HasCurrentTrack);
   ToggleBatchModeCommand=new RelayCommand(()=>SetBatchMode(!BatchMode));
@@ -48,6 +56,12 @@ public sealed class InteractionController:ObservableObject {
   ExitBatchCommand=new RelayCommand(()=>SetBatchMode(false));
   l.PropertyChanged+=(_,e)=>{if(e.Property==ItemsControl.ItemsSourceProperty&&!publishing){original=Items();SyncBatchRows();}};
   l.SelectionChanged+=(_,_)=>SyncSelection();
+  followTimer.Tick+=(_,_)=>scrollStep?.Invoke();
+  l.AddHandler(InputElement.PointerWheelChangedEvent,(_,_)=>MarkManualScroll(),Avalonia.Interactivity.RoutingStrategies.Tunnel,true);
+  l.AddHandler(InputElement.PointerPressedEvent,(_,e)=>{if(OnScrollBar(e.Source))MarkManualScroll();},Avalonia.Interactivity.RoutingStrategies.Tunnel,true);
+  l.AddHandler(InputElement.PointerMovedEvent,(_,e)=>{if(e.GetCurrentPoint(l).Properties.IsLeftButtonPressed&&(e.Pointer.Type==PointerType.Touch||OnScrollBar(e.Source)))MarkManualScroll();},Avalonia.Interactivity.RoutingStrategies.Tunnel,true);
+  l.AddHandler(InputElement.KeyDownEvent,(_,e)=>{if(e.Key is Key.Up or Key.Down or Key.PageUp or Key.PageDown or Key.Home or Key.End)MarkManualScroll();},Avalonia.Interactivity.RoutingStrategies.Tunnel,true);
+  l.DetachedFromVisualTree+=(_,_)=>CancelFollow();
   l.DoubleTapped+=(_,e)=>{if(BatchMode||DateTime.UtcNow<ignoreDouble||FromButton(e.Source))return;var row=Hit(e.Source);if(row!=null&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;};
   l.KeyDown+=(_,e)=>{if(e.Key==Key.Escape){if(BatchMode){SetBatchMode(false);e.Handled=true;return;}Cancel();e.Handled=true;}else if(e.Key==Key.A&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){l.SelectAll();e.Handled=true;}else if(e.Key==Key.Enter&&!FromButton(e.Source)){if(l.SelectedItem is TrackRow row&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;}else if(e.Key==Key.Delete&&(queue||Editable||BatchMode)){if(BatchMode)_=DeleteSelectedAsync();else player.Remove(Selected());e.Handled=true;}else if(e.KeyModifiers.HasFlag(KeyModifiers.Control)&&e.Key is Key.Up or Key.Down&&(queue||Editable)){MoveSelected(e.Key==Key.Up?-1:1);e.Handled=true;}};
   l.ContextRequested+=(_,e)=>{var row=Hit(e.Source);if(row==null)return;if(!Selected().Contains(row))l.SelectedItem=row;var selected=Selected();var menu=new MenuFlyout();LastMenu=menu;
@@ -102,29 +116,88 @@ public sealed class InteractionController:ObservableObject {
  static bool FromButton(object? source)=>source is Button||source is Control c&&c.GetVisualAncestors().OfType<Button>().Any();
  static TrackRow? Hit(object? source){if(source is not Control c)return null;return (c as ListBoxItem??c.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault())?.Content as TrackRow;}
  public void SetRows(TrackRow[] rows){if(original.SequenceEqual(rows))return;original=rows;Display(Sorted());}
- void Display(TrackRow[] rows){var selection=Selected().Select(r=>r.Identity).ToHashSet();var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();var offset=scroll?.Offset;publishing=true;try{list.ItemsSource=rows;}finally{publishing=false;}list.SelectedItems?.Clear();foreach(var r in rows)if(selection.Contains(r.Identity))list.SelectedItems?.Add(r);if(scroll!=null&&offset.HasValue)scroll.Offset=offset.Value;}
+ void Display(TrackRow[] rows)
+ {
+  var state=CaptureView();
+  publishing=true;
+  try{list.ItemsSource=rows;}
+  finally{publishing=false;}
+  RestoreView(state);
+ }
+ private ScrollViewer? Scroller=>list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
+ internal ViewState CaptureView()=>new(pendingOffset??Scroller?.Offset??default,
+     list.SelectedItems?.OfType<TrackRow>().Select(row=>row.Identity).ToHashSet()??[]);
+ internal void RestoreView(ViewState state)
+ {
+  CancelFollow();
+  list.SelectedItems?.Clear();
+  foreach(var row in list.Items.OfType<TrackRow>())
+   if(state.Selected.Contains(row.Identity))list.SelectedItems?.Add(row);
+  var request=scrollRequest;
+  pendingOffset=state.Offset;
+  Dispatcher.UIThread.Post(()=>{
+   if(request!=scrollRequest)return;
+   if(Scroller is { } scroll)scroll.Offset=state.Offset;
+   pendingOffset=null;
+  },DispatcherPriority.Loaded);
+ }
  /// <summary>Recompute whether this list currently contains the playing track, and notify.</summary>
  public void RefreshCurrentState(){HasCurrentTrack=Items().Any(r=>r.IsCurrent);LocateCurrentCommand.NotifyCanExecuteChanged();}
- /// <summary>Find the row that matches the playing track and smooth-scroll it to the centre of the viewport.</summary>
- public void LocateCurrent()
+ private static bool OnScrollBar(object? source)=>source is Visual visual &&
+     (visual is ScrollBar||visual.FindAncestorOfType<ScrollBar>()!=null);
+ private void MarkManualScroll()
  {
-  var rows=Items();
-  int index=Array.FindIndex(rows,row=>row.IsCurrent);
-  if(index<0)return;
-  var item=list.ContainerFromIndex(index) as ListBoxItem;
-  var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();
-  if(scroll==null)return;
-  if(item!=null) item.BringIntoView();
+  lastManualScroll=Stopwatch.GetTimestamp();
+  CancelFollow();
+ }
+ internal void CancelFollow()
+ {
+  scrollRequest++;
+  pendingOffset=null;
+  followTimer.Stop();
+  scrollStep=null;
+ }
+ public void LocateCurrent()=>QueueFollow(ignoreManual:true);
+ internal void FollowCurrent(bool firstOpen=false)=>QueueFollow(ignoreManual:firstOpen);
+ private void QueueFollow(bool ignoreManual)
+ {
+  if(!ignoreManual&&lastManualScroll is { } manual&&Stopwatch.GetElapsedTime(manual)<ManualScrollPause)return;
+  var entry=player.State.CurrentEntryId;
+  if(entry==Guid.Empty)return;
+  // Let a pending view restore finish before using its scroll offset as our starting point.
+  var request=scrollRequest;
   Dispatcher.UIThread.Post(()=>{
-   if(index>=0&&index<list.ItemCount){
-    var target=list.ContainerFromIndex(index) as ListBoxItem;
-    if(target!=null){ target.BringIntoView(); return; }
+   if(request!=scrollRequest||player.State.CurrentEntryId!=entry||!CanFollow()||Scroller is not { } scroll)return;
+   int index=Array.FindIndex(Items(),row=>row.IsCurrent);
+   if(index<0||scroll.Viewport.Height<=0)return;
+   var pitch=queue?DesignTokens.QueueRowHeight:DesignTokens.SongRowHeight;
+   var rowTop=index*pitch;
+   if(list.ContainerFromIndex(index) is Control row&&row.TranslatePoint(default,scroll) is { } at)
+    rowTop=scroll.Offset.Y+at.Y;
+   var from=scroll.Offset.Y;
+   var target=Math.Clamp(rowTop+(pitch-scroll.Viewport.Height)/2,0,Math.Max(0,scroll.Extent.Height-scroll.Viewport.Height));
+   if(Math.Abs(from-target)<1)return;
+   CancelFollow();
+   if(DesignTokens.ShaderDegrade)
+   {
+    scroll.Offset=new Vector(scroll.Offset.X,target);
+    return;
    }
-   // Fallback: estimate row height and centre the offset (works with virtualization).
-   const double rowHeight=52;
-   var center=index*rowHeight - scroll.Viewport.Height/2 + rowHeight/2;
-   scroll.Offset=new Vector(scroll.Offset.X,Math.Max(0,center));
+   var start=Stopwatch.GetTimestamp();
+   var duration=TimeSpan.FromMilliseconds(DesignTokens.MotionOpen);
+   scrollStep=()=>{
+    if(player.State.CurrentEntryId!=entry||!CanFollow()){CancelFollow();return;}
+    var t=Math.Clamp(Stopwatch.GetElapsedTime(start)/duration,0,1);
+    scroll.Offset=new Vector(scroll.Offset.X,from+(target-from)*(1-Math.Pow(1-t,3)));
+    if(t>=1)CancelFollow();
+   };
+   followTimer.Start();
   },DispatcherPriority.Loaded);
+ }
+ private bool CanFollow()
+ {
+  if(!list.IsEffectivelyVisible||!list.IsAttachedToVisualTree())return false;
+  return list.FindAncestorOfType<R2ShellView>() is not { } shell || shell.IsPlaybackListExposed(queue);
  }
  TrackRow[] Sorted()=>sort==0?original:sort==1?original.OrderBy(r=>Value(r,field),StringComparer.CurrentCultureIgnoreCase).ToArray():original.OrderByDescending(r=>Value(r,field),StringComparer.CurrentCultureIgnoreCase).ToArray();
  static string Value(TrackRow r,string key)=>key=="artist"?r.Singer:key=="album"?r.AlbumName:r.Name;
@@ -166,7 +239,7 @@ public sealed class InteractionController:ObservableObject {
   if(await owner.RequestRemoveTracksAsync(rows,list)) SetBatchMode(false);
  }
  public void Cancel(){dragging=null;target=null;moved=false;var old=pointer;pointer=null;old?.Capture(null);line.IsVisible=false;}
- void DragMove(PointerEventArgs e){if(dragging==null)return;var point=e.GetPosition(list);if(!moved){if(Math.Abs(point.Y-origin.Y)<7)return;moved=true;pointer?.Capture(list);ignoreDouble=DateTime.UtcNow.AddMilliseconds(350);}if(point.X<0||point.X>list.Bounds.Width||point.Y<0||point.Y>list.Bounds.Height){target=null;line.IsVisible=false;return;}var scroll=list.GetVisualDescendants().OfType<ScrollViewer>().FirstOrDefault();if(scroll!=null&&(point.Y<28||point.Y>list.Bounds.Height-28))scroll.Offset=new Vector(scroll.Offset.X,Math.Clamp(scroll.Offset.Y+(point.Y<28?-16:16),0,Math.Max(0,scroll.Extent.Height-scroll.Viewport.Height)));
+ void DragMove(PointerEventArgs e){if(dragging==null)return;var point=e.GetPosition(list);if(!moved){if(Math.Abs(point.Y-origin.Y)<7)return;moved=true;pointer?.Capture(list);ignoreDouble=DateTime.UtcNow.AddMilliseconds(350);}if(point.X<0||point.X>list.Bounds.Width||point.Y<0||point.Y>list.Bounds.Height){target=null;line.IsVisible=false;return;}var scroll=Scroller;if(scroll!=null&&(point.Y<28||point.Y>list.Bounds.Height-28)){MarkManualScroll();scroll.Offset=new Vector(scroll.Offset.X,Math.Clamp(scroll.Offset.Y+(point.Y<28?-16:16),0,Math.Max(0,scroll.Extent.Height-scroll.Viewport.Height)));}
   target=null;line.IsVisible=false;foreach(var row in list.GetVisualDescendants().OfType<ListBoxItem>()){var at=row.TranslatePoint(default,list);if(at!=null&&point.Y>=at.Value.Y&&point.Y<at.Value.Y+row.Bounds.Height&&row.Content is TrackRow item){target=item;var down=Array.IndexOf(snapshot,item.Identity)>Array.IndexOf(snapshot,dragging.Identity);line.Margin=new Thickness(6,Math.Clamp(at.Value.Y+(down?row.Bounds.Height:0),0,list.Bounds.Height-2),6,0);line.IsVisible=item.Identity!=dragging.Identity;break;}}
  }
  void Commit(){var source=dragging;var to=target;bool valid=moved&&source!=null&&to!=null&&snapshot.SequenceEqual(Items().Select(r=>r.Identity));Cancel();if(valid&&source!.Identity!=to!.Identity)player.Move(source,to);}
