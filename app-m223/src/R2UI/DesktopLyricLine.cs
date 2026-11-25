@@ -1,18 +1,20 @@
+using System.Globalization;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
+using Avalonia.Rendering;
 using AvaloniaLyrics;
 
 namespace HuayuanPreview.R2;
 
 // The two brushes share one shaped line and one viewport position.
-internal sealed class DesktopLyricLine : Control
+internal sealed class DesktopLyricLine : Control, ICustomHitTest
 {
     // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
     private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
-    private static readonly IBrush HitArea = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
+    private const double ViewportLimit = 710;
     // 补丁2：文字可读性由双层投影承担——宽影保任意背景可读，细影保锐度。
     private static readonly IEffect WideShadow = new DropShadowEffect { BlurRadius = 10, OffsetX = 0, OffsetY = 0, Opacity = 0.5, Color = Color.Parse("#0B1020") };
     private static readonly IEffect SharpShadow = new DropShadowEffect { BlurRadius = 2, OffsetX = 0, OffsetY = 0, Opacity = 0.9, Color = Color.Parse("#0B1020") };
@@ -21,6 +23,8 @@ internal sealed class DesktopLyricLine : Control
     private IReadOnlyList<LyricWord> words = [];
     private TextLayout? normal;
     private TextLayout? sung;
+    private Geometry? glyphOutline;
+    private Rect inkBounds;
     private (double Start, double End, double Left, double Right)[] timings = [];
     private double start;
     private double duration;
@@ -32,23 +36,29 @@ internal sealed class DesktopLyricLine : Control
     {
         this.foreground = foreground;
         HorizontalAlignment = HorizontalAlignment.Center;
-        MaxWidth = 710;
+        MaxWidth = ViewportLimit;
         ClipToBounds = true;
     }
 
     internal bool HasText => text.Length > 0;
     internal double TextWidth => normal?.Width ?? 0;
+    internal Size InkSize => new(Math.Min(inkBounds.Width, ViewportLimit), inkBounds.Height);
+    private Point TextOrigin => new(HorizontalOffset - inkBounds.X, -inkBounds.Y);
+    bool ICustomHitTest.HitTest(Point point) => HitsInk(point);
+    internal bool HitsInk(Point point) =>
+        new Rect(Bounds.Size).Contains(point) && glyphOutline?.FillContains(point - (Vector)TextOrigin) == true;
+
     private double LineProgress => duration > 0 ? Math.Clamp((position - start) / duration, 0, 1) : 0;
     internal double HorizontalOffset
     {
         get
         {
             var progress = LineProgress;
-            if (TextWidth <= Bounds.Width || progress <= .10) return 0;
-            var travel = TextWidth - Bounds.Width + 24;
+            if (inkBounds.Width <= Bounds.Width || progress <= .10) return 0;
+            var travel = inkBounds.Width - Bounds.Width + 24;
             var timeline = travel * Math.Clamp((progress - .10) / .75, 0, 1);
             // Catch up to fast-sung words before the highlight reaches the right edge.
-            var follow = (SungWidth - Bounds.Width * .44) * Math.Clamp((progress - .10) / .15, 0, 1);
+            var follow = (SungWidth - inkBounds.X - Bounds.Width * .44) * Math.Clamp((progress - .10) / .15, 0, 1);
             return -Math.Clamp(Math.Max(timeline, follow), 0, travel);
         }
     }
@@ -107,11 +117,16 @@ internal sealed class DesktopLyricLine : Control
         normal?.Dispose();
         sung?.Dispose();
         normal = sung = null;
+        glyphOutline = null;
+        inkBounds = default;
         timings = [];
         if (HasText && family != null)
         {
             var typeface = new Typeface(family, weight: FontWeight.Bold);
             normal = new TextLayout(text, typeface, fontSize, foreground, textWrapping: TextWrapping.NoWrap);
+            glyphOutline = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                typeface, fontSize, foreground).BuildGeometry(default);
+            inkBounds = glyphOutline?.Bounds ?? default;
             sung = duration > 0
                 ? new TextLayout(text, typeface, fontSize, SungBrush, textWrapping: TextWrapping.NoWrap) : null;
             var spans = new List<(double, double, double, double)>();
@@ -134,14 +149,13 @@ internal sealed class DesktopLyricLine : Control
     }
 
     protected override Size MeasureOverride(Size availableSize) =>
-        normal == null ? default : new Size(Math.Min(TextWidth, availableSize.Width), normal.Height);
+        new(Math.Min(InkSize.Width, availableSize.Width), InkSize.Height);
 
     public override void Render(DrawingContext context)
     {
         if (normal == null) return;
         var viewport = new Rect(Bounds.Size);
-        var origin = new Point(HorizontalOffset, 0);
-        context.FillRectangle(HitArea, viewport);
+        var origin = TextOrigin;
         // 双层阴影：宽影保任意背景可读（BlurRadius 10 / Opacity 0.5），细影保锐度（BlurRadius 2 / Opacity 0.9）。
         using (context.PushEffect(WideShadow, viewport))
             normal.Draw(context, origin);
