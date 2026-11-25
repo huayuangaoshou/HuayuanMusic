@@ -17,6 +17,9 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+          <SolidColorBrush x:Key="UpdateActionHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
+          <SolidColorBrush x:Key="UpdateActionInk" Color="{x:Static tok:DesignTokens.LightText}"/>
           <!-- R11 阴影分档：L2 chrome 8/24 α0.18，L3 floating 16/48 α0.25（层级越高阴影越大越淡）。中性色唯一来源。 -->
           <BoxShadows x:Key="GlassLift">0 8 24 0 #2E0F172A</BoxShadows>
           <BoxShadows x:Key="GlassLiftL3">0 16 48 0 #400F172A</BoxShadows>
@@ -71,6 +74,9 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+          <SolidColorBrush x:Key="UpdateActionHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
+          <SolidColorBrush x:Key="UpdateActionInk" Color="{x:Static tok:DesignTokens.LightText}"/>
           <BoxShadows x:Key="GlassLift">0 8 24 0 #2E101A31</BoxShadows>
           <BoxShadows x:Key="GlassLiftL3">0 16 48 0 #400A142B</BoxShadows>
           <LinearGradientBrush x:Key="GlassKnob" StartPoint="15%,0%" EndPoint="90%,100%">
@@ -132,6 +138,16 @@
   <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
   <Style Selector="Border.glass-float"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLiftL3}"/></Style>
   <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
+  <Style Selector="Window.update-dialog"><Setter Property="Background" Value="{DynamicResource GlassBase}"/></Style>
+  <Style Selector="Border.update-panel"><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
+  <Style Selector="Border.update-enter">
+    <Style.Animations>
+      <Animation Duration="0:0:0.20" Easing="CubicEaseOut">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
 
   <Style Selector="Border.buffer-ring">
     <Style.Animations><Animation Duration="0:0:0.68" IterationCount="Infinite" PlaybackDirection="Alternate">
@@ -165,6 +181,17 @@
   <Style Selector="Button:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource R2Hover}"/>
     <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+  </Style>
+  <Style Selector="Button.update-primary, Button.update-ghost">
+    <Setter Property="Padding" Value="16,8"/>
+    <Setter Property="MinHeight" Value="36"/>
+  </Style>
+  <Style Selector="Button.update-primary /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource UpdateActionFill}"/>
+    <Setter Property="Foreground" Value="{DynamicResource UpdateActionInk}"/>
+  </Style>
+  <Style Selector="Button.update-primary:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource UpdateActionHover}"/>
   </Style>
   <Style Selector="Button.nav"><Setter Property="HorizontalAlignment" Value="Stretch"/>
     <Setter Property="HorizontalContentAlignment" Value="Left"/><Setter Property="MinHeight" Value="36"/>

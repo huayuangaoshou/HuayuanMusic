@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -54,14 +55,21 @@ public partial class R2ShellView
 
     private void OpenUpdateDialog(UpdateManager.ReleaseInfo release)
     {
-        if (Window is not { } owner || updateDialog != null) return;
+        if (!release.IsNewer || Window is not { } owner || updateDialog != null) return;
 
         var body = new TextBlock
         {
             Text = release.Body,
             TextWrapping = TextWrapping.Wrap,
-            MaxHeight = 220,
-            Opacity = 0.78
+            FontSize = 15,
+            LineHeight = 15 * DesignTokens.LineHeightBody
+        };
+        var notes = new ScrollViewer
+        {
+            Content = body,
+            MaxHeight = 192,
+            HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled,
+            IsVisible = !string.IsNullOrWhiteSpace(release.Body)
         };
 
         var progress = new ProgressBar
@@ -70,47 +78,50 @@ public partial class R2ShellView
             IsVisible = false, Height = 8, CornerRadius = new CornerRadius(4)
         };
 
-        var status = new TextBlock { Classes = { "muted" }, Text = " ", FontSize = 12 };
+        var status = new TextBlock { FontSize = DesignTokens.FontXs, TextWrapping = TextWrapping.Wrap, IsVisible = false };
 
-        var later = new Button { Content = "稍后再说", Classes = { "glass-pill" } };
-        var update = new Button { Content = "立即更新", Classes = { "glass-pill", "primary" } };
+        var later = new Button { Content = "暂不", Classes = { "update-ghost" }, IsCancel = true };
+        var update = new Button { Content = "去下载", Classes = { "update-primary" } };
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, HorizontalAlignment = HorizontalAlignment.Right, Children = { later, update } };
+        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = DesignTokens.Space2, HorizontalAlignment = HorizontalAlignment.Right, Children = { later, update } };
 
-        var content = new StackPanel { Spacing = 16, Children =
+        var content = new StackPanel { Margin = new Thickness(DesignTokens.Space5), Spacing = DesignTokens.Space4, Children =
         {
-            new StackPanel { Spacing = 6, Children =
+            new StackPanel { Spacing = DesignTokens.Space1, Children =
             {
-                new TextBlock { Text = $"发现新版本 v{release.Version}", FontSize = 20, FontWeight = FontWeight.SemiBold },
-                new TextBlock { Text = $"当前版本 v{UpdateManager.CurrentVersion} · {release.Name}", Classes = { "muted" }, FontSize = 13 }
+                new TextBlock { Text = $"发现新版本 v{release.Version}", FontSize = DesignTokens.BlockTitleSize, FontWeight = FontWeight.SemiBold },
+                new TextBlock { Text = $"当前版本 v{UpdateManager.CurrentVersion}", FontSize = DesignTokens.FontXs }
             } },
-            body,
+            notes,
             progress,
             status,
             actions
         } };
 
-        var dialog = new Window
+        var panel = new Border
         {
-            Title = "软件更新",
-            Width = 440, Height = 360, CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            RequestedThemeVariant = ActualThemeVariant,
-            Content = new Border
+            Classes = { "glass", "update-panel" },
+            Margin = new Thickness(DesignTokens.Space3),
+            Child = new Grid
             {
-                Classes = { "glass", "glass-float" },
-                Margin = new Thickness(12),
-                Padding = new Thickness(8),
-                Child = new StackPanel
+                Children =
                 {
-                    Children =
-                    {
-                        new GlassOptics { Radius = 12, Frost = DesignTokens.FrostFloating, Saturation = DesignTokens.SaturationFloating, Margin = new Thickness(1), IsHitTestVisible = false },
-                        content
-                    }
+                    new GlassOptics { Radius = DesignTokens.RadiusM, Frost = DesignTokens.FrostFloating, Saturation = DesignTokens.SaturationFloating, IsHitTestVisible = false },
+                    content
                 }
             }
         };
+        var dialog = new Window
+        {
+            Classes = { "update-dialog" },
+            Title = "软件更新",
+            Width = 440, SizeToContent = SizeToContent.Height, CanResize = false,
+            WindowStartupLocation = WindowStartupLocation.CenterOwner,
+            RequestedThemeVariant = ActualThemeVariant,
+            Content = panel
+        };
+        if (!DesignTokens.ShaderDegrade)
+            panel.Classes.Add("update-enter");
 
         updateDialog = dialog;
         dialog.Closed += (_, _) => updateDialog = null;
@@ -119,6 +130,7 @@ public partial class R2ShellView
 
         update.Click += async (_, _) =>
         {
+            status.IsVisible = true;
             if (string.IsNullOrWhiteSpace(release.SetupUrl))
             {
                 status.Text = "未找到可用安装包，请前往发布页手动下载";
