@@ -2,9 +2,10 @@
 ; Build with Inno Setup 6 (ISCC.exe), or via app-m223/bundle.ps1.
 
 #define MyAppName "HuayuanMusic"
-#define MyAppVersion "1.0.0"
+#define MyAppVersion "1.0.1"
 #define MyAppPublisher "HuayuanMusic"
-#define MyAppExeName "HuayuanMusic.P17.Nightflight.exe"
+#define MyAppExeName "HuayuanMusic.exe"
+#define MyPublishedExeName "HuayuanMusic.P17.Nightflight.exe"
 
 [Setup]
 AppId={{7F2A5E1D-4C8B-4A3D-9B1E-2D6C0F8E3A51}
@@ -14,6 +15,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\HuayuanMusic
 DefaultGroupName=HuayuanMusic
 DisableProgramGroupPage=yes
+DisableFinishedPage=no
 ; User music data (downloads, playlists, history) lives under the profile and is
 ; never touched by uninstall, so upgrades and removals preserve the user's library.
 PrivilegesRequired=admin
@@ -38,7 +40,8 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "artifacts\release-build\app\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "artifacts\release-build\app\*"; Excludes: "\{#MyPublishedExeName}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "artifacts\release-build\app\{#MyPublishedExeName}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
 
 [Icons]
 Name: "{group}\HuayuanMusic"; Filename: "{app}\{#MyAppExeName}"
@@ -46,7 +49,7 @@ Name: "{group}\Uninstall HuayuanMusic"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\HuayuanMusic"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,HuayuanMusic}"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "打开化缘音乐"; Flags: postinstall nowait skipifsilent
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{app}"
