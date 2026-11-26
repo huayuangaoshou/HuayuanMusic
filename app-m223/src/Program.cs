@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using Avalonia;
 using Avalonia.Controls;
@@ -7,6 +9,7 @@ using Avalonia.Platform;
 using Avalonia.Threading;
 using HuayuanPreview.R2;
 using KugouAvaloniaPlayer.Services;
+using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Logging.Abstractions;
 using SimpleAudio;
 
@@ -51,25 +54,64 @@ internal static class Program
 
     public static void Log(string kind, object detail)
     {
+        var line = JsonSerializer.Serialize(new { utc = DateTimeOffset.UtcNow, kind, detail }) + Environment.NewLine;
         try
         {
             lock (typeof(Program))
-                File.AppendAllText(Path.Combine(Session, "events.jsonl"),
-                    JsonSerializer.Serialize(new { utc = DateTimeOffset.UtcNow, kind, detail }) + Environment.NewLine);
+                File.AppendAllText(Path.Combine(Session, "events.jsonl"), line);
         }
-        catch (IOException) { }
-        catch (UnauthorizedAccessException) { }
+        catch (IOException) { WriteCrashFallback(line); }
+        catch (UnauthorizedAccessException) { WriteCrashFallback(line); }
+    }
+
+    /// <summary>
+    /// Last-resort evidence sink. When %LOCALAPPDATA% is unwritable (permissions, disk full,
+    /// read-only profile), a crash trace must still survive somewhere — so we append to a
+    /// plain text file beside the executable. Never throws.
+    /// </summary>
+    private static void WriteCrashFallback(string line)
+    {
+        try
+        {
+            lock (typeof(Program))
+                File.AppendAllText(Path.Combine(AppContext.BaseDirectory, "crash-log.txt"), line);
+        }
+        catch { /* evidence sink is best-effort; do not let logging kill the app */ }
     }
 }
 
 public sealed class App : Application
 {
+    // Depth-1 guard: we quarantine a corrupt database and retry the full startup sequence
+    // exactly once. If that retry still fails, we do NOT loop — we fall through to the native
+    // error dialog so the app never silently dies.
+    private static bool _dbQuarantined;
+
     public override void Initialize() => AvaloniaXamlLoader.Load(this);
 
     public override void OnFrameworkInitializationCompleted()
     {
+        try
+        {
+            BuildDesktop();
+        }
+        catch (Exception error)
+        {
+            TriageStartupFailure(error);
+        }
+        base.OnFrameworkInitializationCompleted();
+    }
+
+    private void BuildDesktop()
+    {
         if (ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
             throw new InvalidOperationException("Desktop lifetime required");
+
+        // Pre-flight schema gate: force the database open + version check to run synchronously
+        // BEFORE any window exists. A corrupt db (SqliteException) or a wrong user_version
+        // (InvalidDataException) is caught here by TriageStartupFailure, quarantined, and the
+        // whole startup is retried once — instead of surfacing later as a half-alive window.
+        AppDatabase.EnsureDatabaseCreated();
 
         SettingsManager.Load();
         SimpleAudioPlayer.DesktopMicroFade = DesktopPreferences.Behavior.MicroFade;
@@ -192,7 +234,6 @@ public sealed class App : Application
                 SimpleAudioPlayer.Free();
             }
         };
-        base.OnFrameworkInitializationCompleted();
 
         async Task InitializeAsync()
         {
@@ -215,4 +256,130 @@ public sealed class App : Application
             }
         }
     }
+
+    /// <summary>
+    /// Three-state startup triage. A corrupt database is quarantined and the startup retried
+    /// exactly once; anything else (or a failed retry) goes straight to a native dialog.
+    /// </summary>
+    private void TriageStartupFailure(Exception error)
+    {
+        var root = Unwrap(error);
+
+        if (root is SqliteException or InvalidDataException)
+        {
+            if (!_dbQuarantined)
+            {
+                _dbQuarantined = true;
+                QuarantineDatabase(root);
+
+                // One full restart of the startup sequence, depth-limited to prevent loops.
+                try
+                {
+                    BuildDesktop();
+                    Program.Log("STARTUP_RECOVERED", new { type = root.GetType().Name });
+                    return;
+                }
+                catch (Exception retry)
+                {
+                    error = retry;
+                }
+            }
+        }
+
+        Program.Log("DESKTOP_STARTUP_FAILED", new { type = root.GetType().Name, summary = root.Message, error.StackTrace });
+        Program.Result = 2;
+        ShowFatalMessageBox(error);
+    }
+
+    private static Exception Unwrap(Exception error)
+    {
+        // Walk the inner-exception chain (and peel AggregateException) until we hit a
+        // recognisable root cause, or the deepest exception available.
+        var current = error;
+        while (true)
+        {
+            if (current is AggregateException aggregate && aggregate.InnerException is { } aggregateInner)
+            {
+                current = aggregateInner;
+                continue;
+            }
+            if (current is SqliteException or InvalidDataException)
+                return current;
+            if (current.InnerException is { } next)
+            {
+                current = next;
+                continue;
+            }
+            return current;
+        }
+    }
+
+    /// <summary>
+    /// Rename the corrupt database (and its -wal/-shm sidecars) to a timestamped .corrupt name.
+    /// The file is preserved for forensics — never deleted. Only src-side filesystem moves.
+    /// </summary>
+    private static void QuarantineDatabase(Exception root)
+    {
+        var stamp = DateTime.Now.ToString("yyyyMMddHHmmss");
+        foreach (var path in new[]
+                 {
+                     AppDatabase.DatabasePath,
+                     AppDatabase.DatabasePath + "-wal",
+                     AppDatabase.DatabasePath + "-shm",
+                 })
+        {
+            try
+            {
+                if (File.Exists(path))
+                    File.Move(path, path + ".corrupt-" + stamp);
+            }
+            catch (Exception moveError)
+            {
+                Program.Log("STARTUP_DB_QUARANTINE_PARTIAL", new { path, type = moveError.GetType().Name });
+            }
+        }
+        Program.Log("STARTUP_DB_QUARANTINED", new
+        {
+            database = AppDatabase.DatabasePath,
+            renamedTo = ".corrupt-" + stamp,
+            exception = root.GetType().Name,
+            summary = root.Message,
+        });
+    }
+
+    private void ShowFatalMessageBox(Exception error)
+    {
+        var root = Unwrap(error);
+        var logPath = Path.Combine(Program.Session, "events.jsonl");
+        var message =
+            $"类型：{root.GetType().Name}\n" +
+            $"摘要：{root.Message}\n\n" +
+            $"日志：{logPath}\n\n" +
+            $"点击「是」打开日志文件夹，点击「否」退出。";
+
+        // Native user32 MessageBoxW — must not depend on Avalonia, which may itself be the
+        // reason startup failed.
+        var choice = MessageBoxW(IntPtr.Zero, message, "化缘音乐无法启动",
+            MB_YESNO | MB_ICONERROR | MB_SETFOREGROUND);
+
+        if (choice == IDYES)
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{logPath}\"")
+                {
+                    UseShellExecute = true,
+                });
+            }
+            catch (Exception) { /* non-fatal: the dialog already surfaced the path */ }
+        }
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern int MessageBoxW(IntPtr hWnd, string text, string caption, uint type);
+
+    private const uint MB_YESNO = 0x00000004;
+    private const uint MB_ICONERROR = 0x00000010;
+    private const uint MB_SETFOREGROUND = 0x00010000;
+    private const int IDYES = 6;
 }
