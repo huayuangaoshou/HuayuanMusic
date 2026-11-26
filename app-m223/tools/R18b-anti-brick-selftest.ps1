@@ -82,7 +82,7 @@ try {
         $bytes[60]=0; $bytes[61]=0; $bytes[62]=0; $bytes[63]=9
         [System.IO.File]::WriteAllBytes($db, $bytes)
     }
-    Launch-AndWait
+    Launch-And-Wait
     $after1 = Get-LatestLog
     Write-Host "  会话: $($after1.Name)"
 
@@ -92,7 +92,7 @@ try {
     $rng = [System.Random]::new()
     for ($i = 0; $i -lt 512; $i++) { $bytes[$i] = [byte]$rng.Next(0, 256) }
     [System.IO.File]::WriteAllBytes($db, $bytes)
-    Launch-AndWait
+    Launch-And-Wait
     $after2 = Get-LatestLog
     Write-Host "  会话: $($after2.Name)"
 

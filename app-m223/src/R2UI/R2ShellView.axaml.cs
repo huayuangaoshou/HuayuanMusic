@@ -229,10 +229,15 @@ public partial class R2ShellView : UserControl
         try
         {
             if (row.IsProviderTrack) { return; } // 在线曲目封面走 Control，本地取色仅覆盖本地封面
+            // R18d: LoadLocalCover returns a SHARED, weakly-cached Bitmap (see
+            // KugouArtwork.LoadLocal -> BoundedDiskCachedWebImageLoader.ProvideImageAsync).
+            // The very same instance is bound to Image.Source by TrackArtwork rows. Never
+            // Dispose it here: doing so kills the pixels still referenced by those Images and
+            // the next layout pass throws ObjectDisposedException at Bitmap.get_Size().
+            // Ownership stays with the cache; the extractor only reads pixels via a scaled copy.
             Bitmap? bitmap = await model.Concept.LoadLocalCover(row.Track.Cover!);
-            if (request.IsCancellationRequested || tintTrackKey != key) { bitmap?.Dispose(); return; }
+            if (request.IsCancellationRequested || tintTrackKey != key) return;
             var main = await CoverColorExtractor.ExtractAsync(bitmap, request.Token);
-            bitmap?.Dispose();
             if (request.IsCancellationRequested || tintTrackKey != key || main is not { } color) return;
             var dark = ActualThemeVariant == ThemeVariant.Dark;
             var tint = CoverColorExtractor.TintForBackground(color, dark);

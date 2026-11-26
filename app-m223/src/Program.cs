@@ -48,6 +48,11 @@ internal static class Program
         {
             Log("DESKTOP_STARTUP_FAILED", new { type = error.GetType().Name, error.StackTrace });
             Result = 2;
+            // R18d: never let a startup failure be a silent "window just disappears".
+            // Reuse the R18b native dialog (with the "open log folder" button). The dialog
+            // is native user32 and therefore guarded to Windows only.
+            if (OperatingSystem.IsWindows())
+                App.ShowFatalMessageBox(error);
         }
         return Result;
     }
@@ -365,8 +370,14 @@ public sealed class App : Application
         });
     }
 
-    private void ShowFatalMessageBox(Exception error)
+    /// <summary>
+    /// R18d: made internal-static so Program.Main's outer catch can reuse the same native
+    /// dialog. R18b leftover ①: guard the user32 call to Windows only.
+    /// </summary>
+    internal static void ShowFatalMessageBox(Exception error)
     {
+        if (!OperatingSystem.IsWindows())
+            return;
         var root = Unwrap(error);
         var logPath = Path.Combine(Program.Session, "events.jsonl");
         var message =
