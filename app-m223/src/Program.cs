@@ -37,11 +37,14 @@ internal static class Program
         Activation = activation;
 
         Args = args;
-        Session = Path.Combine(AppDataPaths.LocalRoot, "logs", Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Session);
+        var logRoot = Path.Combine(AppDataPaths.LocalRoot, "logs");
+        Session = Path.Combine(logRoot, Guid.NewGuid().ToString("N"));
+        CrashEvidence.StartSession(logRoot, Session);
+        CrashEvidence.AttachHandlers(Session);
+        int lifetimeResult = -1;
         try
         {
-            AppBuilder.Configure<App>().UsePlatformDetect()
+            lifetimeResult = AppBuilder.Configure<App>().UsePlatformDetect()
                 .StartWithClassicDesktopLifetime([], ShutdownMode.OnMainWindowClose);
         }
         catch (Exception error)
@@ -54,6 +57,8 @@ internal static class Program
             if (OperatingSystem.IsWindows())
                 App.ShowFatalMessageBox(error);
         }
+        if (Result == 0 && lifetimeResult == 0)
+            CrashEvidence.MarkCleanExit(Session);
         return Result;
     }
 
