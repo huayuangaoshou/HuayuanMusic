@@ -33,7 +33,7 @@ $env:AVALONIA_TELEMETRY_OPTOUT = '1'
 $env:NUGET_PACKAGES = Join-Path $root '.p1-work/_shared/nuget-packages'
 
 $props = @(
-    '-p:PublishTrimmed=false', '-p:RuntimeIdentifier=win-x64',
+    '-p:RuntimeIdentifier=win-x64',
     '-p:SelfContained=true', '-p:NuGetAudit=false',
     '-p:UsedAvaloniaProducts=', '-p:UseSharedCompilation=false',
     '-p:GenerateSonnetLanguageData=false'

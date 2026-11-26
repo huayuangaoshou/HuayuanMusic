@@ -1,8 +1,8 @@
-﻿; Inno Setup script for HuayuanMusic
+; Inno Setup script for HuayuanMusic
 ; Build with Inno Setup 6 (ISCC.exe), or via app-m223/bundle.ps1.
 
 #define MyAppName "HuayuanMusic"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "HuayuanMusic"
 #define MyAppExeName "HuayuanMusic.exe"
 #define MyPublishedExeName "HuayuanMusic.P17.Nightflight.exe"
@@ -40,7 +40,7 @@ Name: "chinesesimplified"; MessagesFile: "ChineseSimplified.isl"
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"
 
 [Files]
-Source: "artifacts\release-build\app\*"; Excludes: "\{#MyPublishedExeName}"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "artifacts\release-build\app\*"; Excludes: "\{#MyPublishedExeName},*.pdb"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "artifacts\release-build\app\{#MyPublishedExeName}"; DestDir: "{app}"; DestName: "{#MyAppExeName}"; Flags: ignoreversion
 
 [Icons]
