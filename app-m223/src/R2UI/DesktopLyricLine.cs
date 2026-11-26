@@ -15,6 +15,7 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
     private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
     private const double ViewportLimit = 710;
+    private const double FadeBand = 28;
     // 补丁2：文字可读性由双层投影承担——宽影保任意背景可读，细影保锐度。
     private static readonly IEffect WideShadow = new DropShadowEffect { BlurRadius = 10, OffsetX = 0, OffsetY = 0, Opacity = 0.5, Color = Color.Parse("#0B1020") };
     private static readonly IEffect SharpShadow = new DropShadowEffect { BlurRadius = 2, OffsetX = 0, OffsetY = 0, Opacity = 0.9, Color = Color.Parse("#0B1020") };
@@ -25,6 +26,8 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     private TextLayout? sung;
     private Geometry? glyphOutline;
     private Rect inkBounds;
+    private LinearGradientBrush? edgeMask;
+    private double edgeMaskWidth;
     private (double Start, double End, double Left, double Right)[] timings = [];
     private double start;
     private double duration;
@@ -154,6 +157,40 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     {
         if (normal == null) return;
         var viewport = new Rect(Bounds.Size);
+        if (viewport.Width <= 0 || viewport.Height <= 0) return;
+        if (inkBounds.Width > viewport.Width)
+        {
+            using (context.PushOpacityMask(GetEdgeMask(viewport.Width), viewport))
+                DrawLine(context, viewport, normal);
+        }
+        else
+        {
+            DrawLine(context, viewport, normal);
+        }
+    }
+
+    private IBrush GetEdgeMask(double width)
+    {
+        if (edgeMask is not null && edgeMaskWidth == width) return edgeMask;
+
+        double fade = Math.Min(FadeBand / width, .5);
+        edgeMaskWidth = width;
+        return edgeMask = new LinearGradientBrush
+        {
+            StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+            EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
+            GradientStops =
+            [
+                new(Colors.Transparent, 0),
+                new(Colors.White, fade),
+                new(Colors.White, 1 - fade),
+                new(Colors.Transparent, 1)
+            ]
+        };
+    }
+
+    private void DrawLine(DrawingContext context, Rect viewport, TextLayout normal)
+    {
         var shadowViewport = viewport.Inflate(DesktopLyricWindow.ShadowGutter);
         var origin = TextOrigin;
         // 双层阴影：宽影保任意背景可读（BlurRadius 10 / Opacity 0.5），细影保锐度（BlurRadius 2 / Opacity 0.9）。

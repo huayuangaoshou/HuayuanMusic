@@ -283,7 +283,7 @@
                           CornerRadius="999" BorderBrush="{DynamicResource R2BrandGradient}" AutomationProperties.Name="正在缓冲"/>
                 </Grid>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayNextCommand}" ToolTip.Tip="下一首" AutomationProperties.Name="下一首"><PathIcon Width="16" Height="16" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
-                <Button Name="DesktopLyricToggle" Classes="glass-pill desktop-lyric" Click="ToggleDesktopLyrics" AutomationProperties.Name="桌面歌词开关"><PathIcon Width="16" Height="16" Data="M1 1H15V11H1Z M3 3V9H13V3Z M7 11H9V13H12V15H4V13H7Z"/></Button>
+                <Button Name="DesktopLyricToggle" Classes="glass-pill desktop-lyric" Content="词" Click="ToggleDesktopLyrics" AutomationProperties.Name="桌面歌词开关"/>
               </StackPanel>
               <Grid Grid.Row="1" ColumnDefinitions="38,*,38" VerticalAlignment="Center">
                 <TextBlock Text="{Binding Player.PositionText}" Classes="muted" FontFeatures="tnum" FontSize="13" FontWeight="Medium" VerticalAlignment="Center" AutomationProperties.AutomationId="M223.Progress"/>
