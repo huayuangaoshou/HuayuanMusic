@@ -2,10 +2,10 @@
 ; Build with Inno Setup 6 (ISCC.exe), or via app-m223/bundle.ps1.
 
 #define MyAppName "HuayuanMusic"
-#define MyAppVersion "1.0.3"
 #define MyAppPublisher "HuayuanMusic"
 #define MyAppExeName "HuayuanMusic.exe"
 #define MyPublishedExeName "HuayuanMusic.P17.Nightflight.exe"
+#define MyAppVersion GetStringFileInfo(SourcePath + "artifacts\release-build\app\" + MyPublishedExeName, "ProductVersion")
 
 [Setup]
 AppId={{7F2A5E1D-4C8B-4A3D-9B1E-2D6C0F8E3A51}
