@@ -320,6 +320,13 @@ public sealed class App : Application
     /// </summary>
     private static void QuarantineDatabase(Exception root)
     {
+        // The schema gate opened the database via Microsoft.Data.Sqlite, which pools connections
+        // by default and may still hold the file handle. Clear the pool (and let the finalizer
+        // release any remaining handle) before touching the files, then retry briefly.
+        try { SqliteConnection.ClearAllPools(); } catch { }
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+
         var stamp = DateTime.Now.ToString("yyyyMMddHHmmss");
         foreach (var path in new[]
                  {
@@ -328,14 +335,25 @@ public sealed class App : Application
                      AppDatabase.DatabasePath + "-shm",
                  })
         {
-            try
+            if (!File.Exists(path))
+                continue;
+            // Retry a few times: on Windows the handle release can lag the pool clear by a tick.
+            for (var attempt = 0; ; attempt++)
             {
-                if (File.Exists(path))
+                try
+                {
                     File.Move(path, path + ".corrupt-" + stamp);
-            }
-            catch (Exception moveError)
-            {
-                Program.Log("STARTUP_DB_QUARANTINE_PARTIAL", new { path, type = moveError.GetType().Name });
+                    break;
+                }
+                catch (IOException) when (attempt < 4)
+                {
+                    Thread.Sleep(100 * (attempt + 1));
+                }
+                catch (Exception moveError)
+                {
+                    Program.Log("STARTUP_DB_QUARANTINE_PARTIAL", new { path, type = moveError.GetType().Name });
+                    break;
+                }
             }
         }
         Program.Log("STARTUP_DB_QUARANTINED", new
