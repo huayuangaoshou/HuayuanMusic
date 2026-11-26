@@ -43,7 +43,7 @@ public partial class R2ShellView
             var panel = new StackPanel { Spacing = 9 };
             panel.Children.Add(new TextBlock { Text = title, FontSize = 17, FontWeight = FontWeight.SemiBold });
             foreach (var field in fields) panel.Children.Add(field);
-            body.Children.Add(new Border { Classes = { "glass" }, Padding = new Thickness(16,12), Child = panel });
+            body.Children.Add(new Border { Classes = { "porcelain" }, Padding = new Thickness(16,12), Child = panel });
         }
         static Control Row(string title, Control input)
         {

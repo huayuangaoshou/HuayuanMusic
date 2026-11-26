@@ -15,7 +15,7 @@ namespace HuayuanPreview.R2;
 public partial class R2ShellView : UserControl
 {
     private readonly DispatcherTimer filterDelay = new() { Interval = TimeSpan.FromMilliseconds(150) };
-    private readonly DispatcherTimer drawerDelay = new() { Interval = TimeSpan.FromMilliseconds(255) };
+    private readonly DispatcherTimer drawerDelay = new() { Interval = DesignTokens.MotionSpatialDefault.Duration };
     private readonly DispatcherTimer toastDelay = new() { Interval = TimeSpan.FromMilliseconds(2250) };
     private ShellModel? model;
     private InteractionController? queueController;
@@ -42,7 +42,7 @@ public partial class R2ShellView : UserControl
         {
             toastDelay.Stop();
             ToastPlate.Opacity = 0;
-            DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, TimeSpan.FromMilliseconds(160));
+            DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, DesignTokens.MotionEffectsFast.Duration);
         };
         DataContextChanged += (_, _) => BindModel();
         DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); toastDelay.Stop(); downloadRequest?.Cancel(); CloseSongComments(); };
@@ -338,6 +338,12 @@ public partial class R2ShellView : UserControl
     private void ToggleQueue(object? sender, RoutedEventArgs args) => SetQueueOpen(!queueOpen);
     private void CloseQueueFromBackdrop(object? sender, PointerPressedEventArgs args) => SetQueueOpen(false);
 
+    private static void SetFadeDirection(Border surface, bool entering)
+    {
+        if (surface.Transitions?[0] is Avalonia.Animation.DoubleTransition fade)
+            fade.Easing = entering ? DesignTokens.EmphasizedDecelerate : DesignTokens.EmphasizedAccelerate;
+    }
+
     private void SetQueueOpen(bool open)
     {
         if (!open && queueOpen && queueController is { } closing)
@@ -349,6 +355,7 @@ public partial class R2ShellView : UserControl
         drawerDelay.Stop();
         if (open) DrawerLayer.IsVisible = true; else drawerDelay.Start();
         DrawerLayer.IsHitTestVisible = open;
+        SetFadeDirection(DrawerShade, open);
         DrawerShade.Opacity = open ? 1 : 0;
         QueueDrawer.RenderTransform = TransformOperations.Parse(open ? "translateX(0px)" : "translateX(380px)");
         if (open && queueController is { } opening)

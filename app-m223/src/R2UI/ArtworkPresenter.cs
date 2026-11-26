@@ -19,10 +19,10 @@ internal static class ArtworkPlaceholder
         GradientStops = new() { new(Color.Parse("#FDE6F1"), 0), new(Color.Parse("#DEEBFF"), 1) }
     };
 
-    internal static Control Create(double size) => new Border
+    internal static Control Create(double size, double? radius = null) => new Border
     {
         Width = size, Height = size, Background = Background,
-        CornerRadius = new CornerRadius(size >= 100 ? 12 : 6),
+        CornerRadius = new CornerRadius(radius ?? (size >= 100 ? 12 : 6)),
         Child = new PathIcon
         {
             Data = Note, Foreground = new SolidColorBrush(Color.Parse("#8E5972")),
@@ -35,6 +35,7 @@ internal static class ArtworkPlaceholder
 public sealed class TrackArtwork : ContentControl
 {
     public double DisplaySize { get; set; } = 38;
+    public double? ArtworkRadius { get; set; }
     private int generation;
     private bool attached;
 
@@ -50,22 +51,24 @@ public sealed class TrackArtwork : ContentControl
         int revision = ++generation;
         if (DataContext is not TrackRow row || row.Track.Cover == null)
         {
-            Content = ArtworkPlaceholder.Create(DisplaySize);
+            Content = ArtworkPlaceholder.Create(DisplaySize, ArtworkRadius);
             return;
         }
         if (row.IsProviderTrack)
         {
             var account = row.Track.Key.Split(':', 3)[1];
-            Content = row.Owner.Host.Concept.Cover(account, row.Track.Cover, DisplaySize);
+            var cover = row.Owner.Host.Concept.Cover(account, row.Track.Cover, DisplaySize);
+            if (ArtworkRadius is { } radius && cover is Border border) border.CornerRadius = new CornerRadius(radius);
+            Content = cover;
             return;
         }
 
         var image = new Image { Stretch = Stretch.UniformToFill, Opacity = 0 };
-        image.Transitions = new() { new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180), Easing = new Avalonia.Animation.Easings.CubicEaseOut() } };
+        image.Transitions = new() { new DoubleTransition { Property = OpacityProperty, Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.MotionEffectsFast.Curve } };
         Content = new Border
         {
-            Width = DisplaySize, Height = DisplaySize, CornerRadius = new CornerRadius(7), ClipToBounds = true,
-            Child = new Grid { Children = { ArtworkPlaceholder.Create(DisplaySize), image } }
+            Width = DisplaySize, Height = DisplaySize, CornerRadius = new CornerRadius(ArtworkRadius ?? 7), ClipToBounds = true,
+            Child = new Grid { Children = { ArtworkPlaceholder.Create(DisplaySize, ArtworkRadius), image } }
         };
         _ = ShowLocalAsync(row, image, revision);
     }

@@ -130,7 +130,7 @@ internal sealed class DesktopLyricWindow : Window
             Background = Brushes.Transparent,
             Opacity = 0
         };
-        tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }];
+        tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.MotionEffectsFast.Curve }];
         labels = new StackPanel
         {
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,

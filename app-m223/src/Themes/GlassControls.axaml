@@ -1,4 +1,4 @@
-<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+<Styles xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:tok="using:HuayuanPreview">
   <Styles.Resources>
     <ControlTheme x:Key="GlassSliderSegment" TargetType="RepeatButton">
       <Setter Property="Focusable" Value="False"/>
@@ -8,7 +8,7 @@
             <Border Name="Rail" Height="4" CornerRadius="7" VerticalAlignment="Center"
                     Background="{TemplateBinding Background}" IsHitTestVisible="False">
               <Border.Transitions>
-                <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+                <Transitions><DoubleTransition Property="Height" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions>
               </Border.Transitions>
             </Border>
           </Border>
@@ -37,7 +37,7 @@
     <Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
     <Setter Property="Transitions">
-      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions>
     </Setter>
     <Setter Property="Template">
       <ControlTemplate>
@@ -48,7 +48,7 @@
                           HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
                           VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
           <ContentPresenter.Transitions>
-            <Transitions><BrushTransition Property="Background" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions>
+            <Transitions><BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions>
           </ContentPresenter.Transitions>
         </ContentPresenter>
       </ControlTemplate>
@@ -93,7 +93,7 @@
     <Setter Property="RenderTransform" Value="scale(1)"/>
     <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
     <Setter Property="Transitions">
-      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions>
+      <Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions>
     </Setter>
   </Style>
   <Style Selector="Button.icon:pointerover PathIcon, Button.icon:pointerover Path">
@@ -109,8 +109,8 @@
   </Style>
   <Style Selector="TextBox /template/ Border#PART_BorderElement">
     <Setter Property="Transitions"><Transitions>
-      <BrushTransition Property="BorderBrush" Duration="0:0:0.14" Easing="CubicEaseOut"/>
-      <BrushTransition Property="Background" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+      <BrushTransition Property="BorderBrush" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/>
+      <BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="TextBox.search-capsule"><Setter Property="CornerRadius" Value="24"/><Setter Property="MinHeight" Value="38"/><Setter Property="Background" Value="{DynamicResource GlassSurface}"/></Style>
@@ -133,7 +133,7 @@
           <Border Name="GlassTrackBase" Height="4" VerticalAlignment="Center" CornerRadius="7"
                   Background="{DynamicResource GlassRail}" IsHitTestVisible="False">
             <Border.Transitions>
-              <Transitions><DoubleTransition Property="Height" Duration="0:0:0.14" Easing="CubicEaseOut"/></Transitions>
+              <Transitions><DoubleTransition Property="Height" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions>
             </Border.Transitions>
           </Border>
           <Track Name="PART_Track" Orientation="Horizontal" VerticalAlignment="Stretch"
@@ -154,8 +154,8 @@
     <Setter Property="RenderTransform" Value="scale(0.78)"/>
     <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
     <Setter Property="Transitions"><Transitions>
-      <DoubleTransition Property="Opacity" Duration="0:0:0.14" Easing="CubicEaseOut"/>
-      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+      <DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="Slider:pointerover /template/ Thumb#GlassThumb, Slider:focus-visible /template/ Thumb#GlassThumb, Slider.editing /template/ Thumb#GlassThumb">
@@ -180,7 +180,7 @@
     <Setter Property="CornerRadius" Value="4"/>
     <Setter Property="Opacity" Value="0.54"/>
     <Setter Property="Transitions"><Transitions>
-      <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/>
+      <DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="ScrollBar:pointerover /template/ Thumb /template/ Border">
@@ -202,11 +202,11 @@
   </Style>
 
   <Style Selector="MenuFlyoutPresenter, ContextMenu">
-    <Setter Property="Background" Value="{DynamicResource GlassPopup}"/>
+    <Setter Property="Background" Value="{DynamicResource R2Main}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
     <Setter Property="BorderThickness" Value="1"/>
-    <Setter Property="Padding" Value="5"/>
-    <Setter Property="CornerRadius" Value="16"/>
+    <Setter Property="Padding" Value="4"/>
+    <Setter Property="CornerRadius" Value="12"/>
   </Style>
   <Style Selector="ContextMenu /template/ Border, MenuFlyoutPresenter /template/ Border">
     <Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/>
@@ -219,7 +219,7 @@
   </Style>
   <Style Selector="ToolTip">
     <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
-    <Setter Property="Background" Value="{DynamicResource GlassPopup}"/>
+    <Setter Property="Background" Value="{DynamicResource R2Main}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
     <Setter Property="CornerRadius" Value="8"/>
   </Style>

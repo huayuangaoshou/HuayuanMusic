@@ -209,7 +209,7 @@ public sealed partial class PreviewWindow {
   }
   c3LyricViewport=new ScrollViewer{Content=lines,
    VerticalScrollBarVisibility=ScrollBarVisibility.Auto,Height=narrow?305:350};
-  if(MotionEnabled)c3LyricViewport.Transitions=new Avalonia.Animation.Transitions{new Avalonia.Animation.VectorTransition{Property=ScrollViewer.OffsetProperty,Duration=TimeSpan.FromMilliseconds(220),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}};
+  if(MotionEnabled)c3LyricViewport.Transitions=new Avalonia.Animation.Transitions{new Avalonia.Animation.VectorTransition{Property=ScrollViewer.OffsetProperty,Duration=DesignTokens.MotionSpatialDefault.Duration,Easing=DesignTokens.MotionSpatialDefault.Curve}};
   var lyric=V(heading,c3LyricViewport,
    H(C3TextButton("← 返回曲库",()=>Go("本地音乐")),
      C3TextButton("播放队列  ›",()=>{ToggleQueue();})));

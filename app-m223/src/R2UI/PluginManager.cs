@@ -92,12 +92,12 @@ internal sealed class PluginManager : ScrollViewer
         };
         var tags = new WrapPanel { ItemSpacing = 6, LineSpacing = 6 };
         foreach (var text in new[] { "在线搜索", "歌单同步", "逐字歌词", "主版评论", "音质切换", "每日推荐" })
-            tags.Children.Add(new Border { Classes = { "glass" }, Padding = new Thickness(10, 5), Child = new TextBlock { Text = text } });
+            tags.Children.Add(new Border { Classes = { "porcelain" }, Padding = new Thickness(10, 5), Child = new TextBlock { Text = text } });
         var actions = new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children = { enable, remove, account } };
         var body = new StackPanel { Spacing = 12, MaxWidth = 760, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(6) };
         body.Children.Add(new Border
         {
-            Classes = { "glass" }, Padding = new Thickness(18),
+            Classes = { "porcelain" }, Padding = new Thickness(18),
             Child = new StackPanel { Spacing = 11, Children = {
                 new TextBlock { Text = "酷狗概念版", FontSize = 21, FontWeight = FontWeight.SemiBold },
                 new TextBlock { Text = $"版本 {TrustedModuleDescriptor.Current.Version}", Classes = { "muted" } }, status, tags, actions } }

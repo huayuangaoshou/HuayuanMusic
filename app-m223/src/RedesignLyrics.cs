@@ -18,7 +18,7 @@ public sealed partial class PreviewWindow {
   var lines=new StackPanel{Spacing=12};
   for(int i=0;i<LyricLines.Length;i++){var idx=i;var b=C3TextButton(LyricLines[i],()=>{seconds=idx*32;UpdatePlayback();Notify("已定位模拟歌词 "+Time((int)seconds));},gallery?28:24);b.MinHeight=62;b.Padding=new(16,8);b.HorizontalContentAlignment=gallery?HorizontalAlignment.Center:HorizontalAlignment.Left;b.HorizontalAlignment=HorizontalAlignment.Stretch;b.Background=Brushes.Transparent;b.CornerRadius=new(4);StyleMotion(b);c3LyricButtons.Add(b);lines.Children.Add(b);}
   c3LyricViewport=new ScrollViewer{Content=lines,Height=gallery?(narrow?225:280):(narrow?290:350),VerticalScrollBarVisibility=ScrollBarVisibility.Hidden,HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled,Name="LyricViewport"};
-  if(MotionEnabled)c3LyricViewport.Transitions=new Transitions{new VectorTransition{Property=ScrollViewer.OffsetProperty,Duration=TimeSpan.FromMilliseconds(220),Easing=new CubicEaseOut()}};
+  if(MotionEnabled)c3LyricViewport.Transitions=new Transitions{new VectorTransition{Property=ScrollViewer.OffsetProperty,Duration=DesignTokens.MotionSpatialDefault.Duration,Easing=DesignTokens.MotionSpatialDefault.Curve}};
   var toggle=C3TextButton(c31CoverOnly?"显示歌词":"专注封面",()=>{c31CoverOnly=!c31CoverOnly;Render();});var toggleRow=H(toggle,C3TextButton("返回资料库",()=>Go("本地音乐")));toggleRow.HorizontalAlignment=gallery?HorizontalAlignment.Center:HorizontalAlignment.Left;
   Control content;
   if(c31CoverOnly){var focus=V(Cover(nowSong,narrow?280:360,narrow?280:360),title,toggleRow);focus.HorizontalAlignment=HorizontalAlignment.Center;content=focus;}

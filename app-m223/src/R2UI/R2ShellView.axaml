@@ -7,14 +7,14 @@
   </UserControl.Styles>
   <Grid Name="Root" RowDefinitions="*" ColumnDefinitions="224,*" Background="{DynamicResource GlassBase}">
     <Border Name="CoverTint" Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBase}" IsHitTestVisible="False">
-      <Border.Transitions><Transitions><BrushTransition Property="Background" Duration="0:0:0.4" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+      <Border.Transitions><Transitions><BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsSlowDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsSlowEasing}"/></Transitions></Border.Transitions>
     </Border>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassPinkGlow}" IsHitTestVisible="False"/>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBlueGlow}" IsHitTestVisible="False"/>
     <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False"/>
     <Border Classes="glass glass-side" Background="{DynamicResource GlassSide}" Margin="12,12,0,96">
       <Grid>
-      <r2:GlassOptics Radius="12" Frost="{x:Static tok:DesignTokens.FrostChrome}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+      <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="8,0">
           <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
@@ -47,7 +47,7 @@
                  ShouldUseOverlayLayer="False" TakesFocusFromNativeControl="False" OverlayDismissEventPassThrough="True" IsLightDismissEnabled="True">
             <Border Classes="glass glass-float" Background="{DynamicResource GlassPopup}" Width="296">
               <Grid>
-              <r2:GlassOptics Radius="12" Frost="{x:Static tok:DesignTokens.FrostFloating}" Saturation="{x:Static tok:DesignTokens.SaturationFloating}" Margin="1" IsHitTestVisible="False"/>
+              <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
               <StackPanel Margin="10" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Name="SuggestionTitle" Classes="muted" Margin="8,4" VerticalAlignment="Center"/>
@@ -76,13 +76,13 @@
 
     </Grid>
     <Border Grid.ColumnSpan="2" Grid.RowSpan="2" Name="LyricsOverlay" ZIndex="3" IsVisible="False" Opacity="0" Background="{DynamicResource FullLyricBack}">
-      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsSlowDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsSlowEasing}"/></Transitions></Border.Transitions>
       <Grid ClipToBounds="True">
         <Border Background="{DynamicResource FullLyricBack}"/>
         <Border Background="{DynamicResource GlassPinkGlow}"/>
         <Border Background="{DynamicResource GlassBlueGlow}"/>
         <r2:GlassOptics IsAtmosphere="True" IsHitTestVisible="False"/>
-        <r2:TrackArtwork DisplaySize="420" IsHitTestVisible="False" Opacity="0.43" HorizontalAlignment="Center" VerticalAlignment="Center"
+        <r2:TrackArtwork DisplaySize="420" IsHitTestVisible="False" Opacity="{DynamicResource FullLyricArtworkOpacity}" HorizontalAlignment="Center" VerticalAlignment="Center"
                          RenderTransform="scale(3.1)" DataContext="{Binding Player.DisplayedPlayingSong}">
           <r2:TrackArtwork.Effect><BlurEffect Radius="76"/></r2:TrackArtwork.Effect>
         </r2:TrackArtwork>
@@ -100,8 +100,8 @@
           </Grid>
           <Grid Grid.Row="1" ColumnDefinitions="44*,56*" ColumnSpacing="32">
             <StackPanel Margin="12,0" MaxWidth="390" VerticalAlignment="Center" Spacing="8">
-              <Border Classes="glass" HorizontalAlignment="Center" CornerRadius="12" Padding="1" BoxShadow="{DynamicResource GlassLift}">
-                <r2:TrackArtwork DisplaySize="300" DataContext="{Binding Player.DisplayedPlayingSong}"/>
+              <Border Classes="porcelain" HorizontalAlignment="Center" CornerRadius="12" Padding="1" BoxShadow="{DynamicResource GlassLift}">
+                <r2:TrackArtwork DisplaySize="300" ArtworkRadius="11" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Border>
               <Border Padding="16,0" HorizontalAlignment="Stretch">
                 <StackPanel HorizontalAlignment="Center" Spacing="0" Margin="0,6,0,0">
@@ -133,33 +133,41 @@
                 </Grid>
                 <Button Classes="icon" Width="32" Height="32" Command="{Binding Player.PlayNextCommand}" ToolTip.Tip="下一首" AutomationProperties.Name="下一首"><PathIcon Width="16" Height="16" Data="M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"/></Button>
               </StackPanel>
-              <Border Classes="glass" CornerRadius="999" HorizontalAlignment="Center" Padding="8,4">
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Content="音量" Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量"/>
-                  <local:CommitSlider Name="FullVolume" Width="51" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" AutomationProperties.Name="歌词页音量"/>
-                  <ComboBox Name="FullQuality" Width="75" Background="{DynamicResource GlassSide}" Foreground="{DynamicResource R2Ink}"
-                            BorderBrush="{DynamicResource GlassRim}" AutomationProperties.Name="歌词页音质" SelectionChanged="ChangeQuality">
-                    <ComboBoxItem Content="标准"/><ComboBoxItem Content="高品 MP3"/><ComboBoxItem Content="无损 FLAC"/>
-                  </ComboBox>
-                  <Button Name="TranslationToggle" Classes="glass-pill" Content="译" Click="ToggleTranslation" AutomationProperties.Name="显示歌词翻译"/>
-                  <Button Name="FullDesktopLyricToggle" Classes="glass-pill desktop-lyric" Content="词" Click="ToggleDesktopLyrics" AutomationProperties.Name="歌词页桌面歌词开关"/>
-                  <Button Content="队列" Click="ToggleQueue" AutomationProperties.Name="歌词页播放队列"/>
-                </StackPanel>
+              <Border Classes="glass glass-clear" CornerRadius="999" HorizontalAlignment="Center">
+                <Grid ClipToBounds="True">
+                  <Border Margin="1" CornerRadius="999" Background="Black" Opacity="{x:Static tok:DesignTokens.ClearBackdropDimOpacity}" IsVisible="{DynamicResource GlassClearNeedsDim}" IsHitTestVisible="False"/>
+                  <r2:GlassOptics Margin="1" Radius="999" Opacity="{x:Static tok:DesignTokens.ClearOpticsOpacity}" Frost="{x:Static tok:DesignTokens.FrostClear}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False"/>
+                  <StackPanel Margin="8,4" Orientation="Horizontal" Spacing="3">
+                    <Button Content="音量" Command="{Binding Player.MuteCommand}" ToolTip.Tip="静音或恢复音量"/>
+                    <local:CommitSlider Name="FullVolume" Width="51" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1" AutomationProperties.Name="歌词页音量"/>
+                    <ComboBox Name="FullQuality" Width="75" Background="{DynamicResource R2Main}" Foreground="{DynamicResource R2Ink}"
+                              BorderBrush="{DynamicResource GlassRim}" AutomationProperties.Name="歌词页音质" SelectionChanged="ChangeQuality">
+                      <ComboBoxItem Content="标准"/><ComboBoxItem Content="高品 MP3"/><ComboBoxItem Content="无损 FLAC"/>
+                    </ComboBox>
+                    <Button Name="TranslationToggle" Classes="glass-pill" Content="译" Click="ToggleTranslation" AutomationProperties.Name="显示歌词翻译"/>
+                    <Button Name="FullDesktopLyricToggle" Classes="glass-pill desktop-lyric" Content="词" Click="ToggleDesktopLyrics" AutomationProperties.Name="歌词页桌面歌词开关"/>
+                    <Button Content="队列" Click="ToggleQueue" AutomationProperties.Name="歌词页播放队列"/>
+                  </StackPanel>
+                </Grid>
               </Border>
             </StackPanel>
             <Grid Grid.Column="1" RowDefinitions="42,*">
-              <Border Classes="glass" CornerRadius="999" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="4">
-                <StackPanel Orientation="Horizontal" Spacing="3">
-                  <Button Name="LyricsTab" Classes="glass-pill selected" Content="歌词" Click="ShowLyricsTab"/>
-                  <Button Name="CommentsTab" IsVisible="{Binding Player.DisplayedPlayingSong.IsProviderTrack}" Classes="glass-pill" Click="ShowCommentsTab" AutomationProperties.Name="歌曲评论">
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <TextBlock Text="评论"/>
-                      <Border Name="CommentBadge" IsVisible="False" Background="{DynamicResource R2Tint}" CornerRadius="999" Padding="6,1">
-                        <TextBlock Name="CommentCount" FontSize="12" Foreground="{DynamicResource R2RedInk}"/>
-                      </Border>
-                    </StackPanel>
-                  </Button>
-                </StackPanel>
+              <Border Classes="glass glass-clear" CornerRadius="999" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid ClipToBounds="True">
+                  <Border Margin="1" CornerRadius="999" Background="Black" Opacity="{x:Static tok:DesignTokens.ClearBackdropDimOpacity}" IsVisible="{DynamicResource GlassClearNeedsDim}" IsHitTestVisible="False"/>
+                  <r2:GlassOptics Margin="1" Radius="999" Opacity="{x:Static tok:DesignTokens.ClearOpticsOpacity}" Frost="{x:Static tok:DesignTokens.FrostClear}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False"/>
+                  <StackPanel Margin="4" Orientation="Horizontal" Spacing="3">
+                    <Button Name="LyricsTab" Classes="glass-pill selected" Content="歌词" Click="ShowLyricsTab"/>
+                    <Button Name="CommentsTab" IsVisible="{Binding Player.DisplayedPlayingSong.IsProviderTrack}" Classes="glass-pill" Click="ShowCommentsTab" AutomationProperties.Name="歌曲评论">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="评论"/>
+                        <Border Name="CommentBadge" IsVisible="False" Background="{DynamicResource R2Tint}" CornerRadius="999" Padding="6,1">
+                          <TextBlock Name="CommentCount" FontSize="12" Foreground="{DynamicResource R2RedInk}"/>
+                        </Border>
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+                </Grid>
               </Border>
               <Grid Grid.Row="1" Name="LyricsPane">
                 <Grid.OpacityMask>
@@ -172,7 +180,7 @@
                                   PrimaryForeground="{DynamicResource FullLyricIdle}" PrimaryPlayedForeground="{DynamicResource FullLyricSung}"
                                   TranslationForeground="{DynamicResource FullLyricTranslation}" TranslationPlayedForeground="{DynamicResource FullLyricSung}"
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableScale="False"
-                                  ScrollDuration="0:0:0.3" UseLightweightScrollAnimation="True"
+                                  ScrollDuration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" UseLightweightScrollAnimation="True"
                                   SeekOnLineTap="True" AutomationProperties.Name="同步歌词"/>
                 <TextBlock Name="LyricEmpty" Classes="muted" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
@@ -191,12 +199,12 @@
     </Border>
       <Grid Grid.ColumnSpan="2" Grid.RowSpan="2" Name="DrawerLayer" ZIndex="4" IsVisible="False" IsHitTestVisible="False" ClipToBounds="True">
         <Border Name="DrawerShade" Background="#52000000" Opacity="0" PointerPressed="CloseQueueFromBackdrop">
-          <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+          <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsDefaultEasing}"/></Transitions></Border.Transitions>
         </Border>
         <Border Name="QueueDrawer" Classes="glass glass-float" Width="360" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(380px)">
-          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.28" Easing="BackEaseOut"/></Transitions></Border.Transitions>
+          <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialDefaultEasing}"/></Transitions></Border.Transitions>
           <Grid>
-          <r2:GlassOptics Radius="12" Frost="{x:Static tok:DesignTokens.FrostFloating}" Saturation="{x:Static tok:DesignTokens.SaturationFloating}" Margin="1" IsHitTestVisible="False"/>
+          <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="3">
               <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -245,7 +253,7 @@
       </Grid>
     <Border Name="MainDock" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="2" VerticalAlignment="Bottom" Classes="glass dock" Margin="12,0,12,12">
       <Grid>
-        <r2:GlassOptics Radius="12" Frost="{x:Static tok:DesignTokens.FrostChrome}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+        <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
         <Border Padding="20,8,20,8">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
             <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -324,12 +332,12 @@
     </Border>
     <Grid Grid.ColumnSpan="2" Grid.RowSpan="2" Name="CommentDrawerLayer" ZIndex="5" IsVisible="False" IsHitTestVisible="False" ClipToBounds="True">
       <Border Name="CommentDrawerShade" Background="#52000000" Opacity="0" PointerPressed="CloseSongCommentsFromShade">
-        <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.18" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+        <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsDefaultEasing}"/></Transitions></Border.Transitions>
       </Border>
       <Border Name="CommentDrawer" Classes="glass glass-float" Width="430" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(444px)">
-        <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.28" Easing="BackEaseOut"/></Transitions></Border.Transitions>
+        <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialDefaultEasing}"/></Transitions></Border.Transitions>
         <Grid>
-          <r2:GlassOptics Radius="12" Frost="{x:Static tok:DesignTokens.FrostFloating}" Saturation="{x:Static tok:DesignTokens.SaturationFloating}" Margin="1" IsHitTestVisible="False"/>
+          <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
           <Grid RowDefinitions="Auto,*" Margin="16">
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
               <StackPanel Spacing="4">
@@ -357,7 +365,7 @@
             Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="16,12" CornerRadius="12"
             Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Pink}" BorderThickness="1"
             BoxShadow="{DynamicResource GlassLiftL3}">
-      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions></Border.Transitions>
+      <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Border.Transitions>
       <TextBlock Name="ToastText" FontWeight="Medium" Foreground="{DynamicResource R2Ink}" MaxWidth="520" TextTrimming="CharacterEllipsis"/>
     </Border>
   </Grid>

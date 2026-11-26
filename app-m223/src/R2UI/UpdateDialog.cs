@@ -106,7 +106,7 @@ public partial class R2ShellView
             {
                 Children =
                 {
-                    new GlassOptics { Radius = DesignTokens.RadiusM, Frost = DesignTokens.FrostFloating, Saturation = DesignTokens.SaturationFloating, IsHitTestVisible = false },
+                    new GlassOptics { Margin = new Thickness(1), Radius = DesignTokens.RadiusM - 1, Frost = DesignTokens.FrostRegular, Saturation = DesignTokens.SaturationChrome, IsHitTestVisible = false },
                     content
                 }
             }

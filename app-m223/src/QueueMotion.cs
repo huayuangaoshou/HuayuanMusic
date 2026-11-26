@@ -34,7 +34,7 @@ public sealed partial class PreviewWindow {
   if(row.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault() is not {} container)return;
   container.Transitions=null;container.RenderTransform=null;container.Opacity=QueueMotion ? .88 : 1;
   if(!QueueMotion)return;long generation=queueAnimation;
-  container.Transitions=new Transitions{new DoubleTransition{Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(160),Easing=new CubicEaseOut()}};
+  container.Transitions=new Transitions{new DoubleTransition{Property=OpacityProperty,Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.MotionEffectsFast.Curve}};
   Dispatcher.UIThread.Post(()=>{if(generation==queueAnimation&&TopLevel.GetTopLevel(row)!=null&&ReferenceEquals(container.Content,row.Tag))container.Opacity=1;},DispatcherPriority.Render);
  }
  void ApplyQueueDragFeedback(ListBox list){foreach(var row in QueueVisualRows(list)){var item=(QueueDisplay)row.Tag!;row.RenderTransform=null;row.Opacity=1;row.Background=item.EntryId==dragQueueSong?R("Surface2"):Brushes.Transparent;if(row.GetVisualAncestors().OfType<ListBoxItem>().FirstOrDefault() is {} container){container.Transitions=null;container.RenderTransform=null;container.Opacity=1;}foreach(var line in row.Children.OfType<Border>())if(line.Tag?.ToString()=="DropLine")line.IsVisible=false;}}

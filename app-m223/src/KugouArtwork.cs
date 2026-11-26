@@ -103,7 +103,7 @@ public sealed partial class PreviewWindow {
   readonly KugouArtwork loader;readonly string account;readonly string? source;readonly bool online;readonly Func<bool>? eligible;readonly int size;readonly Image image;CancellationTokenSource? pending;Bitmap? owned;int version;
   internal string? Identity=>source;internal bool IsArtworkLoaded=>image.Source is Bitmap;internal Bitmap? Current=>image.Source as Bitmap;
   internal ArtworkTile(KugouArtwork loader,string account,string? source,double size,bool online,Func<bool>? eligible){this.loader=loader;this.account=account;this.source=ArtworkUrl.Normalize(source);this.online=online;this.eligible=eligible;this.size=size>=100?400:150;Width=Height=size;CornerRadius=new(size>=100?12:6);ClipToBounds=true;
-   image=new Image{Stretch=Stretch.UniformToFill,Opacity=0,Transitions=new(){new Avalonia.Animation.DoubleTransition{Property=OpacityProperty,Duration=TimeSpan.FromMilliseconds(180),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}}};
+   image=new Image{Stretch=Stretch.UniformToFill,Opacity=0,Transitions=new(){new Avalonia.Animation.DoubleTransition{Property=OpacityProperty,Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.MotionEffectsFast.Curve}}};
    Child=new Grid{Children={R2.ArtworkPlaceholder.Create(size),image}};
    AttachedToVisualTree+=(_,_)=>Reload();DetachedFromVisualTree+=(_,_)=>Cancel();
   }

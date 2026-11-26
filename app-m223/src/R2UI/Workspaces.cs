@@ -60,8 +60,8 @@ public sealed partial class WorkspaceState:ObservableObject {
   // R11: 进场编排——内容卡 12px 上移 + 淡入；退场更快（进场 60%）。
   content.Transitions = new()
   {
-   new DoubleTransition { Property = Visual.OpacityProperty, Duration = TimeSpan.FromMilliseconds(DesignTokens.MotionView), Easing = new Avalonia.Animation.Easings.CubicEaseOut() },
-   new TransformOperationsTransition { Property = Visual.RenderTransformProperty, Duration = TimeSpan.FromMilliseconds(DesignTokens.MotionView), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }
+   new DoubleTransition { Property = Visual.OpacityProperty, Duration=DesignTokens.MotionEffectsSlow.Duration,Easing=DesignTokens.EmphasizedDecelerate },
+   new TransformOperationsTransition { Property = Visual.RenderTransformProperty, Duration=DesignTokens.MotionSpatialSlow.Duration,Easing=DesignTokens.MotionSpatialSlow.Curve }
   };
   content.RenderTransform = TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
   // R10 布局：史诗级留白——上 64 / 左右 64（≥5vw）/ 底部 96（给悬浮播放条让位）。
@@ -149,11 +149,11 @@ public sealed partial class WorkspaceState:ObservableObject {
      container.Opacity=0;
      container.RenderTransform=TransformOperations.Parse($"translateY({DesignTokens.ChoreoOffsetPx}px)");
      container.Transitions=new Transitions{
-      new DoubleTransition{Property=Visual.OpacityProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.MotionMicro),Easing=new Avalonia.Animation.Easings.CubicEaseOut()},
-      new TransformOperationsTransition{Property=Visual.RenderTransformProperty,Duration=TimeSpan.FromMilliseconds(DesignTokens.MotionMicro),Easing=new Avalonia.Animation.Easings.CubicEaseOut()}
+      new DoubleTransition{Property=Visual.OpacityProperty,Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.EmphasizedDecelerate},
+      new TransformOperationsTransition{Property=Visual.RenderTransformProperty,Duration=DesignTokens.MotionSpatialFast.Duration,Easing=DesignTokens.MotionSpatialFast.Curve}
      };
      var i=index;
-     _=Task.Delay(i*DesignTokens.ChoreoRowStagger).ContinueWith(_=>Dispatcher.UIThread.Post(()=>{
+     _=Task.Delay(i*DesignTokens.MotionStaggerStep).ContinueWith(_=>Dispatcher.UIThread.Post(()=>{
       if(!container.IsVisible)return;
       container.Opacity=1;
       container.RenderTransform=TransformOperations.Parse("translateY(0px)");

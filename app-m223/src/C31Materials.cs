@@ -20,7 +20,7 @@ public sealed partial class PreviewWindow
  bool MaterialsEnabled=>c31Materials&&!c31Low&&!HighContrast&&!Program.Args.Contains("--software");
  ScrollViewer? c31Page;Control? c31QueueSurface;int c31QueueVersion;
  string c31Feedback="就绪";
- static readonly TimeSpan Quick=TimeSpan.FromMilliseconds(140),Normal=TimeSpan.FromMilliseconds(200);
+ static TimeSpan PanelMotionDuration => DesignTokens.MotionSpatialDefault.Duration;
  [DllImport("user32.dll",EntryPoint="SystemParametersInfoW")]static extern bool SpiBool(uint action,uint param,out int result,uint flags);
  [StructLayout(LayoutKind.Sequential,CharSet=CharSet.Unicode)]struct HC {public uint Size,Flags;public IntPtr Scheme;}
  [DllImport("user32.dll",EntryPoint="SystemParametersInfoW",CharSet=CharSet.Unicode)]static extern bool SpiContrast(uint action,uint param,ref HC result,uint flags);
@@ -45,9 +45,10 @@ public sealed partial class PreviewWindow
  IBrush PearlBrush()=>MaterialsEnabled?Gradient(dark?"#81BFE5":"#687DD1",dark?"#CC8CB9":"#B16AA2"):R("Primary");
  void ConfigureMotion(Control c){
   c.RenderTransformOrigin=new RelativePoint(.5,.5,RelativeUnit.Relative);
+  var spatial = c.Name == "LiquidPlay" ? DesignTokens.MotionSpatialFast : DesignTokens.MotionSpatialDefault;
   c.Transitions=MotionEnabled?new Transitions{
-   new DoubleTransition{Property=Visual.OpacityProperty,Duration=Quick,Easing=new CubicEaseOut()},
-   new TransformOperationsTransition{Property=Visual.RenderTransformProperty,Duration=Normal,Easing=c.Name=="LiquidPlay"?new SpringEasing{Mass=1,Stiffness=320,Damping=23}:new CubicEaseOut()}
+   new DoubleTransition{Property=Visual.OpacityProperty,Duration=DesignTokens.MotionEffectsFast.Duration,Easing=DesignTokens.MotionEffectsFast.Curve},
+   new TransformOperationsTransition{Property=Visual.RenderTransformProperty,Duration=spatial.Duration,Easing=spatial.Curve}
   }:new Transitions();
   c.RenderTransform=TransformOperations.Parse("translate(0px, 0px) scale(1)");
  }
@@ -79,14 +80,14 @@ public sealed partial class PreviewWindow
   }
   Enter(next,8);
  }
- async Task RemoveOld(Panel parent,Control old){await Task.Delay(Normal+TimeSpan.FromMilliseconds(30));parent.Children.Remove(old);}
+ async Task RemoveOld(Panel parent,Control old){await Task.Delay(PanelMotionDuration+TimeSpan.FromMilliseconds(30));parent.Children.Remove(old);}
  void ToggleQueue()=>SetQueue(!queueOpen);
  async void SetQueue(bool open){
   var generation=++c31QueueVersion;
   if(!CanPresentCore){queueOpen=open;coreUiDeferred=true;Event("C31_DRAWER","deferred while hidden/minimized");return;}
   if(open){queueOpen=true;UpdateQueueSurface();if(c31QueueSurface!=null){c31QueueSurface.Opacity=1;Move(c31QueueSurface,0,1);}Event("C31_DRAWER","open");return;}
   var surface=c31QueueSurface;
-  if(MotionEnabled&&surface!=null){ConfigureMotion(surface);surface.Opacity=0;Move(surface,0,.98);await Task.Delay(Normal);}
+  if(MotionEnabled&&surface!=null){ConfigureMotion(surface);surface.Opacity=0;Move(surface,0,.98);await Task.Delay(PanelMotionDuration);}
   if(generation!=c31QueueVersion)return;queueOpen=false;UpdateQueueSurface();Event("C31_DRAWER","closed");
  }
  void CloseSongMenu(){c31SongFlyout?.Hide();songActionsOpen=false;}

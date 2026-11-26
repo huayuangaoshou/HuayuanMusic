@@ -1,3 +1,4 @@
+using Avalonia.Animation.Easings;
 using Avalonia.Media;
 
 namespace HuayuanPreview;
@@ -42,8 +43,8 @@ public static class DesignTokens
     public static readonly Color DarkTint   = Color.Parse("#3A2A36");
 
     // ── 歌单行底（非当前行统一半透明底，压平氛围光晕透出差异）──
-    public static readonly Color LightRowBase = Color.Parse("#80FFFFFF");
-    public static readonly Color DarkRowBase  = Color.Parse("#80282530");
+    public static readonly Color LightRowBase = Color.Parse("#FFFFFFFF");
+    public static readonly Color DarkRowBase  = Color.Parse("#FF282530");
     public static readonly Color AccentSoftHover = Color.Parse("#14FBDDEB"); // AccentSoft 8%
 
     // ── 状态色（浅色 / 深色）────────────────────────────────
@@ -120,19 +121,38 @@ public static class DesignTokens
     public const int CoverCrossfadeMs = 400; // 切歌背景过渡
     public const int LyricOpacityMs  = 200; // 歌词行透明度过渡
 
-    // R11 动效时长三档（微反馈 150~200 / 组件开合 250~300 / 视图切换 400）
-    public const int MotionMicro = 180; // hover、按压、勾选、红心点亮
-    public const int MotionOpen  = 280; // 抽屉、弹层、菜单、评论面板
-    public const int MotionView  = 400; // 页面跳转、列表重排
+    // Spatial 用于位移、尺寸和缩放，允许过冲。Effects 用于透明度和颜色，保持单调。
+    public sealed record MotionSpec(TimeSpan Duration, Easing Curve);
 
-    // R11 进场编排：标题 0ms → 内容卡 +60ms → 列表行逐行 +30ms（最多前 10 行）
-    public const int ChoreoCardDelay   = 60;
-    public const int ChoreoRowStagger  = 30;
-    public const int ChoreoRowMax      = 10;
-    public const double ChoreoOffsetPx = 12; // 进场元素统一位移 12px + 淡入
+    public static MotionSpec MotionSpatialFast { get; } = new(TimeSpan.FromMilliseconds(350), Easing.Parse(".42,1.67,.21,.90"));
+    public static MotionSpec MotionSpatialDefault { get; } = new(TimeSpan.FromMilliseconds(500), Easing.Parse(".38,1.21,.22,1"));
+    public static MotionSpec MotionSpatialSlow { get; } = new(TimeSpan.FromMilliseconds(650), Easing.Parse(".39,1.29,.35,.98"));
+    public static MotionSpec MotionEffectsFast { get; } = new(TimeSpan.FromMilliseconds(170), Easing.Parse(".2,0,0,1"));
+    public static MotionSpec MotionEffectsDefault { get; } = new(TimeSpan.FromMilliseconds(260), Easing.Parse(".2,0,0,1"));
+    public static MotionSpec MotionEffectsSlow { get; } = new(TimeSpan.FromMilliseconds(350), Easing.Parse(".2,0,0,1"));
+    public static Easing EmphasizedDecelerate { get; } = Easing.Parse(".05,.7,.1,1");
+    public static Easing EmphasizedAccelerate { get; } = Easing.Parse(".3,0,.8,.15");
+    public const int MotionStaggerStep = 32;
 
-    // R11 液态回弹：仅弹层开合与悬浮播放条出现，位移过冲 ≈4%，禁果冻弹跳
-    public const double BackEaseAmplitude = 0.4;
+    // XAML 的 x:Static 读取单层成员。
+    public static TimeSpan MotionSpatialFastDuration => MotionSpatialFast.Duration;
+    public static Easing MotionSpatialFastEasing => MotionSpatialFast.Curve;
+    public static TimeSpan MotionSpatialDefaultDuration => MotionSpatialDefault.Duration;
+    public static Easing MotionSpatialDefaultEasing => MotionSpatialDefault.Curve;
+    public static TimeSpan MotionSpatialSlowDuration => MotionSpatialSlow.Duration;
+    public static Easing MotionSpatialSlowEasing => MotionSpatialSlow.Curve;
+    public static TimeSpan MotionEffectsFastDuration => MotionEffectsFast.Duration;
+    public static Easing MotionEffectsFastEasing => MotionEffectsFast.Curve;
+    public static TimeSpan MotionEffectsDefaultDuration => MotionEffectsDefault.Duration;
+    public static Easing MotionEffectsDefaultEasing => MotionEffectsDefault.Curve;
+    public static TimeSpan MotionEffectsSlowDuration => MotionEffectsSlow.Duration;
+    public static Easing MotionEffectsSlowEasing => MotionEffectsSlow.Curve;
+
+    public static TimeSpan BufferPulseDuration { get; } = TimeSpan.FromMilliseconds(680);
+
+    public const int ChoreoCardDelay = 60;
+    public const int ChoreoRowMax = 10;
+    public const double ChoreoOffsetPx = 12;
 
     // ── 阴影 ─────────────────────────────────────────────────
     public const double HoverLift   = -2;       // hover 上移 px
@@ -165,10 +185,11 @@ public static class DesignTokens
     public const int DepthLayerPanel      = 1; // L1 内容卡/列表：panel
     public const int DepthLayerChrome     = 2; // L2 chrome 播放条/侧栏/顶栏
     public const int DepthLayerFloating   = 3; // L3 悬浮层菜单/弹窗/桌面歌词
-    // 材质 frost 分档（接 R9 材质体系）
-    public const double FrostPanel    = 0.45; // L1
-    public const double FrostChrome   = 0.55; // L2
-    public const double FrostFloating = 0.32; // L3
+    // Regular 用于导航和弹层；Clear 只用于媒体背景上的控件。
+    public const double FrostRegular = 0.64;
+    public const double FrostClear = 0.32;
+    public const double ClearBackdropDimOpacity = 0.35;
+    public const double ClearOpticsOpacity = 0.28;
     // R9 透出色提饱和幅度（随 frost 档位对齐：chrome +18% / panel +28% / floating +34%）
     // 数值 = 1 + 提幅，shader 内 mix(luma, color, saturation)。
     public const double SaturationChrome   = 1.18; // L2 chrome 播放条/侧栏/顶栏

@@ -48,6 +48,7 @@ public partial class R2ShellView
         MainDock.IsVisible = false;
         LyricsOverlay.IsVisible = true;
         LyricsOverlay.Opacity = 0;
+        SetFadeDirection(LyricsOverlay, entering: true);
         FullLyricView.EnableAnimation = true;
         FullLyricView.IsActive = true;
         CancelSuggestions();
@@ -65,6 +66,7 @@ public partial class R2ShellView
         lyricOpen = false;
         CancelComments();
         ReleaseLyricsIfHidden();
+        SetFadeDirection(LyricsOverlay, entering: false);
         LyricsOverlay.Opacity = 0;
         Avalonia.Threading.DispatcherTimer.RunOnce(() =>
         {
@@ -74,7 +76,7 @@ public partial class R2ShellView
                 LyricsOverlay.IsVisible = false;
                 MainDock.IsVisible = true;
             }
-        }, TimeSpan.FromMilliseconds(210));
+        }, DesignTokens.MotionEffectsSlow.Duration);
     }
 
     private void UpdateLyricOverlay()

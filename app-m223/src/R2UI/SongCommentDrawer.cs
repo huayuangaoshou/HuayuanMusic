@@ -38,6 +38,7 @@ public partial class R2ShellView
         Dispatcher.UIThread.Post(() =>
         {
             if (drawerCommentTrack == null) return;
+            SetFadeDirection(CommentDrawerShade, entering: true);
             CommentDrawerShade.Opacity = 1;
             CommentDrawer.RenderTransform = TransformOperations.Parse("translateX(0px)");
         }, DispatcherPriority.Loaded);
@@ -54,12 +55,13 @@ public partial class R2ShellView
         drawerCommentRequest?.Cancel();
         drawerCommentRequest = null;
         CommentDrawerLayer.IsHitTestVisible = false;
+        SetFadeDirection(CommentDrawerShade, entering: false);
         CommentDrawerShade.Opacity = 0;
         CommentDrawer.RenderTransform = TransformOperations.Parse("translateX(444px)");
         DispatcherTimer.RunOnce(() =>
         {
             if (drawerCommentTrack == null) CommentDrawerLayer.IsVisible = false;
-        }, TimeSpan.FromMilliseconds(255));
+        }, DesignTokens.MotionSpatialDefault.Duration);
     }
 
     private async void LoadDrawerComments(object? sender, RoutedEventArgs args) => await FetchDrawerCommentsAsync();

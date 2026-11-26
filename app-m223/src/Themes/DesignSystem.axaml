@@ -17,6 +17,8 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <x:Double x:Key="FullLyricArtworkOpacity">.43</x:Double>
+          <x:Boolean x:Key="GlassClearNeedsDim">True</x:Boolean>
           <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <SolidColorBrush x:Key="UpdateActionHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
           <SolidColorBrush x:Key="UpdateActionInk" Color="{x:Static tok:DesignTokens.LightText}"/>
@@ -74,6 +76,8 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <x:Double x:Key="FullLyricArtworkOpacity">.26</x:Double>
+          <x:Boolean x:Key="GlassClearNeedsDim">False</x:Boolean>
           <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <SolidColorBrush x:Key="UpdateActionHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
           <SolidColorBrush x:Key="UpdateActionInk" Color="{x:Static tok:DesignTokens.LightText}"/>
@@ -135,6 +139,17 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="CornerRadius" Value="12"/>
   </Style>
+  <Style Selector="Border.porcelain">
+    <Setter Property="Background" Value="{DynamicResource R2Main}"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
+  <Style Selector="Border.glass-clear">
+    <Setter Property="Background" Value="Transparent"/>
+  </Style>
+  <Style Selector="Border.playlist-tile">
+    <Setter Property="Background" Value="{DynamicResource R2Main}"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
   <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
   <Style Selector="Border.glass-float"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLiftL3}"/></Style>
   <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
@@ -142,7 +157,7 @@
   <Style Selector="Border.update-panel"><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
   <Style Selector="Border.update-enter">
     <Style.Animations>
-      <Animation Duration="0:0:0.20" Easing="CubicEaseOut">
+      <Animation Duration="{x:Static tok:DesignTokens.MotionEffectsDefaultDuration}" Easing="{x:Static tok:DesignTokens.EmphasizedDecelerate}">
         <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/></KeyFrame>
         <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
       </Animation>
@@ -150,7 +165,7 @@
   </Style>
 
   <Style Selector="Border.buffer-ring">
-    <Style.Animations><Animation Duration="0:0:0.68" IterationCount="Infinite" PlaybackDirection="Alternate">
+    <Style.Animations><Animation Duration="{x:Static tok:DesignTokens.BufferPulseDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsSlowEasing}" IterationCount="Infinite" PlaybackDirection="Alternate">
       <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.28"/></KeyFrame>
       <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
     </Animation></Style.Animations>
@@ -166,7 +181,6 @@
   <Style Selector="Button.desktop-lyric.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/>
   </Style>
-  <Style Selector="MenuFlyoutPresenter"><Setter Property="Background" Value="{DynamicResource GlassPopup}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/><Setter Property="CornerRadius" Value="12"/></Style>
   <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
   <Style Selector="TextBlock.current"><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/></Style>
@@ -185,6 +199,7 @@
   <Style Selector="Button.update-primary, Button.update-ghost">
     <Setter Property="Padding" Value="16,8"/>
     <Setter Property="MinHeight" Value="36"/>
+    <Setter Property="CornerRadius" Value="8"/>
   </Style>
   <Style Selector="Button.update-primary /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource UpdateActionFill}"/>
@@ -223,7 +238,7 @@
   </Style>
   <Style Selector="Button.heart Path"><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="Fill" Value="Transparent"/>
     <Setter Property="RenderTransform" Value="scale(1)"/>
-    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions></Setter>
   </Style>
   <Style Selector="Button.heart:pointerover Path"><Setter Property="Stroke" Value="{DynamicResource R2Pink}"/><Setter Property="RenderTransform" Value="scale(1.1)"/></Style>
   <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/></Style>
@@ -234,13 +249,13 @@
   <Style Selector="Path.empty-heart"><Setter Property="Data" Value="{DynamicResource R2Heart}"/><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="StrokeThickness" Value="1.8"/></Style>
   <Style Selector="MenuFlyoutPresenter MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="ContextMenu MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
-  <Style Selector="StackPanel.row-actions"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions></Setter></Style>
+  <Style Selector="StackPanel.row-actions"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter></Style>
   <Style Selector="ListBoxItem:pointerover StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="ListBoxItem:focus-within StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Button.caption"><Setter Property="Width" Value="38"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="Button.caption /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="BorderBrush" Value="Transparent"/></Style>
   <Style Selector="Button.caption:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/></Style>
-  <Style Selector="Button.caption PathIcon"><Setter Property="RenderTransform" Value="scale(1)"/><Setter Property="RenderTransformOrigin" Value="50%,50%"/><Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.15" Easing="CubicEaseOut"/></Transitions></Setter></Style>
+  <Style Selector="Button.caption PathIcon"><Setter Property="RenderTransform" Value="scale(1)"/><Setter Property="RenderTransformOrigin" Value="50%,50%"/><Setter Property="Transitions"><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/></Transitions></Setter></Style>
   <Style Selector="Button.caption:pointerover PathIcon"><Setter Property="RenderTransform" Value="scale(1.12)"/></Style>
   <Style Selector="Button.caption:pressed PathIcon"><Setter Property="RenderTransform" Value="scale(0.92)"/></Style>
   <Style Selector="Button.close:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Accent}"/><Setter Property="Foreground" Value="White"/></Style>
@@ -254,7 +269,7 @@
   <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
   <Style Selector="ListBox.songs > ListBoxItem"><Setter Property="Background" Value="{DynamicResource R2RowBase}"/></Style>
   <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="0:0:0.20" Easing="CubicEaseOut"/></Transitions></Setter>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter>
   </Style>
   <Style Selector="ListBox.songs > ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource R2RowHover}"/></Style>
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
@@ -263,16 +278,15 @@
     <Setter Property="RenderTransform" Value="translateY(0px)"/>
     <Setter Property="BoxShadow" Value="0 8 16 0 #140F172A"/>
     <Setter Property="Transitions"><Transitions>
-      <TransformOperationsTransition Property="RenderTransform" Duration="0:0:0.14" Easing="CubicEaseOut"/>
+      <TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}"/>
     </Transitions></Setter>
   </Style>
   <Style Selector="Border.playlist-tile:pointerover">
     <Setter Property="RenderTransform" Value="translateY(-2px)"/>
     <Setter Property="BoxShadow" Value="0 12 24 0 #290F172A"/>
   </Style>
-  <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="0:0:0.16" Easing="CubicEaseOut"/></Transitions></Setter></Style>
+  <Style Selector="Button.card-play"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter></Style>
   <Style Selector="Border.playlist-tile:pointerover Button.card-play"><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Button.card-play:focus-visible"><Setter Property="Opacity" Value="1"/></Style>
-  <Style Selector="TextBlock.wave"><Style.Animations><Animation Duration="0:0:0.9" IterationCount="Infinite" PlaybackDirection="Alternate"><KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.4"/></KeyFrame><KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame></Animation></Style.Animations></Style>
   <StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/GlassControls.axaml"/>
 </Styles>

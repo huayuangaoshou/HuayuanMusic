@@ -184,11 +184,11 @@ public sealed class InteractionController:ObservableObject {
     return;
    }
    var start=Stopwatch.GetTimestamp();
-   var duration=TimeSpan.FromMilliseconds(DesignTokens.MotionOpen);
+   var duration=DesignTokens.MotionSpatialDefault.Duration;
    scrollStep=()=>{
     if(player.State.CurrentEntryId!=entry||!CanFollow()){CancelFollow();return;}
     var t=Math.Clamp(Stopwatch.GetElapsedTime(start)/duration,0,1);
-    scroll.Offset=new Vector(scroll.Offset.X,from+(target-from)*(1-Math.Pow(1-t,3)));
+    scroll.Offset=new Vector(scroll.Offset.X,from+(target-from)*DesignTokens.MotionSpatialDefault.Curve.Ease(t));
     if(t>=1)CancelFollow();
    };
    followTimer.Start();

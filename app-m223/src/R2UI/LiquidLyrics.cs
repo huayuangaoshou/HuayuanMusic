@@ -91,7 +91,7 @@ public partial class R2ShellView
         FullLyricView.IsActive = !comments && lyricOpen;
         CommentsPane.IsVisible = comments;
         if (!comments) return;
-        CommentsPane.Transitions ??= [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(180), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }];
+        CommentsPane.Transitions ??= [new DoubleTransition { Property = OpacityProperty, Duration=DesignTokens.MotionEffectsDefault.Duration,Easing=DesignTokens.MotionEffectsDefault.Curve }];
         CommentsPane.Opacity = 0;
         Dispatcher.UIThread.Post(() => { if (commentsOpen) CommentsPane.Opacity = 1; });
         if (nextCommentPage == 1 && commentRequest == null) _ = FetchCommentsAsync();
@@ -207,7 +207,7 @@ public partial class R2ShellView
         var body = new SelectableTextBlock { Text = item.Body, TextWrapping = TextWrapping.Wrap, FontSize = 14, LineHeight = 22 };
         return new Border
         {
-            Classes = { "glass" }, Padding = new Thickness(13, 9),
+            Classes = { "porcelain" }, Padding = new Thickness(13, 9),
             Child = new StackPanel { Spacing = 5, Children = { profile, body } }
         };
     }

@@ -1,5 +1,5 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:tok="using:HuayuanPreview"
              xmlns:vm="clr-namespace:KugouAvaloniaPlayer.ViewModels;assembly=HuayuanMusic.P1"
              xmlns:behaviors="clr-namespace:KugouAvaloniaPlayer.Behaviors;assembly=HuayuanMusic.P1"
              x:Class="HuayuanPreview.R2.QueuePreview" xmlns:preview="using:HuayuanPreview.R2"
@@ -59,7 +59,7 @@
                                 Background="Transparent">
                             <Border.Transitions>
                                 <Transitions>
-                                    <BrushTransition Property="Background" Duration="0:0:0.15" Easing="CubicEaseOut" />
+                                    <BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}" />
                                 </Transitions>
                             </Border.Transitions>
                         </Border>
@@ -122,7 +122,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Transitions">
                 <Transitions>
-                    <DoubleTransition Property="Opacity" Duration="0:0:0.15" Easing="CubicEaseOut" />
+                    <DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}" />
                 </Transitions>
             </Setter>
         </Style>

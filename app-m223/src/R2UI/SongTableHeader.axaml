@@ -19,7 +19,7 @@
           </Button>
         </StackPanel>
       </Grid>
-      <Border Grid.Row="1" Classes="glass" Margin="7,6,7,6" Padding="10,6" IsVisible="{Binding BatchMode}">
+      <Border Grid.Row="1" Classes="porcelain" Margin="7,6,7,6" Padding="10,6" IsVisible="{Binding BatchMode}">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
           <Button Classes="glass-pill" Content="{Binding SelectAllLabel}" Command="{Binding SelectAllCommand}"/>
           <TextBlock Text="{Binding SelectedCountLabel}" Classes="muted" VerticalAlignment="Center" FontFeatures="tnum"/>
