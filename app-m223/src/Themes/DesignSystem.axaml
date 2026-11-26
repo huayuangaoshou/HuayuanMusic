@@ -198,9 +198,18 @@
     <Setter Property="BorderThickness" Value="1"/>
     <Setter Property="Opacity" Value="0.75"/>
   </Style>
+  <Style Selector="TextBlock.track-title, SelectableTextBlock.track-title, TextBlock.section-title, SelectableTextBlock.section-title, SelectableTextBlock.playing-title">
+    <Setter Property="FontFamily" Value="{x:Static tok:DesignTokens.LyricSerif}"/>
+    <Setter Property="LetterSpacing" Value="{x:Static tok:DesignTokens.TitleTracking}"/>
+  </Style>
+  <Style Selector="TextBlock.section-title, SelectableTextBlock.section-title">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.BlockTitleSize}"/>
+  </Style>
+  <Style Selector="SelectableTextBlock.playing-title">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.PlayingTitleSize}"/>
+  </Style>
   <Style Selector="TextBlock.track-title, SelectableTextBlock.track-title">
     <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.FontXl}"/>
-    <Setter Property="LetterSpacing" Value="{x:Static tok:DesignTokens.TitleTracking}"/>
   </Style>
   <Style Selector="TextBlock.track-caption, SelectableTextBlock.track-caption">
     <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.TrackingCaptionSize}"/>

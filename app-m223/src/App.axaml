@@ -1,6 +1,6 @@
-<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="HuayuanPreview.App">
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:tok="using:HuayuanPreview" x:Class="HuayuanPreview.App">
 <Application.Styles><FluentTheme/>
-<Style Selector="Window"><Setter Property="FontFamily" Value="avares://HuayuanMusic.P17.Nightflight/Assets/Fonts#MiSans, MiSans, Segoe UI Variable, Microsoft YaHei UI"/><Setter Property="FontSize" Value="13"/></Style>
+<Style Selector="Window"><Setter Property="FontFamily" Value="{x:Static tok:DesignTokens.BodyFont}"/><Setter Property="FontSize" Value="13"/></Style>
 <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
 <Style Selector="Button"><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Padding" Value="12,8"/><Setter Property="CornerRadius" Value="10"/><Setter Property="MinHeight" Value="32"/><Setter Property="BorderThickness" Value="1"/><Setter Property="BorderBrush" Value="Transparent"/><Setter Property="HorizontalContentAlignment" Value="Center"/><Setter Property="VerticalContentAlignment" Value="Center"/></Style>
 <Style Selector="Button.primary"><Setter Property="Foreground" Value="{DynamicResource PrimaryInk}"/></Style>
@@ -17,6 +17,7 @@
 <Style Selector="ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource Surface2}"/></Style>
 <Style Selector="TextBox"><Setter Property="PlaceholderForeground" Value="{DynamicResource Sub}"/><Setter Property="Foreground" Value="{DynamicResource Text}"/><Setter Property="Background" Value="{DynamicResource Surface}"/><Setter Property="BorderBrush" Value="{DynamicResource Line}"/></Style>
 <Style Selector="TextBox /template/ TextBlock#PART_Placeholder"><Setter Property="Opacity" Value="1"/></Style>
+<Style Selector="MenuItem, ToolTip"><Setter Property="FontFamily" Value="{x:Static tok:DesignTokens.BodyFont}"/></Style>
 <Style Selector="MenuItem"><Setter Property="Foreground" Value="{DynamicResource Text}"/></Style>
 
 <StyleInclude Source="avares://HuayuanMusic.P17.Nightflight/Themes/DesignSystem.axaml"/>

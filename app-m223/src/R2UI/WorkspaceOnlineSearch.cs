@@ -114,7 +114,7 @@ public sealed partial class WorkspaceState
         if (onlinePage != null) return;
         onlineSongsPage = SongPage("单曲结果", []);
         onlineDetailPage = SongPage("曲目列表", []);
-        onlineHeading = new SelectableTextBlock { FontSize = 20, FontWeight = FontWeight.SemiBold };
+        onlineHeading = new SelectableTextBlock { Classes = { "track-title" }, FontWeight = FontWeight.SemiBold };
         onlineStatus = new SelectableTextBlock { Classes = { "muted" }, Margin = new Thickness(0, 3, 0, 8) };
         onlineResults = new ContentControl();
         var tabs = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };

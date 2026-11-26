@@ -98,7 +98,9 @@ public static class DesignTokens
     public const double StateMessageWidth = 420;
     public const double NoticeLineHeight = 24; // 15px × 1.6
     public const double StateCopySize = 15;
-    public const double TitleTracking = -0.42; // −1.5% at 28px
+    public const double TitleTracking = -0.30;
+    public const double PlayingTitleSize = 24;
+    public const double DesktopLyricEntryOffset = 6;
     public const double TrackingCaptionSize = 11;
     public const double CaptionTracking = 0.11; // +1% at 11px
     public const string LyricSerifFonts = "avares://HuayuanMusic.P17.Nightflight/Assets/Fonts#LXGW WenKai Lite, SimSun, 宋体, $Default";
@@ -106,7 +108,12 @@ public static class DesignTokens
 
     public const string FontLatin  = "Segoe UI Variable, Segoe UI";
     public const string FontCjk    = "Microsoft YaHei UI";
-    public const string FontFamily = "MiSans, MiSans, Segoe UI Variable, Microsoft YaHei UI";
+    public const string FontFamily = "avares://HuayuanMusic.P17.Nightflight/Assets/Fonts/MiSans-Regular.ttf#MiSans, MiSans, Segoe UI Variable, Microsoft YaHei UI";
+    public static Avalonia.Media.FontFamily BodyFont { get; } = new(FontFamily);
+    public static Avalonia.Media.FontFamily BodyDemibold { get; } =
+        new("avares://HuayuanMusic.P17.Nightflight/Assets/Fonts/MiSans-Demibold.ttf#MiSans, MiSans, Segoe UI Variable, Microsoft YaHei UI");
+    // Xiaomi's original TTF assigns this weight class to Demibold.
+    public static FontWeight MiSansDemiboldWeight => (FontWeight)450;
 
     // ── 行高系数 ─────────────────────────────────────────────
     public const double LineHeightRatio = 1.45;

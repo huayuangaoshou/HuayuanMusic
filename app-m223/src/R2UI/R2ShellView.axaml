@@ -19,7 +19,7 @@
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="8,0">
           <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
-          <TextBlock Text="HuayuanMusic" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center"/>
+          <TextBlock Text="HuayuanMusic" FontSize="15" FontFamily="{x:Static tok:DesignTokens.BodyDemibold}" FontWeight="{x:Static tok:DesignTokens.MiSansDemiboldWeight}" VerticalAlignment="Center"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Spacing="4" Margin="0,2,0,12">
           <TextBlock Text="工作空间" Classes="muted" FontSize="12" Margin="10,2,0,4"/>
@@ -108,11 +108,11 @@
               <Border Padding="16,0" HorizontalAlignment="Stretch">
                 <StackPanel HorizontalAlignment="Center" Spacing="0" Margin="0,6,0,0">
                   <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Spacing="8">
-                    <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" FontSize="18" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource R2Ink}"/>
+                    <SelectableTextBlock Text="{Binding Player.NowPlayingTitle}" Classes="playing-title" FontWeight="Bold" MaxWidth="320" TextWrapping="Wrap" VerticalAlignment="Center" Foreground="{DynamicResource R2Ink}"/>
                     <Border IsVisible="{Binding Player.HasCurrentSong}"><r2:HeartButton DataContext="{Binding Player.DisplayedPlayingSong}"/></Border>
                     <r2:SongDownloadButton DataContext="{Binding Player.DisplayedPlayingSong}"/>
                   </StackPanel>
-                  <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" FontSize="14" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
+                  <SelectableTextBlock Text="{Binding Player.NowPlayingCredit}" Classes="muted" FontSize="15" TextAlignment="Center" TextWrapping="Wrap" MaxWidth="365" HorizontalAlignment="Center"/>
                 </StackPanel>
               </Border>
               <Grid ColumnDefinitions="43,*,43" ColumnSpacing="8" Margin="0,4,0,0">
@@ -181,8 +181,8 @@
                 <lyrics:LyricView Name="FullLyricView" PrimaryFontSize="20" TranslationFontSize="15" ActiveAnchorRatio="0.44"
                                   PrimaryForeground="{DynamicResource FullLyricIdle}" PrimaryPlayedForeground="{DynamicResource FullLyricSung}"
                                   TranslationForeground="{DynamicResource FullLyricTranslation}" TranslationPlayedForeground="{DynamicResource FullLyricSung}"
-                                  DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableScale="False"
-                                  ScrollDuration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" UseLightweightScrollAnimation="True"
+                                  DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableStagger="True" EnableScale="True"
+                                  ScrollDuration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}"
                                   SeekOnLineTap="True" AutomationProperties.Name="同步歌词"/>
                 <TextBlock Name="LyricEmpty" Classes="muted state-empty-copy" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
@@ -210,7 +210,7 @@
           <Border Classes="glass-edge"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="3">
-              <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+              <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" Classes="section-title" FontWeight="SemiBold" VerticalAlignment="Center"/>
               <Button Grid.Column="1" Name="QueueLocateButton" Classes="icon" Width="30" Height="30" Command="{Binding LocateCurrentCommand}"
                       IsVisible="{Binding HasCurrentTrack}" ToolTip.Tip="定位当前播放歌曲" AutomationProperties.Name="定位当前播放歌曲" VerticalAlignment="Center">
                 <PathIcon Width="15" Height="15" Data="M9 1C5.1 1 2 4.1 2 8C2 11.9 5.1 15 9 15C12.9 15 16 11.9 16 8C16 4.1 12.9 1 9 1ZM9 13C6.2 13 4 10.8 4 8C4 5.2 6.2 3 9 3C11.8 3 14 5.2 14 8C14 10.8 11.8 13 9 13ZM10 4H8V9L12 11.5L13 10L10 8V4Z"/>
@@ -345,7 +345,7 @@
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
               <StackPanel Spacing="4">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                  <TextBlock Text="歌曲评论" FontSize="18" FontWeight="SemiBold"/>
+                  <TextBlock Text="歌曲评论" Classes="section-title" FontWeight="SemiBold"/>
                   <TextBlock Name="DrawerCommentCount" FontFeatures="tnum" Classes="muted" VerticalAlignment="Center"/>
                 </StackPanel>
                 <SelectableTextBlock Name="DrawerCommentTitle" Classes="muted" TextTrimming="CharacterEllipsis"/>

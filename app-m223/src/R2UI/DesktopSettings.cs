@@ -41,7 +41,7 @@ public partial class R2ShellView
         void Section(string title, params Control[] fields)
         {
             var panel = new StackPanel { Spacing = 9 };
-            panel.Children.Add(new TextBlock { Text = title, FontSize = 17, FontWeight = FontWeight.SemiBold });
+            panel.Children.Add(new TextBlock { Text = title, Classes = { "section-title" }, FontWeight = FontWeight.SemiBold });
             foreach (var field in fields) panel.Children.Add(field);
             body.Children.Add(new Border { Classes = { "porcelain" }, Padding = new Thickness(16,12), Child = panel });
         }
@@ -123,6 +123,7 @@ public partial class R2ShellView
         var checkUpdate = new Button { Content = "检查更新", Classes = { "glass-pill" } };
         checkUpdate.Click += CheckForUpdates;
         Section("关于与更新", Row("版本", version),
+            new TextBlock { Text = "界面字体 MiSans 由小米提供。", Classes = { "muted" } },
             new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children = { checkUpdate } });
         body.AttachedToVisualTree += async (_,_) =>
         {

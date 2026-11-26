@@ -108,7 +108,7 @@ internal sealed class PluginManager : ScrollViewer
         {
             Classes = { "porcelain" }, Padding = new Thickness(18),
             Child = new StackPanel { Spacing = 11, Children = {
-                new TextBlock { Text = "酷狗概念版", FontSize = 21, FontWeight = FontWeight.SemiBold },
+                new TextBlock { Text = "酷狗概念版", Classes = { "section-title" }, FontWeight = FontWeight.SemiBold },
                 new TextBlock { Text = $"版本 {TrustedModuleDescriptor.Current.Version}", Classes = { "muted" } }, status, tags, actions } }
         });
         body.Children.Add(inspect);

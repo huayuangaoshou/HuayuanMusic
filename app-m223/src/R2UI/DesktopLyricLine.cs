@@ -193,7 +193,7 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     {
         var shadowViewport = viewport.Inflate(DesktopLyricWindow.ShadowGutter);
         var origin = TextOrigin;
-        // 双层阴影：宽影保任意背景可读（BlurRadius 10 / Opacity 0.5），细影保锐度（BlurRadius 2 / Opacity 0.9）。
+        // 双层阴影：宽影保任意背景可读（BlurRadius 9 / Opacity 0.32），细影保锐度（BlurRadius 3 / Opacity 0.28）。
         using (context.PushEffect(WideShadow, shadowViewport))
             normal.Draw(context, origin);
         using (context.PushEffect(SharpShadow, shadowViewport))

@@ -24,6 +24,11 @@ internal sealed class DesktopLyricWindow : Window
     internal const double ShadowGutter = 12;
 
     private readonly DesktopLyricLine current = CreateLine(Brushes.White);
+    private readonly DesktopLyricLine outgoing = CreateLine(Brushes.White);
+    private readonly Grid currentBand = new();
+    private readonly TranslateTransform currentShift = new();
+    private CancellationTokenSource? lineTransition;
+
     private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(DesignTokens.DarkSub));
     private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(DesignTokens.DarkText));
     private readonly Button translationButton;
@@ -137,7 +142,15 @@ internal sealed class DesktopLyricWindow : Window
             HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Top,
             Margin = new Thickness(ShadowGutter), Background = null, Spacing = 4
         };
-        labels.Children.Add(current); labels.Children.Add(translation); labels.Children.Add(next);
+        current.RenderTransform = new TransformGroup { Children = { currentShift } };
+        outgoing.IsHitTestVisible = false;
+        outgoing.IsVisible = false;
+        currentBand.Children.Add(new Canvas { IsHitTestVisible = false, Children = { outgoing } });
+        currentBand.Children.Add(current);
+        currentBand.SizeChanged += (_, _) => CenterOutgoingLine();
+        labels.Children.Add(currentBand);
+        labels.Children.Add(translation);
+        labels.Children.Add(next);
         toolbarWindow = new Window
         {
             Title = "桌面歌词工具条", Content = tools, Topmost = true, ShowActivated = false,
@@ -215,6 +228,7 @@ internal sealed class DesktopLyricWindow : Window
         Closed += (_, _) =>
         {
             renderClock.Stop();
+            StopLineTransition();
             saveDelay.Stop();
             nativeInputClock.Stop();
             if (!toolbarClosed) toolbarWindow.Close();
@@ -278,6 +292,7 @@ internal sealed class DesktopLyricWindow : Window
 
     internal void SetLyrics(IReadOnlyList<LyricLine> lines, string message)
     {
+        StopLineTransition();
         lyrics = lines;
         empty = message;
         renderedLine = -1;
@@ -414,8 +429,10 @@ internal sealed class DesktopLyricWindow : Window
 
     private void UpdateFont()
     {
+        StopLineTransition();
         var family = serif ? DesignTokens.LyricSerif : FontFamily;
         current.SetFont(family, fontSize);
+        outgoing.SetFont(family, fontSize);
         translation.SetFont(family, Math.Max(14, fontSize * .58));
         next.SetFont(family, Math.Max(16, fontSize * .66));
         ResizeToLyrics();
@@ -448,6 +465,7 @@ internal sealed class DesktopLyricWindow : Window
 
     internal void SetShowTranslation(bool visible)
     {
+        StopLineTransition();
         showTranslation = visible;
         renderedLine = -1;
         RenderLyrics();
@@ -460,10 +478,70 @@ internal sealed class DesktopLyricWindow : Window
         saveDelay.Start();
     }
 
+    private void CenterOutgoingLine() =>
+        Canvas.SetLeft(outgoing, (currentBand.Bounds.Width - outgoing.Width) / 2);
+
+    private static double LineDuration(LyricLine line, LyricLine? following)
+    {
+        var duration = line.Duration.TotalSeconds;
+        if (duration <= 0) duration = following == null ? 3 : (following.Start - line.Start).TotalSeconds;
+        return Math.Max(.1, duration);
+    }
+
+    private static Animation LineAnimation(AvaloniaProperty property, double from, double to, bool entering) =>
+        new()
+        {
+            Duration = DesignTokens.MotionEffectsFast.Duration,
+            Easing = entering ? DesignTokens.EmphasizedDecelerate : DesignTokens.MotionEffectsFast.Curve,
+            Children =
+            {
+                new KeyFrame { Cue = new Cue(0), Setters = { new Setter(property, from) } },
+                new KeyFrame { Cue = new Cue(1), Setters = { new Setter(property, to) } }
+            }
+        };
+
+    private void StopLineTransition()
+    {
+        lineTransition?.Cancel();
+        lineTransition = null;
+        outgoing.SetLine(null);
+    }
+
+    private async void BeginLineTransition(int previous, double position)
+    {
+        StopLineTransition();
+        var oldLine = lyrics[previous];
+        var following = previous + 1 < lyrics.Count ? lyrics[previous + 1] : null;
+        outgoing.SetLine(oldLine.Text, oldLine.Start.TotalSeconds, LineDuration(oldLine, following), oldLine.Words);
+        outgoing.SetPosition(position);
+        outgoing.Width = outgoing.InkSize.Width;
+        CenterOutgoingLine();
+        using var request = new CancellationTokenSource();
+        lineTransition = request;
+        try
+        {
+            await Task.WhenAll(
+                LineAnimation(OpacityProperty, 1, 0, false).RunAsync(outgoing, request.Token),
+                LineAnimation(OpacityProperty, 0, 1, true).RunAsync(current, request.Token),
+                LineAnimation(TranslateTransform.YProperty, DesignTokens.DesktopLyricEntryOffset, 0, true)
+                    .RunAsync(current, request.Token));
+        }
+        catch (OperationCanceledException) when (request.IsCancellationRequested) { }
+        finally
+        {
+            if (ReferenceEquals(lineTransition, request))
+            {
+                lineTransition = null;
+                outgoing.SetLine(null);
+            }
+        }
+    }
+
     private void RenderLyrics()
     {
         if (lyrics.Count == 0)
         {
+            currentBand.IsVisible = !string.IsNullOrWhiteSpace(empty);
             current.SetLine(empty);
             translation.SetLine(null);
             next.SetLine(null);
@@ -481,12 +559,14 @@ internal sealed class DesktopLyricWindow : Window
         int index = Math.Max(0, first - 1);
         if (index != renderedLine)
         {
+            var previous = renderedLine;
             renderedLine = index;
             var line = lyrics[index];
             var following = index + 1 < lyrics.Count ? lyrics[index + 1] : null;
-            var duration = line.Duration.TotalSeconds;
-            if (duration <= 0) duration = following == null ? 3 : (following.Start - line.Start).TotalSeconds;
-            duration = Math.Max(.1, duration);
+            var duration = LineDuration(line, following);
+            currentBand.IsVisible = !string.IsNullOrWhiteSpace(line.Text);
+            if (previous >= 0 && current.HasText && currentBand.IsVisible && IsVisible && !DesignTokens.ShaderDegrade)
+                BeginLineTransition(previous, position);
             current.SetLine(line.Text, line.Start.TotalSeconds, duration, line.Words);
             translation.SetLine(showTranslation ? line.Translation : null, line.Start.TotalSeconds, duration, line.TranslationWords);
             next.SetLine(following?.Text);

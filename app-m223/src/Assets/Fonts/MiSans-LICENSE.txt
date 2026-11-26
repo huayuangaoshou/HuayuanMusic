@@ -1,0 +1,8 @@
+HuayuanMusic uses MiSans Regular and MiSans Demibold by Xiaomi Inc.
+
+MiSans is licensed separately under the MiSans Font Intellectual Property License Agreement. The original agreement is included as MiSans-OFFICIAL-LICENSE.pdf when the fonts are embedded in the application.
+
+Official font and terms: https://hyperos.mi.com/font/en/download/
+Official embedding FAQ: https://hyperos.mi.com/font/en/faq/
+
+To prepare the local Avalonia resources, run Get-MiSans.ps1 from app-m223/src. The upstream fonts are embedded unmodified and their standalone files are excluded from version control.

@@ -251,7 +251,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   filter.TextChanged+=(_,_)=>ApplyFilter(filter.Text??"");
   var meta=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Spacing=9,Children={
    new SelectableTextBlock{Text=Local?"本地歌单":"在线歌单",Classes={"muted","track-caption"}},
-   new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
+   new SelectableTextBlock{Text=title,Classes={"track-title"},FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
   if(Local&&Program.Desktop&&Host.Player.State.Lists.FirstOrDefault(list=>list.Id==SelectedPlaylistId) is { IsCustom:true } customList)
   {

@@ -191,7 +191,7 @@ public partial class R2ShellView
     }
 
     private static TextBlock SectionHeading(string title) =>
-        new() { Text = title, FontSize = 17, FontWeight = FontWeight.SemiBold, Margin = new Thickness(2, 7, 0, 0) };
+        new() { Text = title, Classes = { "section-title" }, FontWeight = FontWeight.SemiBold, Margin = new Thickness(2, 7, 0, 0) };
 
     private Border CommentCard(DesktopComment item)
     {
