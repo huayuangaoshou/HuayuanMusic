@@ -2,6 +2,9 @@
   <Styles.Resources>
     <ResourceDictionary>
       <!-- 颜色唯一来源：DesignTokens。视觉表现层不得散写硬编码 hex。 -->
+      <SolidColorBrush x:Key="NoticeSurface" Color="#F2121212"/>
+      <SolidColorBrush x:Key="NoticeInk" Color="#F2FFFFFF"/>
+      <SolidColorBrush x:Key="GlassTopLight" Color="#33FFFFFF"/>
       <SolidColorBrush x:Key="Primary" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
       <SolidColorBrush x:Key="R2Accent" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
       <SolidColorBrush x:Key="R2Pink" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
@@ -58,7 +61,7 @@
           <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.AccentSoft}"/>
           <SolidColorBrush x:Key="R2RowBase" Color="{x:Static tok:DesignTokens.LightRowBase}"/>
           <SolidColorBrush x:Key="R2RowHover" Color="{x:Static tok:DesignTokens.AccentSoftHover}"/>
-          <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
+          <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.LightAccentInk}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#00000000" Offset="1"/>
           </LinearGradientBrush>
@@ -155,15 +158,98 @@
   <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
   <Style Selector="Window.update-dialog"><Setter Property="Background" Value="{DynamicResource GlassBase}"/></Style>
   <Style Selector="Border.update-panel"><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
-  <Style Selector="Border.update-enter">
+  <Style Selector="Border.toast">
+    <Setter Property="Background" Value="{DynamicResource R2Main}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Pink}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Padding" Value="16,12"/>
+    <Setter Property="CornerRadius" Value="12"/>
+  </Style>
+  <Style Selector="TextBlock.toast-copy">
+    <Setter Property="FontWeight" Value="Medium"/>
+    <Setter Property="Foreground" Value="{DynamicResource R2Ink}"/>
+  </Style>
+  <Style Selector="Border.toast.notice">
+    <Setter Property="Background" Value="{DynamicResource NoticeSurface}"/>
+    <Setter Property="BorderThickness" Value="0"/>
+    <Setter Property="Padding" Value="14,10"/>
+    <Setter Property="CornerRadius" Value="{x:Static tok:DesignTokens.NoticeRadius}"/>
+  </Style>
+  <Style Selector="Border.notice TextBlock.toast-copy">
+    <Setter Property="Foreground" Value="{DynamicResource NoticeInk}"/>
+    <Setter Property="FontWeight" Value="Normal"/>
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.StateCopySize}"/>
+    <Setter Property="FontFamily" Value="{x:Static tok:DesignTokens.LyricSerif}"/>
+    <Setter Property="LineHeight" Value="{x:Static tok:DesignTokens.NoticeLineHeight}"/>
+    <Setter Property="TextAlignment" Value="Center"/>
+  </Style>
+  <Style Selector="TextBlock.state-empty-copy">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.StateCopySize}"/>
+    <Setter Property="FontFamily" Value="{x:Static tok:DesignTokens.LyricSerif}"/>
+    <Setter Property="LineHeight" Value="{x:Static tok:DesignTokens.NoticeLineHeight}"/>
+  </Style>
+  <Style Selector="TextBlock.state-error-copy">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.StateCopySize}"/>
+  </Style>
+  <Style Selector="PathIcon.state-note"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
+  <Style Selector="Border.state-skeleton">
+    <Setter Property="Background" Value="{DynamicResource R2RowBase}"/>
+    <Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/>
+    <Setter Property="BorderThickness" Value="1"/>
+    <Setter Property="Opacity" Value="0.75"/>
+  </Style>
+  <Style Selector="TextBlock.track-title, SelectableTextBlock.track-title">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.FontXl}"/>
+    <Setter Property="LetterSpacing" Value="{x:Static tok:DesignTokens.TitleTracking}"/>
+  </Style>
+  <Style Selector="TextBlock.track-caption, SelectableTextBlock.track-caption">
+    <Setter Property="FontSize" Value="{x:Static tok:DesignTokens.TrackingCaptionSize}"/>
+    <Setter Property="LetterSpacing" Value="{x:Static tok:DesignTokens.CaptionTracking}"/>
+  </Style>
+  <Style Selector="Border.glass-edge">
+    <Setter Property="BorderBrush" Value="{DynamicResource GlassTopLight}"/>
+    <Setter Property="BorderThickness" Value="0,1,0,0"/>
+    <Setter Property="CornerRadius" Value="11"/>
+    <Setter Property="Margin" Value="1"/>
+    <Setter Property="IsHitTestVisible" Value="False"/>
+  </Style>
+  <Style Selector="Border.glass-enter, Grid.glass-enter">
+    <Setter Property="RenderTransformOrigin" Value="50%,50%"/>
+    <Setter Property="RenderTransform"><ScaleTransform/></Setter>
     <Style.Animations>
-      <Animation Duration="{x:Static tok:DesignTokens.MotionEffectsDefaultDuration}" Easing="{x:Static tok:DesignTokens.EmphasizedDecelerate}">
+      <Animation Duration="{x:Static tok:DesignTokens.MotionEffectsSlowDuration}" Easing="{x:Static tok:DesignTokens.EmphasizedDecelerate}">
         <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/></KeyFrame>
         <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      </Animation>
+      <Animation Duration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialDefaultEasing}">
+        <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleX" Value=".98"/><Setter Property="ScaleTransform.ScaleY" Value=".98"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/></KeyFrame>
       </Animation>
     </Style.Animations>
   </Style>
 
+  <Style Selector="Border.popup-enter, MenuFlyoutPresenter.popup-enter, ContextMenu.popup-enter">
+    <Setter Property="RenderTransformOrigin" Value="0%,0%"/>
+    <Setter Property="RenderTransform"><ScaleTransform/></Setter>
+    <Style.Animations>
+      <Animation Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.EmphasizedDecelerate}">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      </Animation>
+      <Animation Duration="{x:Static tok:DesignTokens.MotionSpatialFastDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialFastEasing}">
+        <KeyFrame Cue="0%"><Setter Property="ScaleTransform.ScaleX" Value=".96"/><Setter Property="ScaleTransform.ScaleY" Value=".96"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="ScaleTransform.ScaleX" Value="1"/><Setter Property="ScaleTransform.ScaleY" Value="1"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
+  <Style Selector="r2|StateViews.state-loading Border.state-skeleton">
+    <Style.Animations>
+      <Animation Duration="{x:Static tok:DesignTokens.BufferPulseDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsSlowEasing}" IterationCount="Infinite" PlaybackDirection="Alternate">
+        <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.55"/></KeyFrame>
+        <KeyFrame Cue="100%"><Setter Property="Opacity" Value="1"/></KeyFrame>
+      </Animation>
+    </Style.Animations>
+  </Style>
   <Style Selector="Border.buffer-ring">
     <Style.Animations><Animation Duration="{x:Static tok:DesignTokens.BufferPulseDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsSlowEasing}" IterationCount="Infinite" PlaybackDirection="Alternate">
       <KeyFrame Cue="0%"><Setter Property="Opacity" Value="0.28"/></KeyFrame>
@@ -173,13 +259,13 @@
   <Style Selector="SelectableTextBlock"><Setter Property="Focusable" Value="True"/><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/><Setter Property="SelectionBrush" Value="#667DC9FF"/></Style>
   <Style Selector="SelectableTextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
   <Style Selector="Button.glass-pill"><Setter Property="CornerRadius" Value="999"/><Setter Property="Background" Value="{DynamicResource R2Main}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Edge}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
-  <Style Selector="Button.glass-pill.selected"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="Button.glass-pill.selected"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/></Style>
   <Style Selector="Button.desktop-lyric"><Setter Property="Width" Value="32"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="FontWeight" Value="Bold"/></Style>
   <Style Selector="Button.desktop-lyric.selected">
-    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/>
+    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/>
   </Style>
   <Style Selector="Button.desktop-lyric.selected:pointerover /template/ ContentPresenter#PART_ContentPresenter">
-    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2Accent}"/>
+    <Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="Foreground" Value="{DynamicResource R2RedInk}"/>
   </Style>
   <Style Selector="TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="TextBlock.muted"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
@@ -249,9 +335,8 @@
   <Style Selector="Path.empty-heart"><Setter Property="Data" Value="{DynamicResource R2Heart}"/><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="StrokeThickness" Value="1.8"/></Style>
   <Style Selector="MenuFlyoutPresenter MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
   <Style Selector="ContextMenu MenuItem"><Setter Property="Foreground" Value="{DynamicResource R2Ink}"/></Style>
-  <Style Selector="StackPanel.row-actions"><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter></Style>
-  <Style Selector="ListBoxItem:pointerover StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
-  <Style Selector="ListBoxItem:focus-within StackPanel.row-actions"><Setter Property="Opacity" Value="1"/></Style>
+  <Style Selector="StackPanel.row-actions"><Setter Property="MaxWidth" Value="0"/><Setter Property="ClipToBounds" Value="True"/><Setter Property="Opacity" Value="0"/><Setter Property="Transitions"><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter></Style>
+  <Style Selector="ListBoxItem:pointerover StackPanel.row-actions, ListBoxItem:focus-within StackPanel.row-actions"><Setter Property="MaxWidth" Value="Infinity"/><Setter Property="Opacity" Value="1"/></Style>
   <Style Selector="Button.caption"><Setter Property="Width" Value="38"/><Setter Property="Height" Value="32"/><Setter Property="Padding" Value="0"/><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="Button.caption /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="BorderBrush" Value="Transparent"/></Style>
   <Style Selector="Button.caption:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="Transparent"/></Style>

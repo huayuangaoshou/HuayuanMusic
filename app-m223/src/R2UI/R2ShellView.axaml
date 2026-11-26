@@ -12,9 +12,10 @@
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassPinkGlow}" IsHitTestVisible="False"/>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBlueGlow}" IsHitTestVisible="False"/>
     <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False"/>
-    <Border Classes="glass glass-side" Background="{DynamicResource GlassSide}" Margin="12,12,0,96">
+    <Border Name="MainSidebar" Classes="glass glass-side" Background="{DynamicResource GlassSide}" Margin="12,12,0,96">
       <Grid>
       <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+      <Border Classes="glass-edge"/>
       <Grid RowDefinitions="64,Auto,*,Auto" Margin="13,0">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="8,0">
           <Image Width="32" Height="32" Source="avares://HuayuanMusic.P17.Nightflight/Assets/icon-1024.png" />
@@ -45,9 +46,10 @@
           <TextBox Grid.Column="2" Name="CurrentFilter" Classes="search-capsule" MaxLength="120" PlaceholderText="筛选本地音乐" VerticalAlignment="Center" TextChanged="FilterChanged"/>
           <Popup Grid.Column="2" Name="SuggestionsPopup" PlacementTarget="{Binding #CurrentFilter}" Placement="BottomEdgeAlignedLeft" VerticalOffset="5"
                  ShouldUseOverlayLayer="False" TakesFocusFromNativeControl="False" OverlayDismissEventPassThrough="True" IsLightDismissEnabled="True">
-            <Border Classes="glass glass-float" Background="{DynamicResource GlassPopup}" Width="296">
+            <Border Name="SuggestionsSurface" Classes="glass glass-float" Background="{DynamicResource GlassPopup}" Width="296">
               <Grid>
               <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+              <Border Classes="glass-edge"/>
               <StackPanel Margin="10" Spacing="6">
                 <Grid ColumnDefinitions="*,Auto">
                   <TextBlock Name="SuggestionTitle" Classes="muted" Margin="8,4" VerticalAlignment="Center"/>
@@ -182,11 +184,11 @@
                                   DistinguishActiveForeground="True" TextAlignment="Left" ItemMargin="0,11" EnableAnimation="True" EnableScale="False"
                                   ScrollDuration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" UseLightweightScrollAnimation="True"
                                   SeekOnLineTap="True" AutomationProperties.Name="同步歌词"/>
-                <TextBlock Name="LyricEmpty" Classes="muted" FontSize="15" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                <TextBlock Name="LyricEmpty" Classes="muted state-empty-copy" HorizontalAlignment="Center" VerticalAlignment="Center"/>
               </Grid>
               <ScrollViewer Grid.Row="1" Name="CommentsPane" IsVisible="False" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="8,8,12,16" Spacing="12">
-                  <TextBlock Name="CommentsStatus" Classes="muted" HorizontalAlignment="Center" Margin="0,30,0,0"/>
+                  <r2:StateViews Name="CommentsStatus"/>
                   <StackPanel Name="HotComments" Spacing="8"/>
                   <StackPanel Name="LatestComments" Spacing="8"/>
                   <Button Name="MoreComments" Classes="glass-pill" Content="加载更多评论" IsVisible="False" Click="LoadMoreComments" HorizontalAlignment="Center"/>
@@ -203,8 +205,9 @@
         </Border>
         <Border Name="QueueDrawer" Classes="glass glass-float" Width="360" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(380px)">
           <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialDefaultEasing}"/></Transitions></Border.Transitions>
-          <Grid>
+          <Grid Name="QueueDrawerSurface">
           <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+          <Border Classes="glass-edge"/>
           <Grid RowDefinitions="56,*" Margin="12,0">
             <Grid ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="3">
               <TextBlock Text="播放队列" Foreground="{DynamicResource R2Ink}" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
@@ -244,9 +247,7 @@
                 </DataTemplate>
               </ListBox.ItemTemplate>
             </ListBox>
-            <TextBlock Grid.Row="1" Text="队列为空，播放或添加歌曲后会显示在这里" Classes="muted" TextWrapping="Wrap"
-                       HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False"
-                       IsVisible="{Binding !Player.HasQueueTracks}"/>
+            <r2:StateViews Grid.Row="1" Name="QueueEmpty" VerticalAlignment="Center" IsVisible="{Binding !Player.HasQueueTracks}"/>
           </Grid>
           </Grid>
         </Border>
@@ -254,6 +255,7 @@
     <Border Name="MainDock" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="2" VerticalAlignment="Bottom" Classes="glass dock" Margin="12,0,12,12">
       <Grid>
         <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+        <Border Classes="glass-edge"/>
         <Border Padding="20,8,20,8">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
             <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
@@ -336,8 +338,9 @@
       </Border>
       <Border Name="CommentDrawer" Classes="glass glass-float" Width="430" Margin="0,12,12,12" HorizontalAlignment="Right" Background="{DynamicResource GlassPopup}" RenderTransform="translateX(444px)">
         <Border.Transitions><Transitions><TransformOperationsTransition Property="RenderTransform" Duration="{x:Static tok:DesignTokens.MotionSpatialDefaultDuration}" Easing="{x:Static tok:DesignTokens.MotionSpatialDefaultEasing}"/></Transitions></Border.Transitions>
-        <Grid>
+        <Grid Name="CommentDrawerSurface">
           <r2:GlassOptics Radius="11" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" Margin="1" IsHitTestVisible="False"/>
+          <Border Classes="glass-edge"/>
           <Grid RowDefinitions="Auto,*" Margin="16">
             <Grid ColumnDefinitions="*,Auto" Margin="0,0,0,8">
               <StackPanel Spacing="4">
@@ -351,7 +354,7 @@
             </Grid>
             <ScrollViewer Grid.Row="1" Name="DrawerCommentScroll">
               <StackPanel Spacing="8">
-                <TextBlock Name="DrawerCommentStatus" Classes="muted"/>
+                <r2:StateViews Name="DrawerCommentStatus"/>
                 <StackPanel Name="DrawerCommentHot" Spacing="8"/>
                 <StackPanel Name="DrawerCommentLatest" Spacing="8"/>
                 <Button Name="DrawerCommentMore" Click="LoadDrawerComments" Classes="glass-pill" HorizontalAlignment="Center"/>
@@ -361,12 +364,11 @@
         </Grid>
       </Border>
     </Grid>
-    <Border Name="ToastPlate" Grid.ColumnSpan="2" ZIndex="6" IsVisible="False" IsHitTestVisible="False"
-            Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Padding="16,12" CornerRadius="12"
-            Background="{DynamicResource R2Main}" BorderBrush="{DynamicResource R2Pink}" BorderThickness="1"
+    <Border Name="ToastPlate" Classes="toast" Grid.ColumnSpan="2" ZIndex="6" IsVisible="False" IsHitTestVisible="False"
+            Margin="20,0,20,24" HorizontalAlignment="Center" VerticalAlignment="Bottom" Opacity="0"
             BoxShadow="{DynamicResource GlassLiftL3}">
       <Border.Transitions><Transitions><DoubleTransition Property="Opacity" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Border.Transitions>
-      <TextBlock Name="ToastText" FontWeight="Medium" Foreground="{DynamicResource R2Ink}" MaxWidth="520" TextTrimming="CharacterEllipsis"/>
+      <TextBlock Name="ToastText" Classes="toast-copy" MaxWidth="520" TextTrimming="CharacterEllipsis"/>
     </Border>
   </Grid>
 </UserControl>

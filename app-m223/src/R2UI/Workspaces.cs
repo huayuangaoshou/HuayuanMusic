@@ -37,21 +37,21 @@ public sealed partial class WorkspaceState:ObservableObject {
  private R2Page? lyricsPage, pluginPage;
  private R2Page? filterPage;
  public string FilterText { get; private set; } = "";
- readonly ContentControl content=new();readonly TextBlock heading=new(){FontSize=23,Margin=new Thickness(0,0,0,4)};readonly TextBlock status=new(){TextWrapping=TextWrapping.Wrap};readonly WrapPanel gallery=new(){ItemWidth=188};
+ readonly ContentControl content=new();readonly TextBlock heading=new(){Margin=new Thickness(0,0,0,4)};readonly TextBlock status=new(){TextWrapping=TextWrapping.Wrap};readonly WrapPanel gallery=new(){ItemWidth=188};
  readonly Dictionary<string,TrackRow> rowViews=[];PlaybackSnapshot? previous;readonly R2Page? favoritesPage,historyPage;TrackRow[] CatalogRows=>Local?Host.Player.State.Tracks.Where(t=>!t.Key.StartsWith("kugou-concept:",StringComparison.Ordinal)).Select(t=>Row(t)).ToArray():conceptRows;
  TrackRow[] conceptRows=[];
  PlatformPlaylistSnapshot? displayedSnapshot;
  string? providerPlaylistId;
  readonly R2Page galleryPage;
- readonly TextBlock galleryEmpty=new(){Text="还没有歌单",Classes={"muted"},Margin=new Thickness(6,12)};
+ readonly StateViews galleryEmpty = new();
  readonly Button prevPage=new(){Content="上一页"}, nextPage=new(){Content="下一页"};
  readonly StackPanel searchPanelHost;
  public WorkspaceState(ShellModel host,bool local){Host=host;Local=local;
   var nav=new StackPanel{Spacing=4,Margin=new Thickness(0)};
   Navigation = nav;
-  heading.FontSize = DesignTokens.PageTitleMin; // R10 页面大标题 36px（36~42 区间）
+  heading.Classes.Add("track-title");
   heading.FontWeight = FontWeight.SemiBold;
-  heading.LineHeight = DesignTokens.PageTitleMin * DesignTokens.LineHeightTitle; // R11 大标题行高 1.08
+  heading.LineHeight = DesignTokens.FontXl * DesignTokens.LineHeightTitle; // R11 大标题行高 1.08
   heading.Margin = new Thickness(0, 0, 0, 28); // R10 大标题下缘 margin 28px
   status.Classes.Add("muted");
   status.FontSize = DesignTokens.FontSm; // R10 副标题 14px
@@ -92,6 +92,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   CatalogPage=SongPage(Local?"本地曲库":"已同步曲目",CatalogRows,Local);AddNav(nav,CatalogPage);
   var cardBody=new StackPanel{Spacing=8};
   if(Local&&Program.Desktop)cardBody.Children.Add(NewPlaylistButton());
+  if (!Local) UpdateGalleryState();
   cardBody.Children.Add(gallery);
   cardBody.Children.Add(galleryEmpty);
   galleryPage=new R2Page("歌单",new ScrollViewer{Content=cardBody});AddNav(nav,galleryPage);
@@ -122,7 +123,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   QueuePage=new R2Page("混合队列",new QueuePreview{DataContext=host});if(!Program.Desktop)AddNav(nav,QueuePage);
   if(!Local){AddNav(nav,new R2Page("我的账号",Host.Concept.AccountPage));Host.Concept.Changed+=RefreshConcept;RefreshConcept();}
   var playlistHeading = new StackPanel { Orientation=Orientation.Horizontal, Spacing=6, Margin=new Thickness(8,10,0,4) };
-  playlistHeading.Children.Add(new TextBlock{Text="我的歌单",Classes={"muted"},FontSize=11,VerticalAlignment=VerticalAlignment.Center});
+  playlistHeading.Children.Add(new TextBlock{Text="我的歌单",Classes={"muted","track-caption"},VerticalAlignment=VerticalAlignment.Center});
   if(Local&&Program.Desktop)playlistHeading.Children.Add(NewPlaylistButton());
   if(!Local&&Program.Desktop)onlineNavigation.Add(playlistHeading);
   nav.Children.Add(playlistHeading);
@@ -181,13 +182,14 @@ public sealed partial class WorkspaceState:ObservableObject {
   foreach(var item in onlineNavigation)item.IsVisible=Host.Concept.Connected;
   if(CurrentPage!=null)HighlightNavigation();
  }
- private readonly Dictionary<R2Page,(Control Header,Control Empty)> emptySongPages=[];
+ private readonly Dictionary<R2Page,(Control Header,StateViews Empty)> emptySongPages=[];
  void Fill(R2Page page,IEnumerable<TrackRow> rows)
  {
   var items=rows.ToArray();
   for(int index=0;index<items.Length;index++) items[index].Number=index+1;
   InteractionController.For(Lists[page]).SetRows(items);
-  if(emptySongPages.TryGetValue(page,out var view)){view.Empty.IsVisible=items.Length==0;view.Header.IsVisible=items.Length>0;}
+  if(page == CatalogPage && !Local && Program.Desktop) UpdateOnlineLibraryState();
+  else if(emptySongPages.TryGetValue(page,out var view)){view.Empty.IsVisible=items.Length==0;view.Header.IsVisible=items.Length>0;}
   InteractionController.For(Lists[page]).RefreshCurrentState();
  }
  private string? PlaylistCover(ProviderPlaylist list) =>
@@ -216,6 +218,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    var delete=new MenuItem{Header="删除歌单"};
    delete.Click+=async (_,_)=>await EditLocalPlaylistAsync(button,id,true);
    button.ContextMenu=new ContextMenu{Items={rename,delete}};
+   if (!DesignTokens.ShaderDegrade) button.ContextMenu.Classes.Add("popup-enter");
   }
   navPlaylists.Add(button,id);
   playlistNav.Children.Add(button);
@@ -247,7 +250,7 @@ public sealed partial class WorkspaceState:ObservableObject {
   var filter=new TextBox{PlaceholderText="筛选歌单内曲目",Text=FilterText,MaxWidth=265,HorizontalAlignment=HorizontalAlignment.Left};
   filter.TextChanged+=(_,_)=>ApplyFilter(filter.Text??"");
   var meta=new StackPanel{VerticalAlignment=VerticalAlignment.Center,Spacing=9,Children={
-   new SelectableTextBlock{Text=Local?"本地歌单":"在线歌单",Classes={"muted"},FontSize=11},
+   new SelectableTextBlock{Text=Local?"本地歌单":"在线歌单",Classes={"muted","track-caption"}},
    new SelectableTextBlock{Text=title,FontSize=29,FontWeight=FontWeight.SemiBold,TextTrimming=TextTrimming.CharacterEllipsis},
    new TextBlock{Text=$"{count} 首曲目",Classes={"muted"}},play,filter}};
   if(Local&&Program.Desktop&&Host.Player.State.Lists.FirstOrDefault(list=>list.Id==SelectedPlaylistId) is { IsCustom:true } customList)
@@ -285,6 +288,8 @@ public sealed partial class WorkspaceState:ObservableObject {
   new CoreTrack(-1,key,track.Title,track.Artist,track.Album,Host.Concept.CatalogDuration(track.ProviderTrackId),track.CoverUrl),this);
  void RefreshConcept(){
   UpdateOnlineNavigation();
+  UpdateGalleryState();
+  UpdateOnlineLibraryState();
   status.Text=Host.Concept.Summary;searchPanelHost.IsVisible=Host.Concept.Connected&&!P2AWorkspace.RealReadOnly&&!M219RStartup.Active;
   if(!Host.Concept.Connected)Fill(SearchPage,[]);
   var next=Host.Concept.Snapshot;
@@ -315,7 +320,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    var list=playlists[i];var id=i+1;
    AddPlaylist(id,list.Name,list.Tracks.Count,Host.Concept.Connected);
   }
-  galleryEmpty.IsVisible=gallery.Children.Count==0;
+  UpdateGalleryState();
   if (next!=null && accountChanged && CurrentPage?.DisplayName=="我的账号")
    Navigate(galleryPage,false);
   if (CurrentPage!=null) HighlightNavigation();
@@ -330,7 +335,7 @@ public sealed partial class WorkspaceState:ObservableObject {
    Fill(CatalogPage,CatalogRows);Fill(SearchPage,CatalogRows.Where(Filter));SetPage(PageNumber);
    gallery.Children.Clear();playlistNav.Children.Clear();navPlaylists.Clear();
    foreach(var list in state.Lists) AddPlaylist(list.Id,list.Name,list.SongIds.Length,true);
-   galleryEmpty.IsVisible=gallery.Children.Count==0;
+   UpdateGalleryState();
    if(CurrentPage!=null) HighlightNavigation();
   }
   if(favoritesPage!=null&&(changed||previous==null||!previous.Favorites.SequenceEqual(state.Favorites)))Fill(favoritesPage,CatalogRows.Where(r=>state.Favorites.Contains(r.Track.Id)));

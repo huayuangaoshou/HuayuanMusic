@@ -17,8 +17,8 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     private const double ViewportLimit = 710;
     private const double FadeBand = 28;
     // 补丁2：文字可读性由双层投影承担——宽影保任意背景可读，细影保锐度。
-    private static readonly IEffect WideShadow = new DropShadowEffect { BlurRadius = 10, OffsetX = 0, OffsetY = 0, Opacity = 0.5, Color = Color.Parse("#0B1020") };
-    private static readonly IEffect SharpShadow = new DropShadowEffect { BlurRadius = 2, OffsetX = 0, OffsetY = 0, Opacity = 0.9, Color = Color.Parse("#0B1020") };
+    private static readonly IEffect WideShadow = new DropShadowEffect { BlurRadius = 9, OffsetX = 0, OffsetY = 0, Opacity = 0.32, Color = DesignTokens.DesktopLyricShadow };
+    private static readonly IEffect SharpShadow = new DropShadowEffect { BlurRadius = 3, OffsetX = 0, OffsetY = 0, Opacity = 0.28, Color = DesignTokens.DesktopLyricShadow };
     private readonly IBrush foreground;
     private string text = "";
     private IReadOnlyList<LyricWord> words = [];

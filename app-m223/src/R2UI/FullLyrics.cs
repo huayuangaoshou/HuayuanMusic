@@ -194,7 +194,7 @@ public partial class R2ShellView
     internal void ResetDesktopLyricsFromHost()
     {
         if(desktopLyrics!=null)desktopLyrics.ResetAppearance();
-        else QueueLyricPreferences(new DesktopLyricOptions());
+        else QueueLyricPreferences(new DesktopLyricOptions(Serif: DesktopPreferences.DesktopLyrics.Serif));
     }
 
     private void OpenDesktopLyrics()

@@ -72,11 +72,12 @@ public partial class R2ShellView
         var reset = MenuItemFor("重置位置与字号", () =>
         {
             if (desktopLyrics != null) desktopLyrics.ResetAppearance();
-            else QueueLyricPreferences(new DesktopLyricOptions());
+            else QueueLyricPreferences(new DesktopLyricOptions(Serif: DesktopPreferences.DesktopLyrics.Serif));
             return Task.CompletedTask;
         });
         var menu = new ContextMenu { Items = { unlock, reset } };
         menu.Opening += (_, _) => unlock.IsEnabled = desktopLyrics?.Locked == true;
+        if (!DesignTokens.ShaderDegrade) menu.Classes.Add("popup-enter");
         button.ContextMenu = menu;
     }
 
@@ -112,8 +113,7 @@ public partial class R2ShellView
         CommentBadge.IsVisible = false;
         MoreComments.IsVisible = false;
         CommentsPane.Offset = default;
-        CommentsStatus.Text = key == null ? "本地歌曲暂无在线评论" : "打开评论查看听众留言";
-        CommentsStatus.IsVisible = true;
+        CommentsStatus.Ready();
         if (commentsOpen && key != null) _ = FetchCommentsAsync();
     }
 
@@ -133,19 +133,18 @@ public partial class R2ShellView
         var page = nextCommentPage;
         if (page < 1) return;
         var id = key[(key.LastIndexOf(':') + 1)..];
-        using var request = new CancellationTokenSource();
+        using var request = new CancellationTokenSource(DesignTokens.ProviderUiTimeout);
         commentRequest = request;
         MoreComments.IsEnabled = false;
-        CommentsStatus.Text = "正在加载评论…";
-        CommentsStatus.IsVisible = page == 1;
+        if (page == 1) CommentsStatus.Loading();
         try
         {
             var data = await model.Concept.DesktopCall((gateway, ct) => gateway.ReadDesktopCommentsAsync(id, page, ct), request.Token);
-            if (!lyricOpen || commentTrack != key || request.IsCancellationRequested) return;
+            if (!lyricOpen || commentTrack != key || !ReferenceEquals(commentRequest, request)) return;
+            request.Token.ThrowIfCancellationRequested();
             if (data == null || data.Latest.Length == 0 && data.Hot.Length == 0)
             {
-                CommentsStatus.Text = "这首歌暂无评论";
-                CommentsStatus.IsVisible = page == 1;
+                if (page == 1) CommentsStatus.Empty("第一条留言还没来。继续听歌吧。", "返回歌词", () => SelectCommentTab(false));
                 nextCommentPage = -1;
                 MoreComments.IsVisible = false;
                 return;
@@ -164,21 +163,20 @@ public partial class R2ShellView
             }
             foreach (var item in data.Latest.Where(item => item.Id == 0 || shownComments.Add(item.Id)))
                 LatestComments.Children.Add(CommentCard(item));
-            CommentsStatus.IsVisible = false;
+            CommentsStatus.Ready();
             MoreComments.Content = "加载更多评论";
             MoreComments.IsVisible = data.More;
             nextCommentPage = data.More ? page + 1 : -1;
             Program.Log("R2_DESKTOP_COMMENTS", new { page, total = data.Total, hot = data.Hot.Length, latest = data.Latest.Length, data.PlatformHot, data.Source });
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) when (!ReferenceEquals(commentRequest, request)) { }
         catch (Exception error)
         {
-            if (!request.IsCancellationRequested)
+            if (ReferenceEquals(commentRequest, request))
             {
-                CommentsStatus.Text = "暂时无法加载评论";
-                CommentsStatus.IsVisible = page == 1;
+                if (page == 1) CommentsStatus.Error(FetchCommentsAsync);
                 MoreComments.Content = "重试加载评论";
-                MoreComments.IsVisible = true;
+                MoreComments.IsVisible = page > 1;
                 Program.Log("R2_DESKTOP_COMMENTS_FAILED", new { type = error.GetType().Name });
             }
         }
@@ -201,9 +199,9 @@ public partial class R2ShellView
         var avatar = model!.Concept.Cover(model.Concept.AccountKey, item.Avatar, 30);
         profile.Children.Add(new Border { Child = avatar, Width = 30, Height = 30, CornerRadius = new CornerRadius(15), ClipToBounds = true });
         profile.Children.Add(new SelectableTextBlock { Text = string.IsNullOrWhiteSpace(item.Author) ? "酷狗听众" : item.Author, FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center });
-        profile.Children.Add(new TextBlock { Text = item.Time, Classes = { "muted" }, FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
+        profile.Children.Add(new TextBlock { Text = item.Time, Classes = { "muted", "track-caption" }, VerticalAlignment = VerticalAlignment.Center });
         if (item.Likes > 0)
-            profile.Children.Add(new TextBlock { Text = $"赞 {item.Likes:N0}", Classes = { "muted" }, FontSize = 11, VerticalAlignment = VerticalAlignment.Center });
+            profile.Children.Add(new TextBlock { Text = $"赞 {item.Likes:N0}", Classes = { "muted", "track-caption" }, VerticalAlignment = VerticalAlignment.Center });
         var body = new SelectableTextBlock { Text = item.Body, TextWrapping = TextWrapping.Wrap, FontSize = 14, LineHeight = 22 };
         return new Border
         {

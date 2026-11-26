@@ -21,7 +21,7 @@ public sealed partial class ShellModel
     }
     internal Task ChangeDlc(DesktopDlcState next)
     {
-        if (!DlcPending.IsCompleted || next == DlcState) return DlcPending;
+        if (!DlcPending.IsCompleted || (next == DlcState && DlcPending.IsCompletedSuccessfully)) return DlcPending;
         return DlcPending = ApplyDlcAsync(next);
     }
 
@@ -54,6 +54,7 @@ internal sealed class PluginManager : ScrollViewer
     internal PluginManager(ShellModel shell)
     {
         var status = new TextBlock { Classes = { "muted" } };
+        var operationState = new StateViews();
         var activity = new TextBlock { Classes = { "muted" }, TextWrapping = TextWrapping.Wrap };
         var enable = new Button { Classes = { "glass-pill" } };
         var remove = new Button { Content = "卸载平台挂载", Classes = { "glass-pill" } };
@@ -62,11 +63,17 @@ internal sealed class PluginManager : ScrollViewer
         async Task ChangeAsync(DesktopDlcState next)
         {
             enable.IsEnabled = remove.IsEnabled = false;
-            activity.Text = "正在切换平台状态…";
-            try { await shell.ChangeDlc(next); activity.Text = ""; }
+            activity.Text = "";
+            operationState.Loading();
+            try
+            {
+                await shell.ChangeDlc(next);
+                operationState.Ready();
+                shell.Player.Notify(next == DesktopDlcState.Enabled ? "已启用酷狗概念版" : "已切换为本地播放");
+            }
             catch (Exception error)
             {
-                activity.Text = "平台状态切换未完成";
+                operationState.Error(() => ChangeAsync(next));
                 Program.Log("DESKTOP_DLC_ERROR", new { type = error.GetType().Name });
             }
             Refresh();
@@ -78,6 +85,8 @@ internal sealed class PluginManager : ScrollViewer
             enable.IsEnabled = true;
             remove.IsEnabled = shell.DlcState != DesktopDlcState.Removed;
             account.IsVisible = shell.KugouEnabled;
+            if (shell.DlcState == DesktopDlcState.Removed && operationState.Content == null)
+                operationState.Empty("音乐在本地，随时都能听。", "恢复内置插件", () => _ = ChangeAsync(DesktopDlcState.Enabled));
         }
         enable.Click += async (_, _) => await ChangeAsync(shell.KugouEnabled ? DesktopDlcState.Disabled : DesktopDlcState.Enabled);
         remove.Click += async (_, _) => await ChangeAsync(DesktopDlcState.Removed);
@@ -104,6 +113,7 @@ internal sealed class PluginManager : ScrollViewer
         });
         body.Children.Add(inspect);
         body.Children.Add(activity);
+        body.Children.Add(operationState);
         Content = body;
         Refresh();
     }

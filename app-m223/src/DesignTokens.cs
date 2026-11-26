@@ -13,6 +13,7 @@ public static class DesignTokens
 {
     // ── 主色（粉） ────────────────────────────────────────────
     /// <summary>播放键 / 当前歌词 / 进度条</summary>
+    public static readonly Color LightAccentInk = Color.Parse("#942B5A");
     public static readonly Color AccentStrong = Color.Parse("#E88AB8");
     /// <summary>hover 态</summary>
     public static readonly Color AccentMid    = Color.Parse("#F0A9C9");
@@ -67,6 +68,7 @@ public static class DesignTokens
     public const double RadiusS = 8;
     public const double RadiusM = 12;
     public const double RadiusL = 16;
+    public static Avalonia.CornerRadius NoticeRadius { get; } = new(RadiusL);
 
     // ── R10 布局数学（YesPlayMusic 移植：只抄参数与节奏）──────
     public const double ContentPadTop     = 64;   // 内容区上留白
@@ -90,6 +92,18 @@ public static class DesignTokens
     public const double FontXl   = 28;
 
     // ── 字体栈（唯一来源）────────────────────────────────────
+    public static readonly Color DesktopLyricShadow = Color.Parse("#0B1020");
+    public static TimeSpan ProviderUiTimeout { get; } = TimeSpan.FromSeconds(20);
+    public const int StateSkeletonRows = 4;
+    public const double StateMessageWidth = 420;
+    public const double NoticeLineHeight = 24; // 15px × 1.6
+    public const double StateCopySize = 15;
+    public const double TitleTracking = -0.42; // −1.5% at 28px
+    public const double TrackingCaptionSize = 11;
+    public const double CaptionTracking = 0.11; // +1% at 11px
+    public const string LyricSerifFonts = "avares://HuayuanMusic.P17.Nightflight/Assets/Fonts#LXGW WenKai Lite, SimSun, 宋体, $Default";
+    public static Avalonia.Media.FontFamily LyricSerif { get; } = new(LyricSerifFonts);
+
     public const string FontLatin  = "Segoe UI Variable, Segoe UI";
     public const string FontCjk    = "Microsoft YaHei UI";
     public const string FontFamily = "MiSans, MiSans, Segoe UI Variable, Microsoft YaHei UI";

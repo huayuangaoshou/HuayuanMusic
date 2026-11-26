@@ -60,6 +60,7 @@ internal sealed class DesktopLyricWindow : Window
     private bool toolbarClosed;
 
     internal bool Locked { get; private set; }
+    private bool serif;
     internal event Action<DesktopLyricOptions>? PreferencesChanged;
     internal event Action? LockChanged;
 
@@ -160,6 +161,7 @@ internal sealed class DesktopLyricWindow : Window
         toolbarWindow.Resized += (_, _) => PositionToolbar();
         toolbarWindow.Closed += (_, _) => toolbarClosed = true;
 
+        serif = preferences.Serif;
         fontSize = Math.Clamp(preferences.FontSize == 30 ? DesktopLyricOptions.DefaultFontSize : preferences.FontSize, 18, 46);
         AdjustFont(0);
         RenderLyrics();
@@ -261,7 +263,7 @@ internal sealed class DesktopLyricWindow : Window
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int key);
 
-    internal DesktopLyricOptions Capture(bool visible) => new(visible, Locked, Position.X, Position.Y, fontSize);
+    internal DesktopLyricOptions Capture(bool visible) => new(visible, Locked, Position.X, Position.Y, fontSize, serif);
 
     internal void Sync(PlaybackSnapshot snapshot)
     {
@@ -306,6 +308,13 @@ internal sealed class DesktopLyricWindow : Window
             AutomationProperties.SetName(lockButton, name);
             ToolTip.SetTip(lockButton, name);
         }
+    }
+
+    internal void SetSerif(bool enabled)
+    {
+        if (serif == enabled) return;
+        serif = enabled;
+        UpdateFont();
     }
 
     internal void ResetAppearance()
@@ -405,9 +414,10 @@ internal sealed class DesktopLyricWindow : Window
 
     private void UpdateFont()
     {
-        current.SetFont(FontFamily, fontSize);
-        translation.SetFont(FontFamily, Math.Max(14, fontSize * .58));
-        next.SetFont(FontFamily, Math.Max(16, fontSize * .66));
+        var family = serif ? DesignTokens.LyricSerif : FontFamily;
+        current.SetFont(family, fontSize);
+        translation.SetFont(family, Math.Max(14, fontSize * .58));
+        next.SetFont(family, Math.Max(16, fontSize * .66));
         ResizeToLyrics();
     }
 

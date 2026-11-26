@@ -64,7 +64,7 @@ public sealed class InteractionController:ObservableObject {
   l.DetachedFromVisualTree+=(_,_)=>CancelFollow();
   l.DoubleTapped+=(_,e)=>{if(BatchMode||DateTime.UtcNow<ignoreDouble||FromButton(e.Source))return;var row=Hit(e.Source);if(row!=null&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;};
   l.KeyDown+=(_,e)=>{if(e.Key==Key.Escape){if(BatchMode){SetBatchMode(false);e.Handled=true;return;}Cancel();e.Handled=true;}else if(e.Key==Key.A&&e.KeyModifiers.HasFlag(KeyModifiers.Control)){l.SelectAll();e.Handled=true;}else if(e.Key==Key.Enter&&!FromButton(e.Source)){if(l.SelectedItem is TrackRow row&&(queue||row.CanUsePlatform))PlayRow(row);e.Handled=true;}else if(e.Key==Key.Delete&&(queue||Editable||BatchMode)){if(BatchMode)_=DeleteSelectedAsync();else player.Remove(Selected());e.Handled=true;}else if(e.KeyModifiers.HasFlag(KeyModifiers.Control)&&e.Key is Key.Up or Key.Down&&(queue||Editable)){MoveSelected(e.Key==Key.Up?-1:1);e.Handled=true;}};
-  l.ContextRequested+=(_,e)=>{var row=Hit(e.Source);if(row==null)return;if(!Selected().Contains(row))l.SelectedItem=row;var selected=Selected();var menu=new MenuFlyout();LastMenu=menu;
+  l.ContextRequested+=(_,e)=>{var row=Hit(e.Source);if(row==null)return;if(!Selected().Contains(row))l.SelectedItem=row;var selected=Selected();var menu=new AnchoredMenuFlyout();LastMenu=menu;
    void Add(string label,Action action,bool enabled=true)=>menu.Items.Add(new MenuItem{Header=label,Command=new RelayCommand(action),IsEnabled=enabled});
    bool local=selected.Length>0&&selected.All(r=>r.Owner.Local&&!r.IsProviderTrack);
    if(selected.Length>0&&selected.All(r=>r.CanUsePlatform)){

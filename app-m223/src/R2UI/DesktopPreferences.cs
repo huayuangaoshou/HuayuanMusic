@@ -3,7 +3,7 @@ using KugouAvaloniaPlayer.Services;
 
 namespace HuayuanPreview.R2;
 
-internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = DesktopLyricOptions.DefaultFontSize)
+internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = false, int? X = null, int? Y = null, double FontSize = DesktopLyricOptions.DefaultFontSize, bool Serif = false)
 {
     internal const double DefaultFontSize = 25;
 }

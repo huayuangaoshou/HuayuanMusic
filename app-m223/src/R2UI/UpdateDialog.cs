@@ -107,6 +107,7 @@ public partial class R2ShellView
                 Children =
                 {
                     new GlassOptics { Margin = new Thickness(1), Radius = DesignTokens.RadiusM - 1, Frost = DesignTokens.FrostRegular, Saturation = DesignTokens.SaturationChrome, IsHitTestVisible = false },
+                    new Border { Classes = { "glass-edge" } },
                     content
                 }
             }
@@ -121,7 +122,7 @@ public partial class R2ShellView
             Content = panel
         };
         if (!DesignTokens.ShaderDegrade)
-            panel.Classes.Add("update-enter");
+            panel.Classes.Add("glass-enter");
 
         updateDialog = dialog;
         dialog.Closed += (_, _) => updateDialog = null;
@@ -189,5 +190,27 @@ public partial class R2ShellView
         }
         // Graceful shutdown: this triggers the normal Closing pipeline in Program.cs.
         Window?.Close();
+    }
+}
+
+internal static class GlassDialogSurface
+{
+    internal static Border Create(Control content, Thickness padding)
+    {
+        var border = new Border
+        {
+            Classes = { "glass", "glass-float" },
+            Margin = new Thickness(DesignTokens.Space3),
+            Child = new Grid
+            {
+                Children =
+                {
+                    new Border { Classes = { "glass-edge" } },
+                    new Border { Padding = padding, Child = content }
+                }
+            }
+        };
+        if (!DesignTokens.ShaderDegrade) border.Classes.Add("glass-enter");
+        return border;
     }
 }

@@ -34,6 +34,7 @@ public partial class R2ShellView
         DrawerCommentScroll.Offset = default;
         if (queueOpen) SetQueueOpen(false);
         CommentDrawerLayer.IsVisible = true;
+        if (!DesignTokens.ShaderDegrade) CommentDrawerSurface.Classes.Add("glass-enter");
         CommentDrawerLayer.IsHitTestVisible = true;
         Dispatcher.UIThread.Post(() =>
         {
@@ -60,7 +61,9 @@ public partial class R2ShellView
         CommentDrawer.RenderTransform = TransformOperations.Parse("translateX(444px)");
         DispatcherTimer.RunOnce(() =>
         {
-            if (drawerCommentTrack == null) CommentDrawerLayer.IsVisible = false;
+            if (drawerCommentTrack != null) return;
+            CommentDrawerLayer.IsVisible = false;
+            CommentDrawerSurface.Classes.Remove("glass-enter");
         }, DesignTokens.MotionSpatialDefault.Duration);
     }
 
@@ -70,19 +73,21 @@ public partial class R2ShellView
     {
         if (model is not { } shell || drawerCommentTrack is not { } row || !row.CanUseOnlineActions ||
             drawerCommentRequest != null || drawerCommentPage < 1) return;
-        using var request = new CancellationTokenSource();
+        using var request = new CancellationTokenSource(DesignTokens.ProviderUiTimeout);
         drawerCommentRequest = request;
         int page = drawerCommentPage;
         string key = row.CatalogIdentity;
         string id = key[(key.LastIndexOf(':') + 1)..];
-        DrawerCommentStatus.Text = "正在加载评论…";
+        if (page == 1) DrawerCommentStatus.Loading();
         DrawerCommentMore.IsEnabled = false;
         try
         {
             var data = await shell.Concept.DesktopCall((gateway, ct) => gateway.ReadDesktopCommentsAsync(id, page, ct), request.Token);
-            if (request.IsCancellationRequested || !row.CanUseOnlineActions) return;
-            DrawerCommentStatus.Text = data == null || (data.Total == 0 && data.Hot.Length == 0 && data.Latest.Length == 0)
-                ? "这首歌暂无评论" : "";
+            if (!ReferenceEquals(drawerCommentRequest, request) || !row.CanUseOnlineActions) return;
+            request.Token.ThrowIfCancellationRequested();
+            if (page == 1 && (data == null || (data.Hot.Length == 0 && data.Latest.Length == 0)))
+                DrawerCommentStatus.Empty("第一条留言还没来。继续听歌吧。", "返回播放", CloseSongComments);
+            else DrawerCommentStatus.Ready();
             if (data != null)
             {
                 DrawerCommentCount.Text = data.Total > 0 ? data.Total.ToString("N0") : "";
@@ -101,13 +106,17 @@ public partial class R2ShellView
             DrawerCommentMore.IsVisible = data?.More == true;
             drawerCommentPage = data?.More == true ? page + 1 : -1;
         }
-        catch (OperationCanceledException) { }
+        catch (OperationCanceledException) when (!ReferenceEquals(drawerCommentRequest, request)) { }
         catch (Exception error)
         {
-            if (request.IsCancellationRequested) return;
-            DrawerCommentStatus.Text = "暂时无法加载评论";
-            DrawerCommentMore.Content = "重试";
-            DrawerCommentMore.IsVisible = true;
+            if (!ReferenceEquals(drawerCommentRequest, request)) return;
+            if (page == 1)
+            {
+                DrawerCommentStatus.Error(FetchDrawerCommentsAsync);
+                ShowNotice("歌曲评论暂时不可用");
+            }
+            DrawerCommentMore.Content = "重试加载评论";
+            DrawerCommentMore.IsVisible = page > 1;
             Program.Log("R2_DRAWER_COMMENTS_FAILED", new { type = error.GetType().Name });
         }
         finally

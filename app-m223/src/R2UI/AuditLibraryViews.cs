@@ -8,26 +8,27 @@ namespace HuayuanPreview.R2;
 
 public sealed partial class WorkspaceState
 {
-    private Control MakeSongEmptyState(string title)
+    private StateViews MakeSongEmptyState(string title)
     {
-        var label = title switch
+        var view = new StateViews();
+        void FocusSearch() => Root.FindAncestorOfType<R2ShellView>()?.FocusSearch();
+        switch (title)
         {
-            "收藏" => "暂无收藏歌曲，点击歌曲旁边的红心即可收藏",
-            "本地曲库" => "暂无本地音乐，可添加文件夹或导入音频文件",
-            "歌单详情" => "这份歌单还没有歌曲",
-            "搜索结果" or "单曲结果" => "没有找到匹配的歌曲，试试其他关键词",
-            _ => "暂无歌曲"
-        };
-        var panel = new StackPanel { Spacing = 10, HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center, IsHitTestVisible = false };
-        if (title == "收藏")
-        {
-            var heart = new Avalonia.Controls.Shapes.Path { Width=32, Height=32, Stretch=Stretch.Uniform };
-            heart.Classes.Add("empty-heart");
-            panel.Children.Add(heart);
+            case "本地曲库":
+                view.Empty("还没有歌。放一首喜欢的进来。", "管理本地文件夹", OpenFolderManager);
+                break;
+            case "收藏":
+                view.Empty("还没有收藏。喜欢哪首歌，就点亮它的红心。", "浏览曲库", () => Navigate(CatalogPage));
+                break;
+            case "搜索结果":
+            case "单曲结果":
+                view.Empty("没有找到这首歌。试试另一个关键词。", "编辑关键词", FocusSearch);
+                break;
+            default:
+                view.Empty("这里还没有歌曲。去曲库找点喜欢的。", "浏览曲库", () => Navigate(CatalogPage));
+                break;
         }
-        panel.Children.Add(new TextBlock { Text=label, Classes={ "muted" }, TextAlignment=TextAlignment.Center });
-        return panel;
+        return view;
     }
 
     private Button NewPlaylistButton()
@@ -53,7 +54,7 @@ public sealed partial class WorkspaceState
         panel.Children.Add(new StackPanel { Orientation=Orientation.Horizontal, Spacing=8, Children={ action,cancel } });
         var dialog = new Window { Title=title, Width=400, SizeToContent=SizeToContent.Height, CanResize=false,
             WindowStartupLocation=WindowStartupLocation.CenterOwner, RequestedThemeVariant=owner.ActualThemeVariant,
-            Content=new Border { Classes={ "glass", "glass-float" }, Margin=new Thickness(12), Padding=new Thickness(14), Child=panel } };
+            Content=GlassDialogSurface.Create(panel, new Thickness(DesignTokens.Space4)) };
         action.Click += (_, _) =>
         {
             if (remove || !string.IsNullOrWhiteSpace(input.Text)) dialog.Close(remove?"":input.Text.Trim());
@@ -98,7 +99,7 @@ public sealed partial class WorkspaceState
         {
             Title = title, Width = 400, SizeToContent = SizeToContent.Height, CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner, RequestedThemeVariant = owner.ActualThemeVariant,
-            Content = new Border { Classes = { "glass", "glass-float" }, Margin = new Thickness(12), Padding = new Thickness(14), Child = panel }
+            Content = GlassDialogSurface.Create(panel, new Thickness(DesignTokens.Space4))
         };
         var result = false;
         confirm.Click += (_, _) => { result = true; dialog.Close(); };

@@ -11,7 +11,7 @@ namespace HuayuanPreview.R2;
 
 internal static class ArtworkPlaceholder
 {
-    private static readonly Geometry Note = Geometry.Parse("M9,3 L20,1 L20,15 C20,19 14,21 12,18 C10,15 13,13 17,13 L17,6 L12,7 L12,18 C12,22 6,24 4,21 C2,18 5,16 9,16 Z");
+    internal static readonly Geometry Note = Geometry.Parse("M9,3 L20,1 L20,15 C20,19 14,21 12,18 C10,15 13,13 17,13 L17,6 L12,7 L12,18 C12,22 6,24 4,21 C2,18 5,16 9,16 Z");
     private static readonly LinearGradientBrush Background = new()
     {
         StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),

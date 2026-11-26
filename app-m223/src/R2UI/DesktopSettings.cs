@@ -79,7 +79,16 @@ public partial class R2ShellView
         { return current with {MicroFade=value}; });
         fade.IsCheckedChanged+=(_,_)=> SimpleAudioPlayer.DesktopMicroFade=fade.IsChecked==true;
         Section("音频与播放",Row("默认音质",quality), Row("音频输出设备",devices),fade);
-        Section("歌词设置", new WrapPanel { ItemSpacing=6, LineSpacing=6, Children={
+        var lyricFont = Options(["无衬线（默认）", "文楷（衬线）"], DesktopPreferences.DesktopLyrics.Serif ? 1 : 0);
+        lyricFont.SelectionChanged += (_, _) =>
+        {
+            if (lyricFont.SelectedIndex < 0) return;
+            var serif = lyricFont.SelectedIndex == 1;
+            desktopLyrics?.SetSerif(serif);
+            var options = desktopLyrics?.Capture(true) ?? DesktopPreferences.DesktopLyrics;
+            QueueLyricPreferences(options with { Serif = serif });
+        };
+        Section("歌词设置", Row("桌面歌词字体", lyricFont), new WrapPanel { ItemSpacing=6, LineSpacing=6, Children={
             ButtonFor("显示 / 隐藏桌面歌词",ToggleDesktopLyricsFromHost),
             ButtonFor("解锁鼠标穿透",UnlockDesktopLyricsFromHost),
             ButtonFor("重置位置和字号",ResetDesktopLyricsFromHost) } });

@@ -30,19 +30,35 @@ public partial class R2ShellView : UserControl
     {
         InitializeComponent();
         InitializeOnlineSearch();
+        if (!DesignTokens.ShaderDegrade)
+        {
+            MainSidebar.Classes.Add("glass-enter");
+            MainDock.Classes.Add("glass-enter");
+            SuggestionsPopup.Opened += (_, _) => SuggestionsSurface.Classes.Add("popup-enter");
+            SuggestionsPopup.Closed += (_, _) => SuggestionsSurface.Classes.Remove("popup-enter");
+        }
         InitializeLyricOverlay();
+        QueueEmpty.Empty("队列还空着。放一首喜欢的歌进来。", "浏览本地曲库", () =>
+        {
+            SetQueueOpen(false);
+            if (lyricOpen) CloseLyricOverlay();
+            if (model is not { } shell) return;
+            shell.Switch(shell.LocalWorkspace);
+            shell.LocalWorkspace.Navigate(shell.LocalWorkspace.CatalogPage);
+        });
         QualityChoice.SelectedIndex=FullQuality.SelectedIndex=DesktopPreferences.Quality switch { "320"=>1,"flac"=>2,_=>0 };
         filterDelay.Tick += (_, _) =>
         {
             filterDelay.Stop();
             if(model?.Workspace.Local==true) model.Workspace.ApplyFilter(CurrentFilter.Text ?? "");
         };
-        drawerDelay.Tick += (_, _) => { drawerDelay.Stop(); if (!queueOpen) DrawerLayer.IsVisible = false; };
+        drawerDelay.Tick += (_, _) => { drawerDelay.Stop(); if (!queueOpen) { DrawerLayer.IsVisible = false; QueueDrawerSurface.Classes.Remove("glass-enter"); } };
         toastDelay.Tick += (_, _) =>
         {
             toastDelay.Stop();
+            SetToastTransition(DesignTokens.MotionEffectsDefault);
             ToastPlate.Opacity = 0;
-            DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, DesignTokens.MotionEffectsFast.Duration);
+            DispatcherTimer.RunOnce(() => { if (!toastDelay.IsEnabled) ToastPlate.IsVisible = false; }, DesignTokens.MotionEffectsDefault.Duration);
         };
         DataContextChanged += (_, _) => BindModel();
         DetachedFromVisualTree += (_, _) => { filterDelay.Stop(); drawerDelay.Stop(); toastDelay.Stop(); downloadRequest?.Cancel(); CloseSongComments(); };
@@ -85,13 +101,29 @@ public partial class R2ShellView : UserControl
         foreach (var row in model?.Player.DisplayPlaybackQueue ?? []) row.RefreshAccess();
     }
 
-    private void ShowToast(string text)
+    internal void FocusSearch() => CurrentFilter.Focus();
+
+    private void ShowToast(string text) => ShowFeedback(text, notice: false);
+    private void ShowNotice(string text) => ShowFeedback(text, notice: true);
+
+    private void ShowFeedback(string text, bool notice)
     {
+        ToastPlate.Classes.Set("notice", notice);
         ToastText.Text = text;
+        SetToastTransition(DesignTokens.MotionEffectsFast);
         ToastPlate.IsVisible = true;
         ToastPlate.Opacity = 1;
         toastDelay.Stop();
         toastDelay.Start();
+    }
+
+    private void SetToastTransition(DesignTokens.MotionSpec spec)
+    {
+        if (ToastPlate.Transitions?[0] is Avalonia.Animation.DoubleTransition transition)
+        {
+            transition.Duration = spec.Duration;
+            transition.Easing = spec.Curve;
+        }
     }
 
     private void WorkspaceChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs args)
@@ -133,9 +165,9 @@ public partial class R2ShellView : UserControl
         syncingQuality=false;
         var selected=index switch { 1=>"320",2=>"flac",_=>"standard" };
         if(selected==DesktopPreferences.Quality) return;
-        try { await DesktopPreferences.ChooseQualityAsync(selected); Program.Log("R2_QUALITY_PREFERENCE",new{quality=selected}); }
+        try { await DesktopPreferences.ChooseQualityAsync(selected); if (model != null) ShowNotice($"已切换音质 · {new[] { "标准", "高品 MP3", "无损 FLAC" }[index]}"); Program.Log("R2_QUALITY_PREFERENCE",new{quality=selected}); }
         catch(Exception error) when(error is IOException or UnauthorizedAccessException)
-        { Program.Log("R2_QUALITY_WRITE_FAILED",new{type=error.GetType().Name}); }
+        { ShowNotice("音质设置暂未保存"); Program.Log("R2_QUALITY_WRITE_FAILED",new{type=error.GetType().Name}); }
     }
 
     private void UpdateVolume()
@@ -252,7 +284,7 @@ public partial class R2ShellView : UserControl
     {
         if (model is not { KugouEnabled: true } shell || sender is not Button button) return;
         if (!shell.Concept.Connected) { _ = ShowQrLoginAsync(shell); return; }
-        var menu = new MenuFlyout();
+        var menu = new AnchoredMenuFlyout();
         var details = new MenuItem { Header = "账号信息" };
         details.Click += (_, _) => shell.ShowAccount();
         var change = new MenuItem { Header = "切换账号" };
@@ -279,8 +311,7 @@ public partial class R2ShellView : UserControl
             Title = "登录酷狗", Width = 460, Height = 440, CanResize = false,
             WindowStartupLocation = WindowStartupLocation.CenterOwner,
             RequestedThemeVariant = ActualThemeVariant,
-            Content = new Border { Classes = { "glass", "glass-float" }, Margin = new Avalonia.Thickness(12),
-                Child = new StackPanel { Children = { holder, refresh } } }
+            Content = GlassDialogSurface.Create(new StackPanel { Children = { holder, refresh } }, new Thickness(0))
         };
         loginDialog = dialog;
         dialog.Closed += (_, _) =>
@@ -354,6 +385,7 @@ public partial class R2ShellView : UserControl
         queueOpen = open;
         drawerDelay.Stop();
         if (open) DrawerLayer.IsVisible = true; else drawerDelay.Start();
+        if (open && !DesignTokens.ShaderDegrade) QueueDrawerSurface.Classes.Add("glass-enter");
         DrawerLayer.IsHitTestVisible = open;
         SetFadeDirection(DrawerShade, open);
         DrawerShade.Opacity = open ? 1 : 0;
