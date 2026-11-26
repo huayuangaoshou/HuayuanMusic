@@ -93,6 +93,16 @@ dotnet publish app-m223/src/Preview.csproj -c Release -r win-x64 --self-containe
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" app-m223/installer.iss
 ```
 
+### 下载慢或失败？
+
+安装包托管在 GitHub Releases。国内直连较慢时，可在以下任一加速镜像下载
+（把镜像地址拼在完整下载链接前面即可）：
+
+- https://ghfast.top/
+- https://gh-proxy.com/
+
+安装包 SHA256 校验值见 Release 页附件说明。若该版本的发布说明未列出校验值，可在 [GitHub Releases API](https://api.github.com/repos/huayuangaoshou/HuayuanMusic/releases) 查询对应附件的 `digest`。
+
 ### 首次运行 Windows SmartScreen 提示
 
 本程序当前未做代码签名证书，首次运行时 Windows SmartScreen 可能弹出「已保护你的电脑」提示。这是未签名程序的正常现象，请按以下步骤放行：

@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
@@ -25,15 +26,21 @@ public static class UpdateManager
         new(version.Major, version.Minor, Math.Max(0, version.Build));
 
     private static readonly HttpClient Client = CreateClient();
+    private static readonly HttpClient DownloadClient = CreateClient(Timeout.InfiniteTimeSpan);
+    private static readonly TimeSpan FirstByteTimeout = TimeSpan.FromSeconds(15);
+    private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
 
-    private static HttpClient CreateClient()
+    // Third-party download mirrors. Replace a domain here when it stops serving release assets.
+    private static readonly string[] DownloadMirrors = ["https://ghfast.top/", "https://gh-proxy.com/", "https://ghproxy.net/"];
+
+    private static HttpClient CreateClient(TimeSpan? timeout = null)
     {
         var client = new HttpClient(new SocketsHttpHandler
         {
             AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
         })
         {
-            Timeout = TimeSpan.FromSeconds(20)
+            Timeout = timeout ?? TimeSpan.FromSeconds(20)
         };
         // GitHub requires a User-Agent; without it requests are rejected with 403.
         client.DefaultRequestHeaders.UserAgent.ParseAdd($"HuayuanMusic/{CurrentVersion} (+https://github.com/{GitHubRepo})");
@@ -43,6 +50,8 @@ public static class UpdateManager
     /// <summary>Latest release payload parsed from the GitHub API.</summary>
     public sealed record ReleaseInfo(string TagName, string Name, string Body, string? SetupUrl, Version Version)
     {
+        public string? SetupDigest { get; init; }
+        public long? SetupSize { get; init; }
         public bool IsNewer => NormalizeVersion(Version) > CurrentVersion;
     }
 
@@ -84,6 +93,8 @@ public static class UpdateManager
 
             // Prefer a "-Setup" .exe asset for the one-click installer.
             string? setupUrl = null;
+            string? setupDigest = null;
+            long? setupSize = null;
             if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
             {
                 foreach (var asset in assets.EnumerateArray())
@@ -94,15 +105,21 @@ public static class UpdateManager
                     if (assetName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
                         && assetName.Contains("-Setup", StringComparison.OrdinalIgnoreCase))
                     {
-                        setupUrl = asset.TryGetProperty("browser_download_url", out var urlElement)
-                            ? urlElement.GetString() : null;
+                        var urlValue = ReadString(asset, "browser_download_url");
+                        if (!IsOfficialInstallerUrl(urlValue)) continue;
+
+                        setupUrl = urlValue;
+                        setupDigest = ReadString(asset, "digest");
+                        if (asset.TryGetProperty("size", out var size) && size.ValueKind == JsonValueKind.Number
+                            && size.TryGetInt64(out var bytes) && bytes > 0)
+                            setupSize = bytes;
                         break;
                     }
                 }
             }
 
             var release = new ReleaseInfo(tag ?? "", string.IsNullOrWhiteSpace(name) ? tag ?? "" : name,
-                body ?? "", setupUrl, version);
+                body ?? "", setupUrl, version) { SetupDigest = setupDigest, SetupSize = setupSize };
             return new CheckResult(release, release.IsNewer ? "发现新版本" : "当前已是最新版本");
         }
         catch (HttpRequestException)
@@ -119,30 +136,120 @@ public static class UpdateManager
         }
     }
 
-    /// <summary>
-    /// Downloads the installer to a temp path, reporting progress on the UI thread.
-    /// </summary>
-    public static async Task<string> DownloadInstallerAsync(string url, IProgress<double>? progress, CancellationToken cancellation = default)
+    public enum DownloadStage { Direct, Mirror, Verifying }
+
+    public readonly record struct DownloadProgress(DownloadStage Stage, double? Fraction = null);
+
+    public static Task<string> DownloadInstallerAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress,
+        CancellationToken cancellation = default) =>
+        DownloadInstallerAsync(release, progress, DownloadClient, FirstByteTimeout, StallTimeout, cancellation);
+
+    internal static string? GetManualDownloadUrl(ReleaseInfo release) =>
+        IsOfficialInstallerUrl(release.SetupUrl) ? DownloadMirrors[0] + release.SetupUrl : null;
+
+    private static bool IsOfficialInstallerUrl(string? value) =>
+        Uri.TryCreate(value, UriKind.Absolute, out var url) &&
+        url.Scheme == Uri.UriSchemeHttps && url.Host == "github.com" && url.IsDefaultPort &&
+        url.UserInfo.Length == 0 && url.Query.Length == 0 && url.Fragment.Length == 0 &&
+        url.AbsolutePath.StartsWith($"/{GitHubRepo}/releases/download/", StringComparison.OrdinalIgnoreCase) &&
+        url.AbsolutePath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase);
+
+    private static string? ReadString(JsonElement item, string name) =>
+        item.TryGetProperty(name, out var value) && value.ValueKind == JsonValueKind.String ? value.GetString() : null;
+
+    private static byte[]? ReadDigest(string? digest)
     {
-        var target = Path.Combine(Path.GetTempPath(), "HuayuanMusic-Setup-Update.exe");
-        using var response = await Client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellation).ConfigureAwait(false);
-        response.EnsureSuccessStatusCode();
+        const string prefix = "sha256:";
+        if (digest?.Length != prefix.Length + 64 || !digest.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return null;
+        try { return Convert.FromHexString(digest.AsSpan(prefix.Length)); }
+        catch (FormatException) { return null; }
+    }
 
-        var total = response.Content.Headers.ContentLength;
-        await using var source = await response.Content.ReadAsStreamAsync(cancellation).ConfigureAwait(false);
-        await using var destination = new FileStream(target, FileMode.Create, FileAccess.Write, FileShare.None, 81920, useAsync: true);
-
-        var buffer = new byte[81920];
-        long received = 0;
-        int read;
-        while ((read = await source.ReadAsync(buffer, cancellation).ConfigureAwait(false)) > 0)
+    internal static async Task<string> DownloadInstallerAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress,
+        HttpClient client, TimeSpan firstByteTimeout, TimeSpan stallTimeout, CancellationToken cancellation)
+    {
+        cancellation.ThrowIfCancellationRequested();
+        var expected = ReadDigest(release.SetupDigest);
+        if (!IsOfficialInstallerUrl(release.SetupUrl) || expected == null)
         {
-            await destination.WriteAsync(buffer.AsMemory(0, read), cancellation).ConfigureAwait(false);
-            received += read;
-            if (total is > 0)
-                progress?.Report(Math.Clamp((double)received / total.Value, 0, 1));
+            Program.Log("UPDATE_SOURCE", new { source = "github.com", result = "missing_installer_or_digest" });
+            throw new InvalidDataException("Missing trusted installer URL or SHA-256.");
         }
-        return target;
+
+        string[] sources = [release.SetupUrl!, .. DownloadMirrors.Select(prefix => prefix + release.SetupUrl)];
+        string target = Path.Combine(Path.GetTempPath(), $"HuayuanMusic-Setup-{Guid.NewGuid():N}.exe");
+        string partial = target + ".download";
+        for (var i = 0; i < sources.Length; i++)
+        {
+            cancellation.ThrowIfCancellationRequested();
+            var source = new Uri(sources[i]);
+            var stage = i == 0 ? DownloadStage.Direct : DownloadStage.Mirror;
+            var failure = "download_failed";
+            bool receiving = false;
+            bool verified = false;
+            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "attempt" });
+            progress?.Report(new(stage));
+            try
+            {
+                using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
+                deadline.CancelAfter(firstByteTimeout);
+                using var response = await client.GetAsync(source, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
+                response.EnsureSuccessStatusCode();
+                await using (var input = await response.Content.ReadAsStreamAsync(deadline.Token).ConfigureAwait(false))
+                await using (var output = new FileStream(partial, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, useAsync: true))
+                {
+                    var total = release.SetupSize ?? response.Content.Headers.ContentLength;
+                    var buffer = new byte[81920];
+                    long received = 0;
+                    while (await input.ReadAsync(buffer, deadline.Token).ConfigureAwait(false) is > 0 and var read)
+                    {
+                        receiving = true;
+                        received += read;
+                        if (release.SetupSize is > 0 && received > release.SetupSize.Value)
+                            throw new InvalidDataException("Installer exceeds the release asset size.");
+                        await output.WriteAsync(buffer.AsMemory(0, read), cancellation).ConfigureAwait(false);
+                        deadline.CancelAfter(stallTimeout);
+                        if (total is > 0)
+                            progress?.Report(new(stage, Math.Clamp((double)received / total.Value, 0, 1)));
+                    }
+                }
+
+                progress?.Report(new(DownloadStage.Verifying, 1));
+                byte[] actual;
+                await using (var file = File.OpenRead(partial))
+                    actual = await SHA256.HashDataAsync(file, cancellation).ConfigureAwait(false);
+                if (CryptographicOperations.FixedTimeEquals(expected, actual))
+                {
+                    cancellation.ThrowIfCancellationRequested();
+                    File.Move(partial, target);
+                    verified = true;
+                    Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "verified" });
+                    return target;
+                }
+
+                failure = "hash_mismatch";
+            }
+            catch (OperationCanceledException) when (!cancellation.IsCancellationRequested)
+            {
+                failure = receiving ? "stall_timeout" : "first_byte_timeout";
+            }
+            catch (Exception error) when (error is HttpRequestException or IOException or InvalidDataException)
+            {
+                failure = error.GetType().Name;
+            }
+            finally
+            {
+                if (!verified) File.Delete(partial);
+            }
+
+            cancellation.ThrowIfCancellationRequested();
+            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = failure });
+            if (i + 1 < sources.Length)
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "switch", next = new Uri(sources[i + 1]).Host });
+        }
+
+        throw new IOException("No download source delivered a verified installer.");
     }
 
     /// <summary>

@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -83,7 +85,13 @@ public partial class R2ShellView
         var later = new Button { Content = "暂不", Classes = { "update-ghost" }, IsCancel = true };
         var update = new Button { Content = "去下载", Classes = { "update-primary" } };
 
-        var actions = new StackPanel { Orientation = Orientation.Horizontal, Spacing = DesignTokens.Space2, HorizontalAlignment = HorizontalAlignment.Right, Children = { later, update } };
+        var manualLink = UpdateManager.GetManualDownloadUrl(release);
+        var copy = new Button { Content = "复制下载链接", Classes = { "update-ghost" }, IsVisible = false };
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal, Spacing = DesignTokens.Space2,
+            HorizontalAlignment = HorizontalAlignment.Right, Children = { later, copy, update }
+        };
 
         var content = new StackPanel { Margin = new Thickness(DesignTokens.Space5), Spacing = DesignTokens.Space4, Children =
         {
@@ -124,72 +132,111 @@ public partial class R2ShellView
         if (!DesignTokens.ShaderDegrade)
             panel.Classes.Add("glass-enter");
 
+        CancellationTokenSource? download = null;
         updateDialog = dialog;
-        dialog.Closed += (_, _) => updateDialog = null;
+        dialog.Closed += (_, _) =>
+        {
+            download?.Cancel();
+            updateDialog = null;
+        };
 
         later.Click += (_, _) => dialog.Close();
 
+        copy.Click += async (_, _) =>
+        {
+            if (manualLink == null || dialog.Clipboard is not { } clipboard) return;
+            try
+            {
+                await clipboard.SetTextAsync(manualLink);
+                ShowToast("已复制，请粘贴到浏览器下载");
+                status.Text = "已复制，请粘贴到浏览器下载";
+            }
+            catch (Exception error) when (error is InvalidOperationException or System.Runtime.InteropServices.ExternalException)
+            {
+                Program.Log("UPDATE_CLIPBOARD_FAILED", new { type = error.GetType().Name });
+                status.Text = "无法复制链接，请前往发布页手动下载";
+            }
+        };
+
         update.Click += async (_, _) =>
         {
+            if (download != null) return;
             status.IsVisible = true;
-            if (string.IsNullOrWhiteSpace(release.SetupUrl))
+            if (manualLink == null)
             {
                 status.Text = "未找到可用安装包，请前往发布页手动下载";
                 return;
             }
-            update.IsEnabled = false;
-            later.IsEnabled = false;
-            progress.IsVisible = true;
+
+            using var request = new CancellationTokenSource();
+            download = request;
+            string? installer = null;
+            bool downloaded = false;
+            update.IsEnabled = later.IsEnabled = false;
+            copy.IsVisible = false;
+            progress.IsVisible = progress.IsIndeterminate = true;
+            progress.Value = 0;
             status.Text = "正在下载安装包…";
-            var reporter = new Progress<double>(value =>
-                Dispatcher.UIThread.Post(() =>
+            var reporter = new Progress<UpdateManager.DownloadProgress>(value =>
+            {
+                if (!ReferenceEquals(download, request) || downloaded || request.IsCancellationRequested) return;
+                progress.IsIndeterminate = value.Fraction == null;
+                progress.Value = value.Fraction ?? 0;
+                status.Text = value.Stage switch
                 {
-                    progress.Value = value;
-                    status.Text = $"正在下载 {value * 100:0}%";
-                }));
+                    UpdateManager.DownloadStage.Mirror => "直连较慢，正在通过加速镜像下载…",
+                    UpdateManager.DownloadStage.Verifying => "正在校验文件完整性…",
+                    _ => "正在下载安装包…"
+                };
+            });
             try
             {
-                var installer = await UpdateManager.DownloadInstallerAsync(release.SetupUrl, reporter);
+                installer = await UpdateManager.DownloadInstallerAsync(release, reporter, request.Token);
+                downloaded = true;
                 status.Text = "下载完成，即将安装…";
-                await Task.Delay(400);
+                await Task.Delay(400, request.Token);
+                LaunchInstaller(installer);
+                installer = null;
                 dialog.Close();
-                LaunchInstallerAndExit(installer);
+                if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+                    desktop.TryShutdown();
+                else Window?.Close();
             }
+            catch (OperationCanceledException) when (request.IsCancellationRequested) { }
             catch (Exception error)
             {
                 Program.Log("UPDATE_DOWNLOAD_FAILED", new { type = error.GetType().Name });
-                status.Text = "下载失败，请稍后重试";
+                if (!dialog.IsVisible) return;
+                status.Text = "下载或安装未完成，请重试，或前往发布页手动下载";
                 progress.IsVisible = false;
-                update.IsEnabled = true;
-                later.IsEnabled = true;
+                update.Content = "重试";
+                update.IsEnabled = later.IsEnabled = true;
+                copy.IsVisible = true;
+            }
+            finally
+            {
+                download = null;
+                if (installer != null)
+                {
+                    try { File.Delete(installer); }
+                    catch (Exception error) when (error is IOException or UnauthorizedAccessException)
+                    { Program.Log("UPDATE_CLEANUP_FAILED", new { type = error.GetType().Name }); }
+                }
             }
         };
 
         dialog.ShowDialog(owner);
     }
 
-    /// <summary>
-    /// Launches the downloaded installer with silent-upgrade flags, then asks the
-    /// main window to close so the old binary can be replaced.
-    /// </summary>
-    private void LaunchInstallerAndExit(string installer)
+    private static void LaunchInstaller(string installer)
     {
-        try
+        var info = new ProcessStartInfo(installer)
         {
-            var info = new ProcessStartInfo(installer)
-            {
-                Arguments = "/SILENT /NORESTART /CLOSEAPPLICATIONS",
-                UseShellExecute = true
-            };
-            Process.Start(info);
-            Program.Log("UPDATE_INSTALLER_LAUNCHED", new { path = installer });
-        }
-        catch (Exception error)
-        {
-            Program.Log("UPDATE_INSTALLER_LAUNCH_FAILED", new { type = error.GetType().Name });
-        }
-        // Graceful shutdown: this triggers the normal Closing pipeline in Program.cs.
-        Window?.Close();
+            Arguments = "/SILENT /NORESTART /CLOSEAPPLICATIONS",
+            UseShellExecute = true
+        };
+        using var process = Process.Start(info) ?? throw new InvalidOperationException("Installer did not start.");
+        Program.Log("UPDATE_INSTALLER_LAUNCHED", new { verified = true });
     }
 }
 
