@@ -4,9 +4,12 @@ using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
+using PathShape = Avalonia.Controls.Shapes.Path;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
+using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
 using Avalonia.Threading;
 using Avalonia.Styling;
@@ -29,10 +32,10 @@ internal sealed class DesktopLyricWindow : Window
     private readonly Border tools;
     private readonly StackPanel toolButtons;
     private readonly StackPanel labels;
-    private readonly PathIcon playIcon;
+    private readonly PathShape playIcon;
     private readonly Window reference;
-    private static readonly Geometry PlayIcon = Geometry.Parse("M4,2 L16,9 L4,16 Z");
-    private static readonly Geometry PauseIcon = Geometry.Parse("M4,2 H7 V16 H4 Z M11,2 H14 V16 H11 Z");
+    private static readonly Geometry PlayIcon = Geometry.Parse("M8,5 L19,12 L8,19 Z");
+    private static readonly Geometry PauseIcon = Geometry.Parse("M9,5 L9,19 M15,5 L15,19");
     private readonly DesktopLyricMousePassthroughService passthrough = new();
     private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private readonly DispatcherTimer hideToolsDelay = new() { Interval = TimeSpan.FromMilliseconds(200) };
@@ -48,6 +51,7 @@ internal sealed class DesktopLyricWindow : Window
     private double toolbarHeight;
     private bool placed;
     private bool windowsInputEnabled = true;
+    private int changedInputSamples;
 
     internal bool Locked { get; private set; }
     internal event Action<DesktopLyricOptions>? PreferencesChanged;
@@ -69,13 +73,18 @@ internal sealed class DesktopLyricWindow : Window
         Background = null;
 
         var commands = toolButtons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 5, Background = null };
+        var hoverStyle = new Style(s => s.OfType<Button>().Class(":pointerover").Template()
+            .OfType<ContentPresenter>().Name("PART_ContentPresenter"));
+        hoverStyle.Setters.Add(new Setter(ContentPresenter.BackgroundProperty, new DynamicResourceExtension("LyricToolbarHover")));
+        commands.Styles.Add(hoverStyle);
         Button Add(object label, string accessible, Action action)
         {
             var button = new Button
             {
-                Content = label, Padding = new Thickness(8, 3), MinHeight = 28,
-                Foreground = new SolidColorBrush(DesignTokens.DarkText),
-                Background = new SolidColorBrush(Color.FromArgb(0x38, DesignTokens.BlueMid.R, DesignTokens.BlueMid.G, DesignTokens.BlueMid.B))
+                Content = label, Padding = new Thickness(0), MinWidth = 32, MinHeight = 32,
+                CornerRadius = new CornerRadius(999), Background = Brushes.Transparent,
+                HorizontalContentAlignment = HorizontalAlignment.Center,
+                VerticalContentAlignment = VerticalAlignment.Center
             };
             AutomationProperties.SetName(button, accessible);
             ToolTip.SetTip(button, accessible);
@@ -83,18 +92,23 @@ internal sealed class DesktopLyricWindow : Window
             commands.Children.Add(button);
             return button;
         }
-        static PathIcon Icon(string path) => new() { Width = 13, Height = 13, Data = Geometry.Parse(path), Foreground = new SolidColorBrush(DesignTokens.DarkText) };
-        Add(Icon("M3,2 H5 V18 H3 Z M17,2 L6,10 L17,18 Z"), "桌面歌词上一首", () => player.PlayPreviousCommand.Execute(null));
-        playIcon = Icon("M4,2 L16,9 L4,16 Z");
+        static PathShape Icon(Geometry data) => new()
+        {
+            Data = data, Width = 16, Height = 16, Stretch = Stretch.Uniform, Fill = null,
+            StrokeThickness = 1.8, StrokeJoin = PenLineJoin.Round, StrokeLineCap = PenLineCap.Round,
+            IsHitTestVisible = false
+        };
+        Add(Icon(Geometry.Parse("M19,5 L9,12 L19,19 Z M7,5 L7,19")), "桌面歌词上一首", () => player.PlayPreviousCommand.Execute(null));
+        playIcon = Icon(PlayIcon);
         Add(playIcon, "桌面歌词播放或暂停", () => player.TogglePlayPauseCommand.Execute(null));
-        Add(Icon("M3,2 L14,10 L3,18 Z M15,2 H17 V18 H15 Z"), "桌面歌词下一首", () => player.PlayNextCommand.Execute(null));
+        Add(Icon(Geometry.Parse("M5,5 L15,12 L5,19 Z M17,5 L17,19")), "桌面歌词下一首", () => player.PlayNextCommand.Execute(null));
         Add("A−", "减小歌词字号", () => AdjustFont(-2));
         Add("A+", "增大歌词字号", () => AdjustFont(2));
         translationButton = Add("译", "显示或隐藏桌面歌词译文", toggleTranslation);
         translationButton.IsVisible = false;
         if (passthrough.IsSupported)
-            Add(Icon("M4,8 H14 V17 H4 Z M6,8 V5 C6,1 12,1 12,5 V8 H10 V5 C10,3 8,3 8,5 V8 Z"), "锁定桌面歌词并穿透鼠标", () => SetLocked(true));
-        Add(Icon("M4,2 L9,7 L14,2 L16,4 L11,9 L16,14 L14,16 L9,11 L4,16 L2,14 L7,9 L2,4 Z"), "关闭桌面歌词", Close);
+            Add(Icon(Geometry.Parse("M8,11 L8,8 A4,4 0 0 1 16,8 L16,11 M5.5,11 L18.5,11 L18.5,19 L5.5,19 Z")), "锁定桌面歌词并穿透鼠标", () => SetLocked(true));
+        Add(Icon(Geometry.Parse("M6,6 L18,18 M18,6 L6,18")), "关闭桌面歌词", Close);
 
         var toolSurface = new Border
         {
@@ -108,7 +122,7 @@ internal sealed class DesktopLyricWindow : Window
             Child = new Grid { Children = { toolSurface, commands } },
             VerticalAlignment = VerticalAlignment.Top, HorizontalAlignment = HorizontalAlignment.Center,
             Background = null,
-            Opacity = 0, IsHitTestVisible = false, IsVisible = false
+            Opacity = 0, IsHitTestVisible = false
         };
         tools.Transitions = [new DoubleTransition { Property = OpacityProperty, Duration = TimeSpan.FromMilliseconds(170), Easing = new Avalonia.Animation.Easings.CubicEaseOut() }];
         labels = new StackPanel
@@ -128,8 +142,6 @@ internal sealed class DesktopLyricWindow : Window
             Win32Properties.AddWindowStylesCallback(this, (style, extendedStyle) => (style | popupStyle, extendedStyle));
             Win32Properties.AddWndProcHookCallback(this, HitTestWindow);
         }
-        layout.PointerEntered += (_, _) => { hideToolsDelay.Stop(); ShowTools(true); };
-        layout.PointerExited += (_, _) => hideToolsDelay.Start();
         hideToolsDelay.Tick += (_, _) => { hideToolsDelay.Stop(); ShowTools(false); };
         layout.AddHandler(PointerPressedEvent, DragWindow, RoutingStrategies.Bubble);
 
@@ -146,8 +158,12 @@ internal sealed class DesktopLyricWindow : Window
             if (preferences.Locked) SetLocked(true);
             if (OperatingSystem.IsWindows())
             {
+                if (!Locked)
+                {
+                    passthrough.Apply(this, DesktopLyricHitTestLayout.Transparent);
+                    windowsInputEnabled = false;
+                }
                 nativeInputClock.Start();
-                UpdateWindowsInput();
             }
             if (running) renderClock.Start();
             Dispatcher.UIThread.Post(() =>
@@ -168,10 +184,12 @@ internal sealed class DesktopLyricWindow : Window
             toolSurface.BorderBrush = new SolidColorBrush(dark ? DesignTokens.DarkLine : DesignTokens.LightLine);
             toolSurface.BoxShadow = BoxShadows.Parse(dark ? "0 8 24 0 #50101726" : "0 8 24 0 #140F172A");
             var foreground = new SolidColorBrush(dark ? DesignTokens.DarkText : DesignTokens.LightText);
+            var hoverBrush = new SolidColorBrush(DesignTokens.AccentStrong, .12);
+            commands.Resources["LyricToolbarHover"] = hoverBrush;
             foreach (var button in commands.Children.OfType<Button>())
             {
                 button.Foreground = foreground;
-                if (button.Content is PathIcon icon) icon.Foreground = foreground;
+                if (button.Content is PathShape icon) icon.Stroke = foreground;
             }
         }
         RefreshToolbarTheme();
@@ -217,12 +235,26 @@ internal sealed class DesktopLyricWindow : Window
 
     private void UpdateWindowsInput()
     {
-        if (Locked || !IsVisible || !GetCursorPos(out var screenPoint)) return;
+        if (Locked || !IsVisible || !GetCursorPos(out var screenPoint))
+        {
+            changedInputSamples = 0;
+            return;
+        }
         // Keep the OS target stable from press through release, including native window dragging.
-        if ((GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0) return;
+        if ((GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0)
+        {
+            changedInputSamples = 0;
+            return;
+        }
         var point = this.PointToClient(new PixelPoint(screenPoint.X, screenPoint.Y));
         bool hot = HitsLyrics(point) || HitsToolbar(point);
-        if (hot == windowsInputEnabled) return;
+        if (hot == windowsInputEnabled)
+        {
+            changedInputSamples = 0;
+            return;
+        }
+        if (++changedInputSamples < 2) return;
+        changedInputSamples = 0;
         windowsInputEnabled = hot;
         // HTTRANSPARENT alone does not guarantee routing to an unrelated process.
         passthrough.Apply(this, hot ? DesktopLyricHitTestLayout.FullWindow : DesktopLyricHitTestLayout.Transparent);
@@ -261,6 +293,7 @@ internal sealed class DesktopLyricWindow : Window
         anchorTimestamp = Stopwatch.GetTimestamp();
         running = snapshot.Playing;
         playIcon.Data = running ? PauseIcon : PlayIcon;
+        playIcon.StrokeThickness = running ? 2.2 : 1.8;
         if (running) renderClock.Start(); else renderClock.Stop();
         RenderLyrics();
     }
@@ -278,8 +311,10 @@ internal sealed class DesktopLyricWindow : Window
     {
         if (!passthrough.IsSupported || locked == Locked) return;
         Locked = locked;
-        passthrough.Apply(this, locked ? DesktopLyricHitTestLayout.Transparent : DesktopLyricHitTestLayout.FullWindow);
-        windowsInputEnabled = !locked;
+        windowsInputEnabled = !locked && !OperatingSystem.IsWindows();
+        passthrough.Apply(this, windowsInputEnabled ? DesktopLyricHitTestLayout.FullWindow : DesktopLyricHitTestLayout.Transparent);
+        changedInputSamples = 0;
+        hideToolsDelay.Stop();
         ShowTools(false);
         ScheduleSave();
         LockChanged?.Invoke();
@@ -303,7 +338,9 @@ internal sealed class DesktopLyricWindow : Window
         var width = (int)(Width * screen.Scaling);
         var height = (int)(Height * screen.Scaling);
         var position = requested is { } saved && area.Contains(saved)
-            ? saved : new PixelPoint(area.X + (area.Width - width) / 2, area.Bottom - height - 70);
+            ? new PixelPoint(saved.X - ToPixels(Width / 2, screen.Scaling) + ToPixels(lyricWidth / 2, screen.Scaling),
+                saved.Y - ToPixels(toolbarHeight, screen.Scaling))
+            : new PixelPoint(area.X + (area.Width - width) / 2, area.Bottom - height - 70);
         Position = new PixelPoint(Math.Clamp(position.X, area.X, Math.Max(area.X, area.Right - width)),
             Math.Clamp(position.Y, area.Y, Math.Max(area.Y, area.Bottom - height)));
     }
@@ -311,9 +348,7 @@ internal sealed class DesktopLyricWindow : Window
     private void ShowTools(bool shown)
     {
         tools.IsHitTestVisible = shown && !Locked;
-        tools.IsVisible = tools.IsHitTestVisible;
         tools.Opacity = tools.IsHitTestVisible ? 1 : 0;
-        ResizeToLyrics();
     }
 
     private void DragWindow(object? sender, PointerPressedEventArgs args)
@@ -345,16 +380,13 @@ internal sealed class DesktopLyricWindow : Window
     {
         labels.InvalidateMeasure();
         labels.Measure(Size.Infinity);
-        if (tools.IsVisible)
-        {
-            tools.InvalidateMeasure();
-            tools.Measure(Size.Infinity);
-        }
+        tools.InvalidateMeasure();
+        tools.Measure(Size.Infinity);
         const double gutter = 2 * ShadowGutter;
         // The label stack's DesiredSize already includes its margin.
         double newLyricWidth = Math.Max(gutter, Math.Ceiling(labels.DesiredSize.Width));
-        double newToolbarHeight = tools.IsVisible ? Math.Ceiling(tools.DesiredSize.Height) : 0;
-        double width = Math.Max(newLyricWidth, tools.IsVisible ? Math.Ceiling(tools.DesiredSize.Width) + gutter : gutter);
+        double newToolbarHeight = Math.Ceiling(tools.DesiredSize.Height);
+        double width = Math.Max(newLyricWidth, Math.Ceiling(tools.DesiredSize.Width) + gutter);
         double height = Math.Max(gutter, Math.Ceiling(labels.DesiredSize.Height)) + newToolbarHeight;
         if (width == Width && height == Height && newToolbarHeight == toolbarHeight)
         {
