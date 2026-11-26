@@ -2,7 +2,7 @@
 ; Build with Inno Setup 6 (ISCC.exe), or via app-m223/bundle.ps1.
 
 #define MyAppName "HuayuanMusic"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.0.3"
 #define MyAppPublisher "HuayuanMusic"
 #define MyAppExeName "HuayuanMusic.exe"
 #define MyPublishedExeName "HuayuanMusic.P17.Nightflight.exe"
