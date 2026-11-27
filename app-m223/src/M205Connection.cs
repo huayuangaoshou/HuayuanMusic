@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Layout;
+using HuayuanPreview.R2;
 using HuayuanMusic.Provider.Kugou;
 using KugouAvaloniaPlayer.Services.Startup;
 namespace HuayuanPreview;
@@ -25,11 +26,10 @@ public sealed partial class PreviewWindow {
  internal async Task<bool> ConfirmM205Async(string title,string message){
   if(!IsVisible||!IsEnabled)return false;
   var yes=new Button{Content="明确批准本次操作"};var no=new Button{Content="取消"};
-  var panel=new StackPanel{Margin=new Avalonia.Thickness(20),Spacing=18};
+  var panel=new StackPanel{Spacing=18};
   panel.Children.Add(new TextBlock{Text=message,TextWrapping=Avalonia.Media.TextWrapping.Wrap});
   var row=new StackPanel{Orientation=Orientation.Horizontal,Spacing=12};row.Children.Add(no);row.Children.Add(yes);panel.Children.Add(row);
-  var dialog=new Window{Title=title,Width=520,Height=260,Content=panel,WindowStartupLocation=WindowStartupLocation.CenterOwner};
-  yes.Click+=(_,_)=>dialog.Close(true);no.Click+=(_,_)=>dialog.Close(false);
-  return await dialog.ShowDialog<bool>(this);
+  return await ModalOverlay.ShowAsync(this, new ScrollViewer { Content=panel }, new(title, 520),
+      yes, no, () => true, defaultConfirm: false);
  }
 }

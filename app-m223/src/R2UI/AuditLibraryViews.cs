@@ -52,15 +52,9 @@ public sealed partial class WorkspaceState
             ? new TextBlock { Text="仅删除歌单及其成员关系，保留音乐文件。", TextWrapping=TextWrapping.Wrap }
             : input);
         panel.Children.Add(new StackPanel { Orientation=Orientation.Horizontal, Spacing=8, Children={ action,cancel } });
-        var dialog = new Window { Title=title, Width=400, SizeToContent=SizeToContent.Height, CanResize=false,
-            WindowStartupLocation=WindowStartupLocation.CenterOwner, RequestedThemeVariant=owner.ActualThemeVariant,
-            Content=GlassDialogSurface.Create(panel, new Thickness(DesignTokens.Space4)) };
-        action.Click += (_, _) =>
-        {
-            if (remove || !string.IsNullOrWhiteSpace(input.Text)) dialog.Close(remove?"":input.Text.Trim());
-        };
-        cancel.Click += (_, _) => dialog.Close(null);
-        var answer=await dialog.ShowDialog<string?>(owner);
+        var answer = await ModalOverlay.ShowAsync<string?>(owner, panel,
+            new(title, 400, InitialFocus: remove ? cancel : input), action, cancel,
+            () => remove ? "" : input.Text?.Trim(), () => remove || !string.IsNullOrWhiteSpace(input.Text));
         if (answer==null) return;
         await Host.Adapter.PlaylistAsync(remove?"delete":id==0?"create":"rename",answer,id);
         if (Host.Adapter.State.Error.Length>0) Host.Player.Notify("未能保存歌单，请检查名称后重试");
@@ -95,16 +89,8 @@ public sealed partial class WorkspaceState
         var panel = new StackPanel { Spacing = 12 };
         panel.Children.Add(message);
         panel.Children.Add(new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { confirm, cancel } });
-        var dialog = new Window
-        {
-            Title = title, Width = 400, SizeToContent = SizeToContent.Height, CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner, RequestedThemeVariant = owner.ActualThemeVariant,
-            Content = GlassDialogSurface.Create(panel, new Thickness(DesignTokens.Space4))
-        };
-        var result = false;
-        confirm.Click += (_, _) => { result = true; dialog.Close(); };
-        cancel.Click += (_, _) => dialog.Close();
-        await dialog.ShowDialog(owner);
+        var result = await ModalOverlay.ShowAsync(owner, panel, new(title, 400, InitialFocus: cancel),
+            confirm, cancel, () => true);
         if (!result) return false;
 
         if (fromPlaylist) Host.Player.Remove(rows);

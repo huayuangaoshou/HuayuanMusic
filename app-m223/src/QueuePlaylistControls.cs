@@ -8,14 +8,85 @@ using Avalonia.Layout;
 using Avalonia.Automation;
 using Avalonia.Threading;
 using Avalonia.VisualTree;
+using HuayuanPreview.R2;
 namespace HuayuanPreview;
 public sealed partial class PreviewWindow {
  TextBlock? queueCountText;
  ContentControl? sidebarHost;ComboBox? modePicker;int? dragQueueIndex;Guid? dragQueueSong;Point queueDragOrigin;
  long ActiveListId=>core.State.Lists.FirstOrDefault(x=>x.Name==localList)?.Id??0;
  void RefreshMode(){if(modePicker!=null&&modePicker.SelectedIndex!=core.State.Mode)modePicker.SelectedIndex=core.State.Mode;}
- void ConfirmDanger(string message,Func<Task> action){var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner,Title="确认本地操作",Width=440,Height=190,Background=R("Base")};var confirm=NB("确认操作",()=>confirmAction());async void confirmAction(){w.IsEnabled=false;try{RunCore(action);await PendingCoreOperations;if(core.State.Error.Length==0)w.Close();else w.IsEnabled=true;}catch{w.IsEnabled=true;}}w.Content=new StackPanel{Margin=new(22),Spacing=16,Children={T(message,14),H(confirm,NB("取消",w.Close))}};w.ShowDialog(this);}
- void PlaylistNameDialog(string op){var id=ActiveListId;var w=new Window{WindowStartupLocation=WindowStartupLocation.CenterOwner,Title=op=="save"?"保存当前队列为本地歌单":"本地歌单名称",Width=480,Height=250,Background=R("Base")};var input=new TextBox{Text=op=="rename"?localList:op=="save"?"队列 "+DateTime.Now.ToString("yyyy-MM-dd HHmmss"):"新建歌单",MaxLength=100};var hint=T("1–80字符；同名不覆盖；重复曲目按独立条目完整保存",11,true);var ok=NB("保存",async()=>{w.IsEnabled=false;try{RunCore(()=>core.PlaylistAsync(op,input.Text??"",id));await PendingCoreOperations;if(core.State.Error.Length==0){w.Close();Notify(op=="create"?"已创建本地歌单":op=="rename"?"已重命名本地歌单":"当前完整队列已保存为本地歌单");}else{hint.Text=core.State.Error;w.IsEnabled=true;}}catch(Exception e){hint.Text=e.Message;w.IsEnabled=true;}},true);w.Content=new StackPanel{Margin=new(22),Spacing=18,Children={input,hint,H(ok,NB("取消",w.Close))}};w.Opened+=(_,_)=>{input.Focus();input.SelectAll();};w.ShowDialog(this);}
+ void ConfirmDanger(string message, Func<Task> action)
+ {
+  var confirm = new Button { Content = "确认操作", Classes = { "primary" } };
+  var cancel = new Button { Content = "取消" };
+  AutomationProperties.SetName(confirm, "确认操作");
+  AutomationProperties.SetName(cancel, "取消");
+  var content = new StackPanel { Spacing = DesignTokens.Space4, Children =
+   { new TextBlock { Text = message, TextWrapping = Avalonia.Media.TextWrapping.Wrap }, H(confirm, cancel) } };
+  ShowPlaylistOperation(content, new("确认本地操作", 440, InitialFocus: cancel), confirm, cancel, action);
+ }
+
+ void PlaylistNameDialog(string op)
+ {
+  var id = ActiveListId;
+  var title = op == "save" ? "保存当前队列为本地歌单" : "本地歌单名称";
+  var input = new TextBox
+  {
+   Text = op == "rename" ? localList : op == "save" ? "队列 " + DateTime.Now.ToString("yyyy-MM-dd HHmmss") : "新建歌单",
+   MaxLength = 100
+  };
+  AutomationProperties.SetName(input, "本地歌单名称");
+  var hint = new TextBlock { Text = "1–80字符；同名不覆盖；重复曲目按独立条目完整保存", Classes = { "muted" },
+   TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+  var save = new Button { Content = "保存", Classes = { "primary" } };
+  var cancel = new Button { Content = "取消" };
+  AutomationProperties.SetName(save, "保存");
+  AutomationProperties.SetName(cancel, "取消");
+  var content = new StackPanel { Spacing = DesignTokens.Space4, Children = { input, hint, H(save, cancel) } };
+  ShowPlaylistOperation(content, new(title, 480, InitialFocus: input), save, cancel,
+   () => core.PlaylistAsync(op, input.Text ?? "", id), hint,
+   () => Notify(op == "create" ? "已创建本地歌单" : op == "rename" ? "已重命名本地歌单" : "当前完整队列已保存为本地歌单"));
+  input.SelectAll();
+ }
+
+ void ShowPlaylistOperation(Control content, ModalOptions options, Button confirm, Button cancel,
+  Func<Task> action, TextBlock? feedback = null, Action? onSuccess = null)
+ {
+  var session = ModalOverlay.TryShow<bool>(this, content, options, () => content.IsEnabled);
+  if (session == null) return;
+  confirm.IsDefault = true;
+  cancel.IsCancel = true;
+  cancel.Click += (_, _) => session.Dismiss();
+  confirm.Click += async (_, _) =>
+  {
+   if (!session.IsOpen || !content.IsEnabled) return;
+   content.IsEnabled = false;
+   try
+   {
+    RunCore(action);
+    await PendingCoreOperations;
+    if (!session.IsOpen) return;
+    if (core.State.Error.Length == 0)
+    {
+     session.Complete(true);
+     onSuccess?.Invoke();
+    }
+    else if (feedback != null) feedback.Text = core.State.Error;
+   }
+   catch (Exception error)
+   {
+    if (feedback != null) feedback.Text = error.Message;
+   }
+   finally
+   {
+    if (session.IsOpen)
+    {
+     content.IsEnabled = true;
+     options.InitialFocus?.Focus();
+    }
+   }
+  };
+ }
  Control NightQueue(){dragQueueIndex=null;dragQueueSong=null;var p=V();p.Spacing=12;p.Children.Add(H(T("播放队列",19,false,true),NI("close","关闭队列",()=>SetQueue(false))));queueCountText=T($"{core.State.Queue.Length} 首 · 本地受控副本 · 上限1000",10,true);p.Children.Add(queueCountText);modePicker=new ComboBox{Name="QueueMode",ItemsSource=new[]{"列表循环","单曲循环","随机播放","顺序播放（末尾停止）"},SelectedIndex=core.State.Mode,HorizontalAlignment=HorizontalAlignment.Stretch};AutomationProperties.SetName(modePicker,"播放模式");modePicker.SelectionChanged+=(_,_)=>{if(modePicker.SelectedIndex>=0&&modePicker.SelectedIndex!=core.State.Mode)RunCore(()=>core.SetModeAsync(modePicker.SelectedIndex));};p.Children.Add(modePicker);
   p.Children.Add(H(NB("保存队列为歌单",()=>PlaylistNameDialog("save"),true),NB("清空",()=>ConfirmDanger("清空临时队列并停止；不删除永久歌单或音频",()=>core.QueueAsync("clear")))));
   queueCurrentArtwork=new ContentControl{Content=Cover(nowSong,40,40)};queueCurrentTitle=T(Track(nowSong).Title,12,false,true);queueCurrentArtist=T(Track(nowSong).Artist,10,true);p.Children.Add(H(queueCurrentArtwork,V(queueCurrentTitle,queueCurrentArtist)));

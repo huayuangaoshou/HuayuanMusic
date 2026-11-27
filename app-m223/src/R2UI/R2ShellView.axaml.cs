@@ -305,21 +305,29 @@ public partial class R2ShellView : UserControl
     }
     private async Task ShowQrLoginAsync(ShellModel shell)
     {
-        if (Window is not { } owner || loginDialog != null) return;
+        if (loginDialog != null) return;
         var account = shell.Concept.AccountPage;
-        var oldParent = account.GetLogicalParent() as ContentControl;
-        if(oldParent?.Content == account) oldParent.Content = null;
-        var holder = new ContentControl { Content = account };
+        var holder = new ContentControl();
         var refresh = new Button { Content = "刷新二维码", Classes = { "glass-pill" } };
-        var dialog = new Window
+        var close = new Button { Content = "关闭", IsCancel = true };
+        var actions = new StackPanel
         {
-            Title = "登录酷狗", Width = 460, Height = 440, CanResize = false,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            RequestedThemeVariant = ActualThemeVariant,
-            Content = GlassDialogSurface.Create(new StackPanel { Children = { holder, refresh } }, new Thickness(0))
+            Orientation = Avalonia.Layout.Orientation.Horizontal,
+            HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Right,
+            Spacing = DesignTokens.Space2,
+            Children = { close, refresh }
         };
+        var content = new Grid { RowDefinitions = new RowDefinitions("*,Auto"), Children = { holder, actions } };
+        Grid.SetRow(actions, 1);
+        CancelSuggestions();
+        var dialog = ModalOverlay.TryShow<bool>(this, content, new("登录酷狗", 460, 440, close));
+        if (dialog == null) return;
+        var oldParent = account.GetLogicalParent() as ContentControl;
+        if (oldParent?.Content == account) oldParent.Content = null;
+        holder.Content = account;
         loginDialog = dialog;
-        dialog.Closed += (_, _) =>
+        close.Click += (_, _) => dialog.Dismiss();
+        dialog.Closed += () =>
         {
             loginDialog = null;
             if (!shell.Concept.Connected) shell.Concept.CancelDesktopOperations();
@@ -333,17 +341,20 @@ public partial class R2ShellView : UserControl
             {
                 shell.Concept.CancelDesktopOperations();
                 await shell.Concept.Pending;
-                if(dialog.IsVisible&&!shell.Concept.Connected)await shell.Concept.StartDesktopQrAsync();
-                if(dialog.IsVisible&&shell.Concept.Connected)dialog.Close();
+                if (dialog.IsOpen && !shell.Concept.Connected) await shell.Concept.StartDesktopQrAsync();
+                if (shell.Concept.Connected) dialog.Complete(true);
             }
             finally { refresh.IsEnabled = true; }
         };
-        var shown = dialog.ShowDialog(owner);
-        await shell.Concept.StartDesktopQrAsync();
-        if (shell.Concept.Connected && dialog.IsVisible) dialog.Close();
-        await shown;
+        try
+        {
+            await shell.Concept.StartDesktopQrAsync();
+            if (shell.Concept.Connected) dialog.Complete(true);
+            await dialog.Completion;
+        }
+        finally { dialog.Dismiss(); }
     }
-    private Window? loginDialog;
+    private ModalOverlay.Session<bool>? loginDialog;
     private async void ToggleTheme(object? sender, RoutedEventArgs args) => await SetDesktopThemeAsync(ActualThemeVariant!=ThemeVariant.Dark);
 
     private async Task SetDesktopThemeAsync(bool dark)

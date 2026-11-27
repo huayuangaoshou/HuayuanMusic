@@ -4,8 +4,6 @@ using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Controls.Primitives;
-using Avalonia.Data;
-using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
@@ -17,7 +15,7 @@ namespace HuayuanPreview.R2;
 
 public partial class R2ShellView
 {
-    private Grid? updateDialog;
+    private ModalOverlay.Session<bool>? updateDialog;
     private UpdateManager.DownloadRoute updateRoute;
 
     /// <summary>
@@ -58,10 +56,11 @@ public partial class R2ShellView
         OpenUpdateDialog(result.Release);
     }
 
-    private void OpenUpdateDialog(UpdateManager.ReleaseInfo release)
+    private async void OpenUpdateDialog(UpdateManager.ReleaseInfo release)
     {
-        if (!release.IsNewer || Window is not { } owner || updateDialog != null ||
-            OverlayLayer.GetOverlayLayer(this) is not { } layer) return;
+        while (updateDialog == null && ModalOverlay.CurrentCompletion(this) is { } active)
+            await active;
+        if (!release.IsNewer || Window is not { } owner || updateDialog != null) return;
 
         var body = new SelectableTextBlock
         {
@@ -126,7 +125,6 @@ public partial class R2ShellView
         } };
         var content = new Grid
         {
-            Margin = new Thickness(DesignTokens.Space5),
             RowDefinitions = new RowDefinitions("Auto,*,Auto"),
             RowSpacing = DesignTokens.Space4,
             Children = { header, notes, footer }
@@ -134,60 +132,18 @@ public partial class R2ShellView
         Grid.SetRow(notes, 1);
         Grid.SetRow(footer, 2);
 
-        var panel = new Border
-        {
-            Classes = { "glass", "glass-float" },
-            BorderThickness = new Thickness(0),
-            Margin = new Thickness(DesignTokens.Space5),
-            MaxWidth = 520,
-            MaxHeight = 600,
-            HorizontalAlignment = HorizontalAlignment.Center,
-            VerticalAlignment = VerticalAlignment.Center,
-            Focusable = true,
-            Child = new Grid
-            {
-                Children =
-                {
-                    new GlassOptics { Radius = DesignTokens.RadiusM, Frost = DesignTokens.FrostRegular, Saturation = DesignTokens.SaturationChrome, IsHitTestVisible = false },
-                    content
-                }
-            }
-        };
-        var dialog = new Grid
-        {
-            Classes = { "update-overlay" },
-            Children = { panel }
-        };
-        dialog.Bind(WidthProperty, new Binding("ClientSize.Width") { Source = owner });
-        dialog.Bind(HeightProperty, new Binding("ClientSize.Height") { Source = owner });
-        AutomationProperties.SetName(panel, "软件更新");
-        KeyboardNavigation.SetTabNavigation(panel, KeyboardNavigationMode.Cycle);
-        if (!DesignTokens.ShaderDegrade)
-            panel.Classes.Add("glass-enter");
-
         CancellationTokenSource? download = null;
-        var previousFocus = owner.FocusManager?.GetFocusedElement();
         CancelSuggestions();
+        var dialog = ModalOverlay.TryShow<bool>(this, content,
+            new("软件更新", 520, InitialFocus: later, ShowTitle: false));
+        if (dialog == null) return;
         updateDialog = dialog;
-        DetachedFromVisualTree += CloseOnDetach;
-        void CloseOnDetach(object? sender, VisualTreeAttachmentEventArgs args) => CloseOverlay();
-        void CloseOverlay()
+        dialog.Closed += () =>
         {
-            if (updateDialog != dialog) return;
-            DetachedFromVisualTree -= CloseOnDetach;
             download?.Cancel();
             updateDialog = null;
-            layer.Children.Remove(dialog);
-            previousFocus?.Focus();
-        }
-
-        dialog.KeyDown += (_, args) =>
-        {
-            if (args.Key != Key.Escape) return;
-            CloseOverlay();
-            args.Handled = true;
         };
-        later.Click += (_, _) => CloseOverlay();
+        later.Click += (_, _) => dialog.Dismiss();
 
         copy.Click += async (_, _) =>
         {
@@ -249,7 +205,7 @@ public partial class R2ShellView
                 await Task.Delay(400, request.Token);
                 LaunchInstaller(installer);
                 installer = null;
-                CloseOverlay();
+                dialog.Complete(true);
                 if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
                     desktop.TryShutdown();
                 else Window?.Close();
@@ -278,8 +234,6 @@ public partial class R2ShellView
             }
         };
 
-        layer.Children.Add(dialog);
-        later.Focus();
     }
 
     private static void LaunchInstaller(string installer)
@@ -291,27 +245,5 @@ public partial class R2ShellView
         };
         using var process = Process.Start(info) ?? throw new InvalidOperationException("Installer did not start.");
         Program.Log("UPDATE_INSTALLER_LAUNCHED", new { verified = true });
-    }
-}
-
-internal static class GlassDialogSurface
-{
-    internal static Border Create(Control content, Thickness padding)
-    {
-        var border = new Border
-        {
-            Classes = { "glass", "glass-float" },
-            Margin = new Thickness(DesignTokens.Space3),
-            Child = new Grid
-            {
-                Children =
-                {
-                    new Border { Classes = { "glass-edge" } },
-                    new Border { Padding = padding, Child = content }
-                }
-            }
-        };
-        if (!DesignTokens.ShaderDegrade) border.Classes.Add("glass-enter");
-        return border;
     }
 }

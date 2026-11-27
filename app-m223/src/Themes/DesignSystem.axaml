@@ -38,7 +38,7 @@
           <SolidColorBrush x:Key="GlassSurface" Color="#F7FFFFFF"/>
           <SolidColorBrush x:Key="GlassSide" Color="#B8F4F9FF"/>
           <SolidColorBrush x:Key="GlassPopup" Color="#D9FFFFFF"/>
-          <SolidColorBrush x:Key="UpdateScrim" Color="#521C2940"/>
+          <SolidColorBrush x:Key="ModalScrim" Color="#521C2940"/>
           <SolidColorBrush x:Key="LyricActive" Color="#0F172A"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#475569"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#334155"/>
@@ -97,7 +97,7 @@
           <SolidColorBrush x:Key="GlassSurface" Color="#8C162033"/>
           <SolidColorBrush x:Key="GlassSide" Color="#A0172235"/>
           <SolidColorBrush x:Key="GlassPopup" Color="#D91B263B"/>
-          <SolidColorBrush x:Key="UpdateScrim" Color="#88060912"/>
+          <SolidColorBrush x:Key="ModalScrim" Color="#88060912"/>
           <SolidColorBrush x:Key="LyricActive" Color="#FFFFFF"/>
           <SolidColorBrush x:Key="LyricIdle" Color="#94A3B8"/>
           <SolidColorBrush x:Key="TranslationActive" Color="#CBD5E1"/>
@@ -158,7 +158,7 @@
   <Style Selector="Border.dock"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
   <Style Selector="Border.glass-float"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLiftL3}"/></Style>
   <Style Selector="Border.glass-side"><Setter Property="CornerRadius" Value="12"/><Setter Property="BoxShadow" Value="{DynamicResource GlassLift}"/></Style>
-  <Style Selector="Grid.update-overlay"><Setter Property="Background" Value="{DynamicResource UpdateScrim}"/></Style>
+  <Style Selector="Grid.modal-scrim"><Setter Property="Background" Value="{DynamicResource ModalScrim}"/></Style>
   <Style Selector="ScrollViewer.update-scroll">
     <Setter Property="OpacityMask">
       <LinearGradientBrush StartPoint="0%,0%" EndPoint="0%,100%">

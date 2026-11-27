@@ -1,15 +1,17 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Platform.Storage;
 using Avalonia.Threading;
+using HuayuanPreview.R2;
 using KugouAvaloniaPlayer.Services.Startup;
 using System.Security.Cryptography;
 namespace HuayuanPreview;
 internal sealed record ImportEntry(string Path,long Length,string Hash,string Status);
 public sealed partial class PreviewWindow {
- CancellationTokenSource? importCancel;Task importTask=Task.CompletedTask;TextBlock? importFeedback;Window? importDialog;
- internal async Task CancelImportAndWait(){importCancel?.Cancel();await importTask;if(importDialog!=null)importDialog.Close();}
+ CancellationTokenSource? importCancel;Task importTask=Task.CompletedTask;TextBlock? importFeedback;ModalOverlay.Session<bool>? importDialog;
+ internal async Task CancelImportAndWait(){importCancel?.Cancel();await importTask;importDialog?.Dismiss();}
  internal static async Task<ImportEntry[]> PreviewImport(string[] selected,bool folder,CancellationToken cancel){
   if(!OfflineStartupProfile.Current.Import||!OfflineStartupProfile.Current.LiveGuiPermit)throw new IOException("No explicit import capability");
   var paths=new List<string>();int directories=0,visited=0;
@@ -40,11 +42,113 @@ public sealed partial class PreviewWindow {
    if(folder){var pick=await StorageProvider.OpenFolderPickerAsync(new(){Title="选择音乐文件夹：只预览，确认后复制",AllowMultiple=false,SuggestedStartLocation=start});selected=pick.Select(x=>x.TryGetLocalPath()??throw new IOException("拒绝非本地来源")).ToArray();foreach(var item in pick)item.Dispose();}
    else{var pick=await StorageProvider.OpenFilePickerAsync(new(){Title="选择WAV / MP3 / FLAC：只读导入副本",AllowMultiple=true,SuggestedStartLocation=start,FileTypeFilter=[new("本地音频"){Patterns=["*.wav","*.mp3","*.flac"]}]});selected=pick.Select(x=>x.TryGetLocalPath()??throw new IOException("拒绝非本地来源")).ToArray();foreach(var item in pick)item.Dispose();}
    if(selected.Length==0){Notify("已取消选择，未导入");return;}
-   importCancel=new();var token=importCancel.Token;ImportEntry[] entries=[];var rows=new TextBlock{Text="正在生成受限预览…",TextWrapping=Avalonia.Media.TextWrapping.Wrap};var confirm=NB("确认只读复制并导入",()=>{} ,true);confirm.IsEnabled=false;var cancel=NB("取消",()=>{importCancel.Cancel();if(importTask.IsCompleted)importDialog?.Close();});
-   var window=new Window{Title="P1.7.2 导入预览 · 不修改源文件",Width=650,Height=520,MinWidth=480,MinHeight=380,Background=R("Base"),Content=new StackPanel{Margin=new(22),Spacing=14,Children={T("先预览，再确认",22,false,true),T("只操作本次明确选择的文件。最多500首/2GiB，单文件256MiB。",12,true),new ScrollViewer{Content=rows,Height=310},H(confirm,cancel)}}};importDialog=window;window.Closing+=(_,e)=>{if(!importTask.IsCompleted){importCancel.Cancel();e.Cancel=true;Notify("正在取消导入，请等待安全释放");}};window.Closed+=(_,_)=>{importDialog=null;importCancel?.Dispose();importCancel=null;};window.Show(this);
-   importTask=Load();async Task Load(){try{entries=await Task.Run(()=>PreviewImport(selected,folder,token),token);rows.Text=string.Join('\n',entries.Select(x=>Path.GetFileName(x.Path)+" · "+x.Status+" · "+(x.Length/1048576d).ToString("F2")+"MiB"));confirm.IsEnabled=entries.Any(x=>x.Hash.Length>0);Notify($"预览 {entries.Length} 项，尚未导入");}catch(Exception e){rows.Text="预览未完成："+e.Message;}}
-   await importTask;
-   confirm.Click+=async(_,_)=>{if(!importTask.IsCompleted)return;confirm.IsEnabled=false;importFeedback=rows;importTask=Run();async Task Run(){var result=await ConfirmImport(entries,token);rows.Text=string.Join('\n',result);Notify("导入完成/取消：可查看逐项结果，成功项已保留");}try{await importTask;}finally{importFeedback=null;cancel.Content="关闭";}};
+   await ShowImportPreviewAsync(
+    token => Task.Run(() => PreviewImport(selected, folder, token), token), ConfirmImport);
   }catch(Exception e){Notify("导入未开始："+e.Message);}
+ }
+
+ internal async Task ShowImportPreviewAsync(Func<CancellationToken, Task<ImportEntry[]>> load,
+  Func<ImportEntry[], CancellationToken, Task<string[]>> import)
+ {
+  if (importDialog != null || !importTask.IsCompleted) return;
+  var cancellation = new CancellationTokenSource();
+  var token = cancellation.Token;
+  ImportEntry[] entries = [];
+  var rows = new TextBlock { Text = "正在生成受限预览…", TextWrapping = Avalonia.Media.TextWrapping.Wrap };
+  var status = new TextBlock { TextWrapping = Avalonia.Media.TextWrapping.Wrap, IsVisible = false };
+  var confirm = new Button { Content = "确认只读复制并导入", Classes = { "primary" }, IsEnabled = false, IsDefault = true };
+  var cancel = new Button { Content = "取消", IsCancel = true };
+  AutomationProperties.SetName(confirm, "确认只读复制并导入");
+  AutomationProperties.SetName(cancel, "取消");
+  var description = new TextBlock
+  {
+   Text = "先预览，再确认。只操作本次明确选择的文件。最多500首/2GiB，单文件256MiB。",
+   TextWrapping = Avalonia.Media.TextWrapping.Wrap
+  };
+  var list = new ScrollViewer { Content = rows, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+  var footer = new StackPanel { Spacing = DesignTokens.Space2, Children = { status, H(confirm, cancel) } };
+  var content = new Grid { RowDefinitions = new RowDefinitions("Auto,*,Auto"), RowSpacing = DesignTokens.Space3,
+   Children = { description, list, footer } };
+  Grid.SetRow(list, 1);
+  Grid.SetRow(footer, 2);
+  var dialog = ModalOverlay.TryShow<bool>(this, content, new("导入预览 · 不修改源文件", 650, 520, cancel), RequestClose);
+  if (dialog == null)
+  {
+   cancellation.Dispose();
+   return;
+  }
+  importCancel = cancellation;
+  importDialog = dialog;
+  var cleanup = Task.CompletedTask;
+  dialog.Closed += () => cleanup = ReleaseImportAsync();
+  cancel.Click += (_, _) => dialog.Dismiss();
+  confirm.Click += async (_, _) =>
+  {
+   if (!dialog.IsOpen || !confirm.IsEnabled || !importTask.IsCompleted) return;
+   cancel.Focus();
+   confirm.IsEnabled = false;
+   importFeedback = rows;
+   importTask = RunImportAsync();
+   try { await importTask; }
+   finally
+   {
+    importFeedback = null;
+    cancel.Content = "关闭";
+    AutomationProperties.SetName(cancel, "关闭");
+   }
+  };
+
+  importTask = LoadPreviewAsync();
+  await dialog.Completion;
+  await cleanup;
+
+  async Task ReleaseImportAsync()
+  {
+   cancellation.Cancel();
+   try { await importTask; }
+   finally
+   {
+    cancellation.Dispose();
+    importDialog = null;
+    importCancel = null;
+   }
+  }
+
+  bool RequestClose()
+  {
+   if (importTask.IsCompleted) return true;
+   cancellation.Cancel();
+   status.Text = "正在取消导入，请等待安全释放";
+   status.IsVisible = true;
+   Notify(status.Text);
+   return false;
+  }
+
+  async Task LoadPreviewAsync()
+  {
+   try
+   {
+    entries = await load(token);
+    rows.Text = string.Join('\n', entries.Select(entry =>
+     Path.GetFileName(entry.Path) + " · " + entry.Status + " · " + (entry.Length / 1048576d).ToString("F2") + "MiB"));
+    confirm.IsEnabled = !token.IsCancellationRequested && entries.Any(entry => entry.Hash.Length > 0);
+    Notify($"预览 {entries.Length} 项，尚未导入");
+   }
+   catch (OperationCanceledException) when (token.IsCancellationRequested) { rows.Text = "已取消预览"; }
+   catch (Exception error) { rows.Text = "预览未完成：" + error.Message; }
+   finally { status.IsVisible = false; }
+  }
+
+  async Task RunImportAsync()
+  {
+   try
+   {
+    rows.Text = string.Join('\n', await import(entries, token));
+    Notify("导入完成/取消：可查看逐项结果，成功项已保留");
+   }
+   catch (OperationCanceledException) when (token.IsCancellationRequested) { rows.Text = "已取消；此前成功项保留"; }
+   catch (Exception error) { rows.Text = "导入未完成：" + error.Message; }
+   finally { status.IsVisible = false; }
+  }
  }
 }

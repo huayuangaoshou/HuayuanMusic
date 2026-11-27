@@ -4,6 +4,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Threading;
+using HuayuanPreview.R2;
 
 namespace HuayuanPreview;
 
@@ -31,16 +32,10 @@ public sealed partial class PreviewWindow
                 var no=new Button{Content="取消",MinWidth=85};
                 var actions=new StackPanel{Orientation=Orientation.Horizontal,Spacing=12,HorizontalAlignment=HorizontalAlignment.Right};
                 actions.Children.Add(no);actions.Children.Add(yes);
-                var body=new StackPanel{Margin=new Thickness(20),Spacing=16};
+                var body=new StackPanel{Spacing=16};
                 body.Children.Add(title);body.Children.Add(notice);body.Children.Add(actions);
-                var popup=new Window {
-                    Title="HuayuanMusic 登录迁移确认",
-                    Width=525,Height=325,CanResize=false,
-                    WindowStartupLocation=WindowStartupLocation.CenterOwner,Content=body
-                };
-                yes.Click+=(_,_)=>popup.Close(true);
-                no.Click+=(_,_)=>popup.Close(false);
-                tcs.TrySetResult(await popup.ShowDialog<bool>(this));
+                tcs.TrySetResult(await ModalOverlay.ShowAsync(this, new ScrollViewer { Content = body },
+                    new("HuayuanMusic 登录迁移确认", 720), yes, no, () => true, defaultConfirm: false));
             }
             catch{tcs.TrySetResult(false);}
         });
