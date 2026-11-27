@@ -25,6 +25,7 @@ internal sealed partial class CorePlaybackAdapter
     private (Guid Entry, double Position)? desktopResume;
     private readonly HashSet<int> deferredDesktopIds = [];
     private Func<bool>? restoredSession;
+    private Task catalogReady = Task.CompletedTask;
     private string? restoredAccount;
     private bool restoringDesktopConnection;
     internal bool DesktopQueueTracking { get; set; }
@@ -96,23 +97,30 @@ internal sealed partial class CorePlaybackAdapter
 
     internal async Task RestoreDesktopConnectionAndCatalogAsync(P2AWorkspace concept)
     {
-        restoringDesktopConnection = true;
-        try { await concept.RestoreDesktopConnectionAsync(); }
-        finally { restoringDesktopConnection = false; }
-        if (disposed != 0 || deferredDesktopIds.Count == 0 || !concept.Connected ||
-            concept.AccountKey != restoredAccount) return;
-
-        var generation = Kugou.Generation;
-        var provider = Kugou;
-        bool SessionCurrent() => ReferenceEquals(provider, Kugou) && provider.Generation == generation &&
-            provider.Enabled && provider.LoggedIn && provider.DirectAccountCacheKey == restoredAccount;
-        var catalog = deferredDesktopIds.Select(id => providerMetadata[id]).ToArray();
-        var completion = CompleteAsync();
+        var connection = ConnectAsync();
+        var completion = catalogReady = CompleteAsync();
+        await connection;
         if (await Task.WhenAny(completion, Task.Delay(TimeSpan.FromSeconds(3))) != completion)
             Program.Log("DESKTOP_QUEUE_CATALOG_DEFERRED", new { type = "Timeout" });
 
+        async Task ConnectAsync()
+        {
+            restoringDesktopConnection = true;
+            try { await concept.RestoreDesktopConnectionAsync(); }
+            finally { restoringDesktopConnection = false; }
+        }
+
         async Task CompleteAsync()
         {
+            await connection;
+            if (disposed != 0 || deferredDesktopIds.Count == 0 || !concept.Connected ||
+                concept.AccountKey != restoredAccount) return;
+
+            var generation = Kugou.Generation;
+            var provider = Kugou;
+            bool SessionCurrent() => ReferenceEquals(provider, Kugou) && provider.Generation == generation &&
+                provider.Enabled && provider.LoggedIn && provider.DirectAccountCacheKey == restoredAccount;
+            var catalog = deferredDesktopIds.Select(id => providerMetadata[id]).ToArray();
             try
             {
                 await concept.DesktopCall(async (gateway, ct) =>
@@ -137,6 +145,21 @@ internal sealed partial class CorePlaybackAdapter
     private bool DesktopQueueEntryIsPending(SongItem song) =>
         deferredDesktopIds.Count > 0 && ProviderStreamRegistry.IsProvider(song.LocalFilePath) &&
         deferredDesktopIds.Contains(Id(song));
+
+    // The startup caller stops waiting for the catalog after three seconds. An explicit
+    // play request can join that same work without restarting the handshake or the queue.
+    private async Task WaitForDesktopQueueEntryAsync(SongItem song)
+    {
+        if (!DesktopQueueEntryIsPending(song)) return;
+        var ready = catalogReady;
+        if (DesktopPreferences.Behavior.Kugou == DesktopDlcState.Enabled && !ready.IsCompleted)
+        {
+            try { await ready.WaitAsync(TimeSpan.FromSeconds(8)); }
+            catch (TimeoutException) { }
+        }
+        if (DesktopQueueEntryIsPending(song) || !ProviderStreamRegistry.Allows(song.LocalFilePath))
+            throw new InvalidOperationException("在线曲目暂不可用");
+    }
 
     internal void StartDesktopQueueTracking()
     {
