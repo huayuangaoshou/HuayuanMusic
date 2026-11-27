@@ -11,7 +11,7 @@
     </Border>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassPinkGlow}" IsHitTestVisible="False"/>
     <Border Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{DynamicResource GlassBlueGlow}" IsHitTestVisible="False"/>
-    <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False"/>
+    <r2:GlassOptics Grid.RowSpan="2" Grid.ColumnSpan="2" IsAtmosphere="True" IsHitTestVisible="False" CacheShader="True"/>
     <Border Name="MainSidebar" Classes="glass glass-side" Background="{DynamicResource GlassSide}" BorderThickness="0" Margin="12,12,0,96">
       <Grid>
       <r2:GlassOptics Radius="{x:Static tok:DesignTokens.RadiusM}" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False"/>
@@ -251,7 +251,7 @@
       </Grid>
     <Border Name="MainDock" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="2" VerticalAlignment="Bottom" Classes="glass dock" BorderThickness="0" Margin="12,0,12,12">
       <Grid>
-        <r2:GlassOptics Radius="{x:Static tok:DesignTokens.RadiusM}" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False"/>
+        <r2:GlassOptics Radius="{x:Static tok:DesignTokens.RadiusM}" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False" CacheShader="True"/>
         <Border Padding="20,8,20,8">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
             <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">

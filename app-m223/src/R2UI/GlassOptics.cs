@@ -27,7 +27,11 @@ public sealed class GlassOptics : Control
     public double Frost { get => GetValue(FrostProperty); set => SetValue(FrostProperty, value); }
     public double Saturation { get => GetValue(SaturationProperty); set => SetValue(SaturationProperty, value); }
 
-    static GlassOptics() => AffectsRender<GlassOptics>(RadiusProperty, FrostProperty, SaturationProperty, IsAtmosphereProperty, BoundsProperty);
+    public static readonly StyledProperty<bool> CacheShaderProperty =
+        AvaloniaProperty.Register<GlassOptics,bool>(nameof(CacheShader));
+    public bool CacheShader { get => GetValue(CacheShaderProperty); set => SetValue(CacheShaderProperty, value); }
+
+    static GlassOptics() => AffectsRender<GlassOptics>(RadiusProperty, FrostProperty, SaturationProperty, IsAtmosphereProperty, BoundsProperty, CacheShaderProperty);
 
     public GlassOptics() => ActualThemeVariantChanged += (_, _) => InvalidateVisual();
 
@@ -43,11 +47,11 @@ public sealed class GlassOptics : Control
             Math.Clamp(Radius, 0, Math.Min(Bounds.Width, Bounds.Height) / 2), Math.Clamp(Frost, 0, 1),
             ActualThemeVariant == ThemeVariant.Dark, IsAtmosphere,
             Math.Max(1.0, Saturation),
-            DesignTokens.ShaderDegrade)));
+            DesignTokens.ShaderDegrade, CacheShader)));
     }
 
     private readonly record struct Parameters(Rect Bounds, Size Viewport, Point Origin, double Radius,
-        double Frost, bool Dark, bool Atmosphere, double Saturation, bool Degrade);
+        double Frost, bool Dark, bool Atmosphere, double Saturation, bool Degrade, bool Cache);
 
     private sealed class Draw(Parameters values) : ICustomDrawOperation
     {
@@ -55,17 +59,54 @@ public sealed class GlassOptics : Control
         private static int atmosphereLogged;
         private static int lensLogged;
         private readonly Parameters parameters = values;
+        private SKImage? cachedImage;
+        private SKSizeI cachedSize;
 
         public Rect Bounds => parameters.Bounds;
         public bool HitTest(Point _) => false;
         public bool Equals(ICustomDrawOperation? other) => other is Draw draw && draw.parameters == parameters;
-        public void Dispose() { }
+        public void Dispose() => cachedImage?.Dispose();
 
         public void Render(ImmediateDrawingContext context)
         {
             if (context.TryGetFeature<ISkiaSharpApiLeaseFeature>() is not { } feature || Effect.Value is not { } effect)
                 return;
             using var lease = feature.Lease();
+            var canvas = lease.SkCanvas;
+            var bounds = SKRect.Create((float)Bounds.Width, (float)Bounds.Height);
+            var transform = canvas.TotalMatrix;
+            var size = new SKSizeI((int)Math.Ceiling(bounds.Width * Math.Abs(transform.ScaleX)),
+                (int)Math.Ceiling(bounds.Height * Math.Abs(transform.ScaleY)));
+            if (parameters.Cache && size.Width > 0 && size.Height > 0 &&
+                (long)size.Width * size.Height <= 8_000_000)
+            {
+                if (cachedImage == null || cachedSize != size)
+                {
+                    cachedImage?.Dispose();
+                    var info = new SKImageInfo(size.Width, size.Height);
+                    using var surface = lease.GrContext == null ? SKSurface.Create(info) :
+                        SKSurface.Create(lease.GrContext, false, info);
+                    cachedImage = null;
+                    if (surface != null)
+                    {
+                        surface.Canvas.Clear(SKColors.Transparent);
+                        surface.Canvas.Scale(size.Width / bounds.Width, size.Height / bounds.Height);
+                        DrawShader(surface.Canvas, bounds, effect);
+                        cachedImage = surface.Snapshot();
+                        cachedSize = size;
+                    }
+                }
+                if (cachedImage != null)
+                {
+                    canvas.DrawImage(cachedImage, bounds, new SKSamplingOptions(SKFilterMode.Linear));
+                    return;
+                }
+            }
+            DrawShader(canvas, bounds, effect);
+        }
+
+        private void DrawShader(SKCanvas canvas, SKRect bounds, SKRuntimeEffect effect)
+        {
             using var uniforms = new SKRuntimeEffectUniforms(effect)
             {
                 ["viewport"] = new[] { (float)parameters.Viewport.Width, (float)parameters.Viewport.Height },
@@ -81,7 +122,7 @@ public sealed class GlassOptics : Control
             using var shader = effect.ToShader(uniforms);
             if (shader == null) return;
             using var paint = new SKPaint { IsAntialias = true, Shader = shader };
-            lease.SkCanvas.DrawRect(SKRect.Create((float)Bounds.Width, (float)Bounds.Height), paint);
+            canvas.DrawRect(bounds, paint);
             if (parameters.Atmosphere
                 ? Interlocked.Exchange(ref atmosphereLogged, 1) == 0
                 : Interlocked.Exchange(ref lensLogged, 1) == 0)

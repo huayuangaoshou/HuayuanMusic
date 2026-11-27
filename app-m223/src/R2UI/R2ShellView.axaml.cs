@@ -71,6 +71,8 @@ public partial class R2ShellView : UserControl
         {
             model.PropertyChanged -= WorkspaceChanged;
             model.Player.Updated -= UpdateVolume;
+            model.Player.ProgressUpdated -= UpdateProgress;
+            model.Player.LyricsClockUpdated -= UpdateFullLyricClock;
             model.Player.Toast -= ShowToast;
             model.Concept.Changed -= OnlineActionsChanged;
         }
@@ -79,16 +81,20 @@ public partial class R2ShellView : UserControl
             return;
         model.PropertyChanged += WorkspaceChanged;
         model.Player.Updated += UpdateVolume;
+        model.Player.ProgressUpdated += UpdateProgress;
+        model.Player.LyricsClockUpdated += UpdateFullLyricClock;
         model.Player.Toast += ShowToast;
         model.Concept.Changed += OnlineActionsChanged;
         VolumeSlider.Submit = model.Player.SetVolume;
         FullVolume.Submit = model.Player.SetVolume;
         FullProgress.Submit = model.Player.Seek;
+        DesktopProgress.Submit = model.Player.Seek;
         queueController = InteractionController.Attach(DrawerItems, model.LocalWorkspace, model.Player, true);
         QueueLocateButton.DataContext = queueController;
         UpdateSearchContext();
         SyncFilter();
         UpdateVolume();
+        UpdateProgress();
     }
 
     private void OnlineActionsChanged()
@@ -178,12 +184,6 @@ public partial class R2ShellView : UserControl
         var state=model?.Player.State;
         VolumeSlider.Sync(state?.Volume ?? 0);
         FullVolume.Sync(state?.Volume ?? 0);
-        if (lyricOpen && state != null)
-        {
-            FullProgress.IsEnabled = state.Duration > 0;
-            FullProgress.Maximum = Math.Max(0, state.Duration);
-            FullProgress.Sync(state.Position);
-        }
         UpdateLyricOverlay();
         UpdateCoverTint();
         if (model != null && queueController is { } controller)
@@ -204,6 +204,21 @@ public partial class R2ShellView : UserControl
                     controller.FollowCurrent();
                 }
             }
+        }
+    }
+
+    private void UpdateProgress()
+    {
+        if (model?.Player is not { } player) return;
+        Sync(DesktopProgress);
+        if (lyricOpen) Sync(FullProgress);
+        desktopLyrics?.Sync(player.State);
+
+        void Sync(HuayuanPreview.CommitSlider slider)
+        {
+            slider.IsEnabled = player.State.Duration > 0;
+            slider.Maximum = Math.Max(0, player.State.Duration);
+            slider.Sync(player.ProgressPosition);
         }
     }
 

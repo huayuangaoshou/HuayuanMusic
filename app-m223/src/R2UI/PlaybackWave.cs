@@ -2,86 +2,99 @@ using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
-using Avalonia.Threading;
+using Avalonia.Rendering.Composition;
+using Avalonia.Rendering.Composition.Animations;
 using Avalonia.VisualTree;
 
 namespace HuayuanPreview.R2;
 
-public sealed class PlaybackWave : Control
+public sealed class PlaybackWave : Canvas
 {
     public static readonly StyledProperty<bool> IsPlayingProperty =
         AvaloniaProperty.Register<PlaybackWave, bool>(nameof(IsPlaying));
     public static readonly StyledProperty<IBrush?> FillProperty =
         AvaloniaProperty.Register<PlaybackWave, IBrush?>(nameof(Fill));
 
-    private readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromMilliseconds(32) };
+    private static readonly double[] periods = [.88, .91, .86, .92, .89];
+    private readonly Border[] bars = new Border[periods.Length];
     private long started;
-    private long stopped;
-    private bool attached;
-    public IBrush? Fill
-    {
-        get => GetValue(FillProperty);
-        set => SetValue(FillProperty, value);
-    }
 
-    static PlaybackWave() => AffectsRender<PlaybackWave>(FillProperty);
+    public IBrush? Fill { get => GetValue(FillProperty); set => SetValue(FillProperty, value); }
+    public bool IsPlaying { get => GetValue(IsPlayingProperty); set => SetValue(IsPlayingProperty, value); }
 
     public PlaybackWave()
     {
         Width = 19;
         Height = 16;
-        clock.Tick += (_, _) =>
+        for (int i = 0; i < bars.Length; i++)
         {
-            InvalidateVisual();
-            if (!IsPlaying && Stopwatch.GetElapsedTime(stopped).TotalMilliseconds >= 160) clock.Stop();
-        };
-    }
-
-    public bool IsPlaying
-    {
-        get => GetValue(IsPlayingProperty);
-        set => SetValue(IsPlayingProperty, value);
+            var bar = new Border { Width = 3, Height = 16, CornerRadius = new CornerRadius(1.5),
+                VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom, IsHitTestVisible = false };
+            SetLeft(bar, i * 4);
+            bars[i] = bar;
+            Children.Add(bar);
+        }
     }
 
     protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
     {
         base.OnAttachedToVisualTree(e);
-        attached = true;
-        if (IsPlaying) Start();
+        UpdateAnimation();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
     {
-        attached = false;
-        clock.Stop();
+        foreach (var bar in bars)
+            ElementComposition.GetElementVisual(bar)?.StopAnimation(nameof(CompositionVisual.Scale));
+        started = 0;
         base.OnDetachedFromVisualTree(e);
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property != IsPlayingProperty || !attached) return;
-        if (IsPlaying) Start();
-        else stopped = Stopwatch.GetTimestamp();
+        if (change.Property == FillProperty)
+            foreach (var bar in bars) bar.Background = Fill;
+        else if ((change.Property == IsPlayingProperty || change.Property == IsVisibleProperty) && this.IsAttachedToVisualTree())
+            UpdateAnimation();
     }
 
-    private void Start()
-    {
-        started = Stopwatch.GetTimestamp();
-        clock.Start();
-    }
+    private static Vector3D ScaleAt(double time, int index) =>
+        new(1, .25 + .75 * (.5 + .5 * Math.Cos((time - index * .14) * Math.Tau / periods[index])), 1);
 
-    public override void Render(DrawingContext context)
+    private void UpdateAnimation()
     {
-        var activeTime = IsPlaying ? Stopwatch.GetElapsedTime(started).TotalSeconds :
-            clock.IsEnabled ? Stopwatch.GetElapsedTime(started, stopped).TotalSeconds : 0;
-        var amplitude = IsPlaying ? 1 : clock.IsEnabled ?
-            Math.Clamp(1 - Stopwatch.GetElapsedTime(stopped).TotalMilliseconds / 160, 0, 1) : 0;
-        for (int bar = 0; bar < 4; bar++)
+        var animate = IsPlaying && IsEffectivelyVisible;
+        var previous = started;
+        if (animate && previous != 0) return;
+        var elapsed = previous == 0 ? 0 : Stopwatch.GetElapsedTime(previous).TotalSeconds;
+        started = animate ? Stopwatch.GetTimestamp() : 0;
+        for (int i = 0; i < bars.Length; i++)
         {
-            var phase = (activeTime - bar * .14) * (Math.Tau / .88);
-            var height = 4 + 12 * amplitude * (.5 + .5 * Math.Cos(phase));
-            context.DrawRectangle(Fill, null, new Rect(bar * 5, Bounds.Height - height, 3, height), 1.5, 1.5);
+            if (ElementComposition.GetElementVisual(bars[i]) is not { } visual) continue;
+            visual.StopAnimation(nameof(CompositionVisual.Scale));
+            visual.CenterPoint = new Vector3D(1.5, 16, 0);
+            var resting = new Vector3D(1, .25, 1);
+            visual.Scale = resting;
+            if (!animate && previous == 0) continue;
+            var animation = visual.Compositor.CreateVector3DKeyFrameAnimation();
+            if (animate)
+            {
+                const int samples = 28;
+                var pacing = new PlaybackAnimationPacing(periods[i] / samples);
+                animation.IterationBehavior = AnimationIterationBehavior.Forever;
+                animation.Duration = TimeSpan.FromSeconds(periods[i]);
+                for (int sample = 0; sample <= samples; sample++)
+                    animation.InsertKeyFrame((float)sample / samples, ScaleAt(sample * periods[i] / samples, i), pacing);
+            }
+            else
+            {
+                animation.Duration = TimeSpan.FromMilliseconds(160);
+                animation.StopBehavior = AnimationStopBehavior.SetToFinalValue;
+                animation.InsertKeyFrame(0, ScaleAt(elapsed, i));
+                animation.InsertKeyFrame(1, resting, DesignTokens.MotionEffectsFast.Curve);
+            }
+            visual.StartAnimation(nameof(CompositionVisual.Scale), animation);
         }
     }
 }

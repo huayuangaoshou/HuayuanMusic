@@ -41,21 +41,10 @@ public sealed partial class PreviewWindow {
   // R6: 窗口底启用真实材质——Win11 22000+ 用 Mica，其余回退不透明 Base。
   EnableDesktopBackdrop();
   Content = R2View;
-  var progress = R2View.FindControl<CommitSlider>("DesktopProgress")!;
-  progress.IsVisible = true;
-  progress.Submit = R2Model.Player.Seek;
-  void UpdateProgress(PlaybackSnapshot state)
-  {
-   progress.IsEnabled = state.Duration > 0;
-   progress.Maximum = Math.Max(0, state.Duration);
-   progress.Sync(state.Position);
-  }
-  UpdateProgress(adapter.State);
-  adapter.Changed += UpdateProgress;
   Title = "HuayuanMusic";
   MinWidth = 1000; MinHeight = 700; Width = 1280; Height = 840;
   R2View.InstallResizeHandles(this);
-  Closed += (_, _) => { adapter.Changed -= UpdateProgress; R2Model.Dispose(); };
+  Closed += (_, _) => R2Model.Dispose();
  }
  // R6: 窗口底真实材质。Win11 22000+ 用 Mica；其余回退不透明 Base（由 R2ShellView 的 GlassBase 平涂兜底）。
  internal bool DesktopBackdropActive { get; private set; }

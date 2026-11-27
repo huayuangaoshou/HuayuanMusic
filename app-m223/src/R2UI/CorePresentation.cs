@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
@@ -89,8 +90,13 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public TrackRow? DisplayedPlayingSong=>DisplayPlaybackQueue.FirstOrDefault(r=>r.QueueId==state.CurrentEntryId);
  public string ActiveLyric=>state.LyricIndex>=0&&state.LyricIndex<state.Lyrics.Length
   &&(state.Playing||state.Paused)?state.Lyrics[state.LyricIndex].Text:"";
- public string ProgressText=>$"{FormatSeconds(state.Position)} / {FormatSeconds(state.Duration)}";
- public string PositionText=>FormatSeconds(state.Position);
+ private double progressPosition;
+ private long lastProgressSample;
+ internal double ProgressPosition => progressPosition;
+ internal event Action? ProgressUpdated;
+ internal event Action? LyricsClockUpdated;
+ public string ProgressText=>$"{PositionText} / {DurationText}";
+ public string PositionText=>FormatSeconds(progressPosition);
  public string DurationText=>FormatSeconds(state.Duration);
  public string NowPlayingCredit=>DisplayedPlayingSong is { } row
   ? string.Join("  ·  ", new[]{row.Singer,row.AlbumName}.Where(text=>!string.IsNullOrWhiteSpace(text))) : "";
@@ -130,7 +136,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public ICommand CycleModeCommand { get; }
  public ICommand MuteCommand { get; }
  public ICommand ClearQueueCommand {get;}public ICommand PlaySongCommand {get;}public ICommand RemoveFromQueueCommand {get;}public ICommand PlayPreviousCommand {get;}public ICommand PlayNextCommand {get;}public ICommand TogglePlayPauseCommand {get;}public ICommand StopCommand {get;}
- public CorePresentation(INightflightPlayback core){this.core=core;state=core.State;
+ public CorePresentation(INightflightPlayback core){this.core=core;state=core.State;progressPosition=state.Position;
   FavoriteCurrentCommand=new RelayCommand(()=>{if(DisplayedPlayingSong is { } row)Favorite([row]);});
   CycleModeCommand=new RelayCommand(()=>Submit("mode",()=>{
    // Match the core cycle order: 列表循环 → 顺序播放 → 随机播放 → 单曲循环 → 列表循环
@@ -151,14 +157,42 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  }
  public void Attach(ShellModel shell){host=shell;Refresh(core.State);}
  void Refresh(PlaybackSnapshot next){
-  if(next.Revision<state.Revision)return;bool transportChanged=next.Playing!=state.Playing||next.CurrentEntryId!=state.CurrentEntryId;bool modeChanged=next.Mode!=state.Mode;bool queueChanged=!state.QueueEntries.SequenceEqual(next.QueueEntries)||!ReferenceEquals(state.Tracks,next.Tracks);state=next;
+  if(next.Revision<state.Revision)return;
+  var previous=state;
+  bool transportChanged=next.Playing!=previous.Playing||next.Paused!=previous.Paused||next.CurrentEntryId!=previous.CurrentEntryId;
+  bool durationChanged=next.Duration!=previous.Duration;
+  bool modeChanged=next.Mode!=previous.Mode;
+  bool queueChanged=!ReferenceEquals(previous.Tracks,next.Tracks)||
+   (!ReferenceEquals(previous.QueueEntries,next.QueueEntries)&&!previous.QueueEntries.SequenceEqual(next.QueueEntries));
+  bool lyricsChanged=!ReferenceEquals(previous.Lyrics,next.Lyrics);
+  bool uiChanged=transportChanged||durationChanged||modeChanged||queueChanged||lyricsChanged||
+   !ReferenceEquals(previous.Lists,next.Lists)||next.Importing!=previous.Importing||next.ImportStatus!=previous.ImportStatus||
+   next.Error!=previous.Error||next.Volume!=previous.Volume||!previous.Favorites.SequenceEqual(next.Favorites)||
+   !previous.History.SequenceEqual(next.History);
+  state=next;
+  if(durationChanged)OnPropertyChanged(nameof(DurationText));
+  if(transportChanged||lyricsChanged||next.LyricIndex!=previous.LyricIndex)OnPropertyChanged(nameof(ActiveLyric));
   if(host!=null&&(queueChanged||DisplayPlaybackQueue.Length!=next.QueueEntries.Length)){
    var ids=next.QueueEntries.Select(e=>e.EntryId).ToHashSet();foreach(var id in queueViews.Keys.Where(k=>!ids.Contains(k)).ToArray())queueViews.Remove(id);
    var tracks=next.Tracks.ToDictionary(track=>track.Id);
    DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();for(int i=0;i<DisplayPlaybackQueue.Length;i++){DisplayPlaybackQueue[i].Number=i+1;DisplayPlaybackQueue[i].Refresh();}OnPropertyChanged(nameof(DisplayPlaybackQueue));
   }
-  OnPropertyChanged(nameof(ProgressText));OnPropertyChanged(nameof(PositionText));OnPropertyChanged(nameof(DurationText));OnPropertyChanged(nameof(ActiveLyric));OnPropertyChanged(nameof(TransportStatus));
+  SampleProgress(transportChanged||durationChanged||(!next.Playing&&next.Position!=previous.Position));
+  if(next.Position!=previous.Position||transportChanged) LyricsClockUpdated?.Invoke();
+  if(!uiChanged)return;
+  OnPropertyChanged(nameof(TransportStatus));
   OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged){OnPropertyChanged(nameof(ModeLabel));OnPropertyChanged(nameof(ModeIcon));}if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+ }
+ private void SampleProgress(bool force)
+ {
+  var now=Stopwatch.GetTimestamp();
+  if(!force&&(state.Position==progressPosition||Stopwatch.GetElapsedTime(lastProgressSample,now)<TimeSpan.FromMilliseconds(250)))return;
+  var textChanged=PositionText!=FormatSeconds(state.Position);
+  progressPosition=state.Position;
+  lastProgressSample=now;
+  if(textChanged)OnPropertyChanged(nameof(PositionText));
+  if(textChanged||force)OnPropertyChanged(nameof(ProgressText));
+  ProgressUpdated?.Invoke();
  }
  void DemandResult(){if(core.State.Error.Length>0)throw new InvalidOperationException(core.State.Error);}
  void DemandTrack(TrackRow row){if(!row.Owner.Local||!state.Tracks.Any(t=>t.Id==row.Track.Id&&t.Key==row.Track.Key))throw new InvalidOperationException("P2A 平台曲目只读 · 播放仅限隔离本地曲目");}
@@ -194,10 +228,10 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  });
  public Task Seek(double seconds)
  {
-  Submit("Seek", () => core.SeekAsync(seconds));
+  Submit("Seek", async () => { await core.SeekAsync(seconds); SampleProgress(force:true); });
   return Pending;
  }
- public void Submit(string name,Func<Task> action){if(M219RStartup.Active&&name!="stop")return;var prior=Pending;Pending=Run();async Task Run(){await prior;uiError="";var noticesBefore=failureNotices;bool transport=name is "play" or "play-all" or "next" or "previous";if(transport){IsBuffering=true;OnPropertyChanged(nameof(IsBuffering));}try{await action();DemandResult();}catch(Exception ex){uiError=name is "play" or "play-all" or "next" or "previous" or "toggle"?"暂时无法播放该歌曲，请稍后重试":"操作暂未完成，请重试";if(noticesBefore==failureNotices)Notify(uiError);Program.Log("R2_UI_FAILURE",new{name,type=ex.GetType().Name});}finally{if(transport){IsBuffering=false;OnPropertyChanged(nameof(IsBuffering));}Refresh(core.State);Program.Log("R2_UI_READBACK",new{name,ok=uiError.Length==0&&state.Error.Length==0,state.Revision,hasError=state.Error.Length>0||uiError.Length>0,state.Playing,state.Paused,state.Position,state.LyricIndex,state.CurrentEntryId,queue=state.QueueEntries});}}}
+ public void Submit(string name,Func<Task> action){if(M219RStartup.Active&&name!="stop")return;var prior=Pending;Pending=Run();async Task Run(){await prior;uiError="";var noticesBefore=failureNotices;bool transport=name is "play" or "play-all" or "next" or "previous";if(transport){IsBuffering=true;OnPropertyChanged(nameof(IsBuffering));}try{await action();DemandResult();}catch(Exception ex){uiError=name is "play" or "play-all" or "next" or "previous" or "toggle"?"暂时无法播放该歌曲，请稍后重试":"操作暂未完成，请重试";if(noticesBefore==failureNotices)Notify(uiError);Program.Log("R2_UI_FAILURE",new{name,type=ex.GetType().Name});}finally{if(transport){IsBuffering=false;OnPropertyChanged(nameof(IsBuffering));}Refresh(core.State);OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));Program.Log("R2_UI_READBACK",new{name,ok=uiError.Length==0&&state.Error.Length==0,state.Revision,hasError=state.Error.Length>0||uiError.Length>0,state.Playing,state.Paused,state.Position,state.LyricIndex,state.CurrentEntryId,queue=state.QueueEntries});}}}
  async Task<Guid> Admit(TrackRow row)
  {
   DemandPlayable(row);

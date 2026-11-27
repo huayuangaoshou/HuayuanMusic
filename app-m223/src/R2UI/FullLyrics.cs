@@ -59,6 +59,7 @@ public partial class R2ShellView
             if (lyricOpen) LyricsOverlay.Opacity = 1;
         }, Avalonia.Threading.DispatcherPriority.Render);
         UpdateVolume();
+        UpdateProgress();
     }
 
     private void HideLyricOverlay(object? sender, RoutedEventArgs args) => CloseLyricOverlay();
@@ -81,15 +82,20 @@ public partial class R2ShellView
         }, DesignTokens.MotionEffectsSlow.Duration);
     }
 
+    private void UpdateFullLyricClock()
+    {
+        if (!lyricOpen || model?.Player is not { } player) return;
+        FullLyricView.Position = TimeSpan.FromSeconds(Math.Max(0, player.State.Position));
+        FullLyricView.IsPositionClockRunning = player.State.Playing;
+    }
+
     private void UpdateLyricOverlay()
     {
         if ((!lyricOpen && desktopLyrics == null) || model == null) return;
         var player = model.Player;
         var row = player.DisplayedPlayingSong;
         if (lyricOpen) UpdateCommentTrack(row);
-        FullLyricView.Position = TimeSpan.FromSeconds(Math.Max(0, player.State.Position));
-        FullLyricView.IsPositionClockRunning = player.State.Playing;
-        desktopLyrics?.Sync(player.State);
+        UpdateFullLyricClock();
         if (row == null)
         {
             if (lyricTrack != null || lyricMessage.Length == 0)
@@ -241,6 +247,7 @@ public partial class R2ShellView
         if (lyricMessage.Length > 0) lyrics.SetLyrics(displayedLyrics, lyricMessage);
         UpdateDesktopLyricButtons();
         UpdateLyricOverlay();
+        lyrics.Sync(model.Player.State);
     }
 
     internal void RestoreDesktopLyrics()
