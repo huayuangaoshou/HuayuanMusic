@@ -125,6 +125,10 @@ internal sealed class WindowFrameMeter
         var seconds = Stopwatch.GetElapsedTime(lastReport, now).TotalSeconds;
         lastReport = now;
         var observedAtUtc = DateTimeOffset.UtcNow;
+        var gc0 = GC.CollectionCount(0);
+        var gc1 = GC.CollectionCount(1);
+        var gc2 = GC.CollectionCount(2);
+        var gcPauseMs = GC.GetTotalPauseDuration().TotalMilliseconds;
         sample++;
         foreach (var meter in visible)
         {
@@ -137,7 +141,11 @@ internal sealed class WindowFrameMeter
                 visible = true,
                 sample,
                 observedAtUtc,
-                seconds = Math.Round(seconds, 3)
+                seconds = Math.Round(seconds, 3),
+                gc0,
+                gc1,
+                gc2,
+                gcPauseMs
             });
         }
     }
