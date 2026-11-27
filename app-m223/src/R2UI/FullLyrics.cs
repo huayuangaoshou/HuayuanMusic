@@ -233,12 +233,10 @@ public partial class R2ShellView
     private void QueueLyricPreferences(DesktopLyricOptions options)
     {
         lyricPreferencesWrite = SaveAsync(lyricPreferencesWrite, options);
-        static async Task SaveAsync(Task previous, DesktopLyricOptions options)
+        async Task SaveAsync(Task previous, DesktopLyricOptions options)
         {
             await previous;
-            try { await DesktopPreferences.SetDesktopLyricsAsync(options); }
-            catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-            { Program.Log("R2_DESKTOP_LYRIC_SETTINGS_FAILED", new { type = error.GetType().Name }); }
+            await RunPreferenceActionAsync("desktop_lyrics", () => DesktopPreferences.SetDesktopLyricsAsync(options));
         }
     }
 

@@ -14,13 +14,28 @@ namespace HuayuanPreview.R2;
 public partial class R2ShellView
 {
     private R2Page? settingsPage;
+    private Task behaviorPreferenceWrite = Task.CompletedTask;
     private static readonly string[] CacheDirectories = ["kugou-artwork-cache", "media-session-artwork"];
 
-    private async Task PersistPreferenceAsync(Func<DesktopOptions, DesktopOptions> change)
+    private Task PersistPreferenceAsync(Func<DesktopOptions, DesktopOptions> change, string setting = "behavior")
     {
-        try { await DesktopPreferences.SetBehaviorAsync(change); }
-        catch (Exception error) when (error is IOException or UnauthorizedAccessException)
-        { ShowToast("设置暂未保存"); Program.Log("DESKTOP_PREFERENCE_FAILED", new { type=error.GetType().Name }); }
+        return behaviorPreferenceWrite = SaveAsync(behaviorPreferenceWrite);
+
+        async Task SaveAsync(Task previous)
+        {
+            await previous;
+            await RunPreferenceActionAsync(setting, () => DesktopPreferences.SetBehaviorAsync(change));
+        }
+    }
+
+    private async Task RunPreferenceActionAsync(string setting, Func<Task> action)
+    {
+        try { await action(); }
+        catch (Exception error)
+        {
+            Program.Log("DESKTOP_PREFERENCE_FAILED", new { setting, type = error.GetType().Name });
+            ShowToast("设置暂未保存");
+        }
     }
 
     private void OpenSettings(object? sender, RoutedEventArgs args)
@@ -64,7 +79,11 @@ public partial class R2ShellView
         ToggleSwitch Check(string label,bool value,Func<bool,DesktopOptions,DesktopOptions> update)
         {
             var check = new ToggleSwitch { OnContent=label,OffContent=label,IsChecked=value };
-            check.IsCheckedChanged += async (_,_) => await PersistPreferenceAsync(current=>update(check.IsChecked==true,current));
+            check.IsCheckedChanged += (_, _) =>
+            {
+                var selected = check.IsChecked == true;
+                _ = PersistPreferenceAsync(current => update(selected, current), label);
+            };
             return check;
         }
         var close = Options(["最小化到系统托盘","直接退出"],behavior.TrayOnClose ? 0 : 1);
@@ -95,12 +114,15 @@ public partial class R2ShellView
         var downloadPath = new TextBlock { Text = DesktopPreferences.DownloadFolder,
             Classes = { "muted" }, TextWrapping = TextWrapping.Wrap };
         var changeDownloadPath = new Button { Content = "更改下载位置", Classes = { "glass-pill" } };
-        changeDownloadPath.Click += async (_, _) =>
+        changeDownloadPath.Click += (_, _) => _ = RunPreferenceActionAsync("download_folder", async () =>
         {
             if (TopLevel.GetTopLevel(this) is not { } window) return;
             var choices = await window.StorageProvider.OpenFolderPickerAsync(
                 new FolderPickerOpenOptions { Title = "选择下载位置" });
-            if (choices.FirstOrDefault()?.TryGetLocalPath() is not { } folder) return;
+            string? folder;
+            try { folder = choices.FirstOrDefault()?.TryGetLocalPath(); }
+            finally { foreach (var choice in choices) choice.Dispose(); }
+            if (folder == null) return;
             await PersistPreferenceAsync(options => options with
             {
                 DownloadFolder = folder,
@@ -108,9 +130,9 @@ public partial class R2ShellView
                     .Concat(options.PreviousDownloadFolders ?? [])
                     .Where(path => !string.Equals(path, folder, StringComparison.OrdinalIgnoreCase))
                     .Distinct(StringComparer.OrdinalIgnoreCase).Take(8).ToArray()
-            });
+            }, "download_folder");
             downloadPath.Text = DesktopPreferences.DownloadFolder;
-        };
+        });
         Section("歌曲下载", downloadPath, new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children =
             { changeDownloadPath, ButtonFor("打开下载目录", OpenDownloadFolder) } });
         var clear=new Button { Classes={"glass-pill"},Content="一键清理缓存" };
@@ -125,26 +147,27 @@ public partial class R2ShellView
         Section("关于与更新", Row("版本", version),
             new TextBlock { Text = "界面字体 MiSans 由小米提供。", Classes = { "muted" } },
             new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children = { checkUpdate } });
-        body.AttachedToVisualTree += async (_,_) =>
+        body.AttachedToVisualTree += (_, _) => _ = RunPreferenceActionAsync("load_settings", async () =>
         {
             labels = await Task.Run(()=>SimpleAudioPlayer.GetOutputDevices().ToArray());
             devices.ItemsSource = labels.Select(item=>item.Name).ToArray();
             var index=Array.FindIndex(labels,item=>item.DeviceId==SettingsManager.Settings.AudioOutputDeviceId);
             devices.SelectedIndex = index>=0 ? index : 0;
             await RefreshCacheAsync(false);
-        };
-        devices.SelectionChanged += (_,_) =>
+        });
+        devices.SelectionChanged += (_, _) => _ = RunPreferenceActionAsync("audio_output", () =>
         {
-            if(devices.SelectedIndex<0||devices.SelectedIndex>=labels.Length||model==null)return;
+            if(devices.SelectedIndex<0||devices.SelectedIndex>=labels.Length||model==null)return Task.CompletedTask;
             var id=labels[devices.SelectedIndex].DeviceId;
-            if(id==SettingsManager.Settings.AudioOutputDeviceId)return;
+            if(id==SettingsManager.Settings.AudioOutputDeviceId)return Task.CompletedTask;
             if(model.Adapter.ChangeDesktopOutput(id))ShowToast("已切换音频输出设备");
             else
             {
                 ShowToast("音频设备不可用，保留原设备");
                 devices.SelectedIndex=Array.FindIndex(labels,device=>device.DeviceId==SettingsManager.Settings.AudioOutputDeviceId);
             }
-        };
+            return Task.CompletedTask;
+        });
         var refresh = new DispatcherTimer { Interval=TimeSpan.FromSeconds(6) };
         refresh.Tick += async (_,_) => await RefreshCacheAsync(false);
         body.AttachedToVisualTree += (_,_) => refresh.Start();

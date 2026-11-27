@@ -59,7 +59,7 @@
               </Grid>
             </Border>
           </Popup>
-          <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
+          <Border Grid.Column="3" Name="DragArea" Background="Transparent" PointerPressed="StartWindowDrag"/>
           <Button Grid.Column="4" Name="AccountButton" IsVisible="{Binding KugouEnabled}" Click="ShowAccount" VerticalAlignment="Center" AutomationProperties.Name="我的账号">
             <StackPanel Orientation="Horizontal" Spacing="8">
               <ContentControl Content="{Binding AccountAvatar}" Width="24" Height="24" VerticalAlignment="Center"/>
@@ -92,7 +92,7 @@
             <Button Classes="glass-pill" Width="40" Height="40" Padding="0" Click="HideLyricOverlay" AutomationProperties.Name="收起正在播放">
               <PathIcon Width="15" Height="15" Data="M2,5 L8,11 L14,5 L16,7 L8,15 L0,7 Z"/>
             </Button>
-            <Border Grid.Column="1" Background="Transparent" PointerPressed="StartWindowDrag" DoubleTapped="ToggleWindowSize"/>
+            <Border Grid.Column="1" Background="Transparent" PointerPressed="StartWindowDrag"/>
             <Button Grid.Column="2" Classes="caption" AutomationProperties.Name="切换歌词页主题" Click="ToggleTheme"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMoon}"/></Button>
             <Button Grid.Column="3" Classes="caption" AutomationProperties.Name="最小化窗口" Click="MinimizeWindow"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMinimize}"/></Button>
             <Button Grid.Column="4" Classes="caption" AutomationProperties.Name="最大化或还原" Click="ToggleWindowSize"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassMaximize}"/></Button>

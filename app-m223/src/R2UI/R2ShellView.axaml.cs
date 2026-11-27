@@ -155,7 +155,7 @@ public partial class R2ShellView : UserControl
     }
 
     private bool syncingQuality;
-    private async void ChangeQuality(object? sender,SelectionChangedEventArgs args)
+    private void ChangeQuality(object? sender,SelectionChangedEventArgs args)
     {
         if(syncingQuality || sender is not ComboBox chooser || QualityChoice == null || FullQuality == null) return;
         var index=chooser.SelectedIndex;
@@ -165,9 +165,12 @@ public partial class R2ShellView : UserControl
         syncingQuality=false;
         var selected=index switch { 1=>"320",2=>"flac",_=>"standard" };
         if(selected==DesktopPreferences.Quality) return;
-        try { await DesktopPreferences.ChooseQualityAsync(selected); if (model != null) ShowNotice($"已切换音质 · {new[] { "标准", "高品 MP3", "无损 FLAC" }[index]}"); Program.Log("R2_QUALITY_PREFERENCE",new{quality=selected}); }
-        catch(Exception error) when(error is IOException or UnauthorizedAccessException)
-        { ShowNotice("音质设置暂未保存"); Program.Log("R2_QUALITY_WRITE_FAILED",new{type=error.GetType().Name}); }
+        _ = RunPreferenceActionAsync("audio_quality", async () =>
+        {
+            await DesktopPreferences.ChooseQualityAsync(selected);
+            if (model != null) ShowNotice($"已切换音质 · {new[] { "标准", "高品 MP3", "无损 FLAC" }[index]}");
+            Program.Log("R2_QUALITY_PREFERENCE", new { quality = selected });
+        });
     }
 
     private void UpdateVolume()
@@ -378,8 +381,9 @@ public partial class R2ShellView : UserControl
     private void CloseWindow(object? sender, RoutedEventArgs args) => Window?.Close();
     private void StartWindowDrag(object? sender, PointerPressedEventArgs args)
     {
-        if (args.ClickCount == 1 && args.GetCurrentPoint(this).Properties.IsLeftButtonPressed)
-            Window?.BeginMoveDrag(args);
+        if (Window is not { } window || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed) return;
+        if (args.ClickCount == 2) ToggleWindowSize(sender, args);
+        else if (args.ClickCount == 1) window.BeginMoveDrag(args);
     }
 
     private void ToggleQueue(object? sender, RoutedEventArgs args) => SetQueueOpen(!queueOpen);

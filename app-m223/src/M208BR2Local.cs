@@ -54,6 +54,7 @@ public sealed partial class PreviewWindow {
   adapter.Changed += UpdateProgress;
   Title = "HuayuanMusic";
   MinWidth = 1000; MinHeight = 700; Width = 1280; Height = 840;
+  R2View.InstallResizeHandles(this);
   Closed += (_, _) => { adapter.Changed -= UpdateProgress; R2Model.Dispose(); };
  }
  // R6: 窗口底真实材质。Win11 22000+ 用 Mica；其余回退不透明 Base（由 R2ShellView 的 GlassBase 平涂兜底）。
