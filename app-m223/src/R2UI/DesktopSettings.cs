@@ -4,7 +4,6 @@ using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Media;
-using Avalonia.Styling;
 using Avalonia.Threading;
 using KugouAvaloniaPlayer.Services;
 using SimpleAudio;
@@ -86,11 +85,7 @@ public partial class R2ShellView
             };
             return check;
         }
-        var close = Options(["最小化到系统托盘","直接退出"],behavior.TrayOnClose ? 0 : 1);
-        close.SelectionChanged += async (_,_) => await PersistPreferenceAsync(current=>current with {TrayOnClose=close.SelectedIndex==0});
-        var theme = Options(["浅色粉蓝白","深色夜蓝"],ActualThemeVariant==ThemeVariant.Dark ? 1 : 0);
-        theme.SelectionChanged += async (_,_) => await SetDesktopThemeAsync(theme.SelectedIndex==1);
-        Section("常规与窗口", Row("关闭主窗口",close), Row("界面主题",theme),
+        Section("常规与窗口",
             Check("启动后恢复上次队列，保持就绪", behavior.RestoreQueue,(value,current)=>current with {RestoreQueue=value}));
         var quality=Options(["标准","高品 MP3","无损 FLAC"],QualityChoice.SelectedIndex);
         quality.SelectionChanged += (_,_) => QualityChoice.SelectedIndex=quality.SelectedIndex;
@@ -107,10 +102,7 @@ public partial class R2ShellView
             var options = desktopLyrics?.Capture(true) ?? DesktopPreferences.DesktopLyrics;
             QueueLyricPreferences(options with { Serif = serif });
         };
-        Section("歌词设置", Row("桌面歌词字体", lyricFont), new WrapPanel { ItemSpacing=6, LineSpacing=6, Children={
-            ButtonFor("显示 / 隐藏桌面歌词",ToggleDesktopLyricsFromHost),
-            ButtonFor("解锁鼠标穿透",UnlockDesktopLyricsFromHost),
-            ButtonFor("重置位置和字号",ResetDesktopLyricsFromHost) } });
+        Section("歌词设置", Row("桌面歌词字体", lyricFont));
         var downloadPath = new TextBlock { Text = DesktopPreferences.DownloadFolder,
             Classes = { "muted" }, TextWrapping = TextWrapping.Wrap };
         var changeDownloadPath = new Button { Content = "更改下载位置", Classes = { "glass-pill" } };
@@ -145,7 +137,6 @@ public partial class R2ShellView
         var checkUpdate = new Button { Content = "检查更新", Classes = { "glass-pill" } };
         checkUpdate.Click += CheckForUpdates;
         Section("关于与更新", Row("版本", version),
-            new TextBlock { Text = "界面字体 MiSans 由小米提供。", Classes = { "muted" } },
             new WrapPanel { ItemSpacing = 7, LineSpacing = 7, Children = { checkUpdate } });
         body.AttachedToVisualTree += (_, _) => _ = RunPreferenceActionAsync("load_settings", async () =>
         {

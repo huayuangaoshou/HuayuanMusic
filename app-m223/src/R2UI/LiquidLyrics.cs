@@ -71,8 +71,7 @@ public partial class R2ShellView
         });
         var reset = MenuItemFor("重置位置与字号", () =>
         {
-            if (desktopLyrics != null) desktopLyrics.ResetAppearance();
-            else QueueLyricPreferences(new DesktopLyricOptions(Serif: DesktopPreferences.DesktopLyrics.Serif));
+            ResetDesktopLyricsFromHost();
             return Task.CompletedTask;
         });
         var menu = new ContextMenu { Items = { unlock, reset } };

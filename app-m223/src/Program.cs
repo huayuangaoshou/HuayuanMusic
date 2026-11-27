@@ -194,7 +194,7 @@ public sealed class App : Application
             args.Cancel = true;
             if (closing)
                 return;
-            if (!exitRequested && args.CloseReason == WindowCloseReason.WindowClosing && DesktopPreferences.Behavior.TrayOnClose)
+            if (!exitRequested && args.CloseReason == WindowCloseReason.WindowClosing)
             {
                 window.Hide();
                 Program.Log("DESKTOP_TRAY_HIDE", new { playing = shell.Player.IsPlayingAudio });

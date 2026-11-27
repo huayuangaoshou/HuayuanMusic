@@ -120,6 +120,8 @@ internal sealed class DesktopLyricWindow : Window
         translationButton.IsVisible = false;
         if (passthrough.IsSupported)
             lockButton = Add(Icon(LockIcon), "锁定桌面歌词并穿透鼠标", () => SetLocked(!Locked));
+        Add(Icon(Geometry.Parse("M3,12 A9,9 0 1 1 6,18.7 M3,5 L3,12 L10,12")),
+            "重置桌面歌词位置和字号", ResetAppearance);
         Add(Icon(Geometry.Parse("M6,6 L18,18 M18,6 L6,18")), "关闭桌面歌词", Close);
 
         var toolSurface = new Border
