@@ -10,7 +10,8 @@ internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = f
 internal enum DesktopDlcState { Enabled, Disabled, Removed }
 internal sealed record DesktopOptions(bool TrayOnClose = true, bool RestoreQueue = true, bool Dark = false,
     bool MicroFade = true, bool Translation = true, DesktopDlcState Kugou = DesktopDlcState.Enabled,
-    float PreMuteVolume = 0.8f, string? DownloadFolder = null, string[]? PreviousDownloadFolders = null);
+    float PreMuteVolume = 0.8f, string? DownloadFolder = null, string[]? PreviousDownloadFolders = null,
+    bool WatchMusicFolders = true);
 
 internal static class DesktopPreferences
 {

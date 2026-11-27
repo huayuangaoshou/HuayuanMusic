@@ -22,9 +22,13 @@ namespace HuayuanPreview
             return ids;
         }
 
-        internal Task RemoveLocalTracksAsync(int[] ids) => Run("RemoveLocalTracks",async() =>
+        internal Task RemoveLocalTracksAsync(int[] ids) => Run("RemoveLocalTracks", () => RemoveLocalTracksCoreAsync(ids));
+
+        private async Task RemoveLocalTracksCoreAsync(int[] ids, bool missingFiles = false)
         {
-            var tracks=ids.Distinct().Select(Song).ToArray();
+            // Rescan removes records for paths already checked on disk. Opening those paths
+            // through Song() would require existing media in an isolated library.
+            var tracks = ids.Distinct().Select(id => missingFiles ? items[id] : Song(id)).ToArray();
             if(tracks.Any(track=>track.LocalSourceType!="LocalFile"))
                 throw new InvalidOperationException("只能移除本地曲目");
             await using(var db=await AppDatabase.CreateConnectionAsync())
@@ -46,7 +50,7 @@ namespace HuayuanPreview
             await ReloadAllAsync();
             RefreshRecords();
             if(PersistQueue)root.Player.FlushControlledQueue();
-        });
+        }
 
         internal Task<ManagedMusicFolder[]> ReadManagedFoldersAsync() => Task.Run(async () =>
         {
@@ -72,12 +76,32 @@ namespace HuayuanPreview
         internal Task RescanManagedFoldersAsync() => Run("RescanFolders", async () =>
         {
             var folders = await ReadManagedFoldersAsync();
-            await Task.Run(async () =>
+            var known = items.Where(pair => pair.Value.LocalSourceType == "LocalFile")
+                .Select(pair => (Id: pair.Key, Path: pair.Value.LocalFilePath)).ToArray();
+            var removed = await Task.Run(async () =>
             {
+                var scanned = new List<string>();
                 foreach (var folder in folders)
-                    if (Directory.Exists(folder.Path)) await Store.ImportFolderAsync(folder.Path).ConfigureAwait(false);
+                {
+                    if (!Directory.Exists(folder.Path)) continue;
+                    await Store.ImportFolderAsync(folder.Path).ConfigureAwait(false);
+                    scanned.Add(folder.Path);
+                }
+                return known.Where(entry => entry.Path != null && scanned.Any(folder => IsMissingWithin(folder, entry.Path)))
+                    .Select(entry => entry.Id).ToArray();
             });
-            await ReloadAllAsync();
+            if (removed.Length == 0) await ReloadAllAsync();
+            else await RemoveLocalTracksCoreAsync(removed, missingFiles: true);
+
+            static bool IsMissingWithin(string folder, string file)
+            {
+                var relative = Path.GetRelativePath(folder, file);
+                if (relative == ".." || relative.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal) ||
+                    Path.IsPathRooted(relative) || !Directory.Exists(folder)) return false;
+                try { return File.GetAttributes(file).HasFlag(FileAttributes.Directory); }
+                catch (Exception error) when (error is FileNotFoundException or DirectoryNotFoundException) { return true; }
+                catch (Exception error) when (error is IOException or UnauthorizedAccessException) { return false; }
+            }
         });
 
         internal Task RemoveManagedFolderAsync(long id) => Run("RemoveFolder", async () =>
@@ -145,15 +169,23 @@ namespace HuayuanPreview.R2
         private Task SubmitFolderActionAsync(Func<Task> operation) =>
             folderBusy ? PendingFolderWork : PendingFolderWork = RunFolderActionAsync(operation);
 
+        internal async Task ScanWatchedFoldersAsync(Func<bool> stillEnabled)
+        {
+            while (folderBusy) await PendingFolderWork;
+            if (stillEnabled()) await SubmitFolderActionAsync(Host.Adapter.RescanManagedFoldersAsync);
+        }
+
         private async Task RunFolderActionAsync(Func<Task> operation)
         {
             folderBusy = true;
-            folderStatus!.Text = "正在处理本地文件夹…";
+            if (folderStatus != null) folderStatus.Text = "正在处理本地文件夹…";
             try
             {
                 await operation();
                 var folders = await Host.Adapter.ReadManagedFoldersAsync();
-                folderList!.Children.Clear();
+                Host.FolderWatch?.Sync(folders);
+                if (folderList == null || folderStatus == null) return;
+                folderList.Children.Clear();
                 foreach (var folder in folders)
                 {
                     var row = new Grid { ColumnDefinitions = new ColumnDefinitions("*,Auto"), ColumnSpacing = 8 };
@@ -171,7 +203,7 @@ namespace HuayuanPreview.R2
             }
             catch (Exception error)
             {
-                folderStatus.Text = "本地文件夹操作未完成";
+                if (folderStatus != null) folderStatus.Text = "本地文件夹操作未完成";
                 Program.Log("R2_LOCAL_FOLDER_FAILED", new { type = error.GetType().Name });
             }
             finally { folderBusy = false; }
@@ -181,5 +213,6 @@ namespace HuayuanPreview.R2
     public sealed partial class ShellModel
     {
         internal CorePlaybackAdapter Adapter { get; private set; } = null!;
+        internal FolderWatchService? FolderWatch { get; set; }
     }
 }

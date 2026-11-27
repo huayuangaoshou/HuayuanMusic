@@ -147,6 +147,7 @@ public sealed class App : Application
         var shell = window.R2Model!;
         var view = window.R2View!;
         var shortcuts = new DesktopGlobalShortcuts(root.Player, view, shell.Player);
+        var folderWatch = shell.FolderWatch = new FolderWatchService(shell);
         using var icon = AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/app.ico"));
         var trayMenu = new NativeMenu();
         NativeMenuItem AddTray(string label, Action action)
@@ -211,6 +212,7 @@ public sealed class App : Application
             try
             {
                 window.R2Model!.Concept.CancelDesktopOperations();
+                await folderWatch.StopAsync();
                 if (window.R2View != null) await window.R2View.CloseDesktopLyricsForExitAsync();
                 await window.CancelImportAndWait();
                 await initialization;
@@ -257,6 +259,7 @@ public sealed class App : Application
             try
             {
                 await adapter.InitializeAsync();
+                if (!closing) await folderWatch.SetEnabledAsync(DesktopPreferences.Behavior.WatchMusicFolders);
                 Program.Log("DESKTOP_R2_READY", new { singleCore = true, tracks = adapter.State.Tracks.Length });
                 if (!closing && shell.KugouEnabled)
                     await window.R2Model!.Concept.RestoreDesktopConnectionAsync();

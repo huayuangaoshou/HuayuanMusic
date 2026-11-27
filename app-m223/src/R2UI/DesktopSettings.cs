@@ -75,18 +75,25 @@ public partial class R2ShellView
         }
         static ComboBox Options(string[] choices,int selected) => new()
         { ItemsSource=choices,SelectedIndex=selected,MinWidth=145,HorizontalAlignment=HorizontalAlignment.Left };
-        ToggleSwitch Check(string label,bool value,Func<bool,DesktopOptions,DesktopOptions> update)
+        ToggleSwitch Check(string label,bool value,Func<bool,DesktopOptions,DesktopOptions> update, Func<Task>? afterSave = null)
         {
             var check = new ToggleSwitch { OnContent=label,OffContent=label,IsChecked=value };
             check.IsCheckedChanged += (_, _) =>
             {
                 var selected = check.IsChecked == true;
-                _ = PersistPreferenceAsync(current => update(selected, current), label);
+                _ = RunPreferenceActionAsync(label, async () =>
+                {
+                    await PersistPreferenceAsync(current => update(selected, current), label);
+                    if (afterSave != null) await afterSave();
+                });
             };
             return check;
         }
         Section("常规与窗口",
-            Check("启动后恢复上次队列，保持就绪", behavior.RestoreQueue,(value,current)=>current with {RestoreQueue=value}));
+            Check("启动后恢复上次队列，保持就绪", behavior.RestoreQueue,(value,current)=>current with {RestoreQueue=value}),
+            Check("自动监视音乐文件夹变化", behavior.WatchMusicFolders,
+                (value, current) => current with { WatchMusicFolders = value },
+                () => model?.FolderWatch?.SetEnabledAsync(DesktopPreferences.Behavior.WatchMusicFolders) ?? Task.CompletedTask));
         var quality=Options(["标准","高品 MP3","无损 FLAC"],QualityChoice.SelectedIndex);
         quality.SelectionChanged += (_,_) => QualityChoice.SelectedIndex=quality.SelectedIndex;
         var fade=Check("暂停、恢复与切歌微淡入淡出",behavior.MicroFade,(value,current)=>
