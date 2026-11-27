@@ -173,6 +173,8 @@ internal sealed class DesktopLyricWindow : Window
         tools.PointerMoved += MoveFromToolbar;
         tools.PointerReleased += (_, args) => { if (toolbarDrag == args.Pointer) EndToolbarDrag(); };
         tools.PointerCaptureLost += (_, _) => toolbarDrag = null;
+        WindowFrameMeter.Attach(this, "desktop_lyric");
+        WindowFrameMeter.Attach(toolbarWindow, "toolbar");
         toolbarWindow.Resized += (_, _) => PositionToolbar();
         toolbarWindow.Closed += (_, _) => toolbarClosed = true;
 
