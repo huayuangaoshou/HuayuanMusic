@@ -50,7 +50,7 @@ internal sealed class DesktopLyricWindow : Window
     private readonly DispatcherTimer renderClock = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
     private static readonly TimeSpan HideToolsDelay = TimeSpan.FromMilliseconds(200);
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
-    private readonly DispatcherTimer nativeInputClock = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private readonly DispatcherTimer nativeInputClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private IReadOnlyList<LyricLine> lyrics = [];
     private string empty = "播放一首歌曲后显示歌词";
     private double anchorPosition;
