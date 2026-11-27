@@ -14,6 +14,8 @@ public partial class R2ShellView
     private CoreLyric[]? previousLocalLyrics;
     private bool lyricOpen;
     private DesktopLyricWindow? desktopLyrics;
+    internal bool DesktopLyricsVisible => desktopLyrics != null;
+    internal event Action<bool>? DesktopLyricsVisibilityChanged;
     private LyricLine[] displayedLyrics = [];
     private string lyricMessage = "";
     private bool closingLyricsForExit;
@@ -209,10 +211,12 @@ public partial class R2ShellView
         lyrics.Closed += (_, _) =>
         {
             desktopLyrics = null;
+            DesktopLyricsVisibilityChanged?.Invoke(false);
             UpdateDesktopLyricButtons();
             ReleaseLyricsIfHidden();
         };
         lyrics.Show();
+        DesktopLyricsVisibilityChanged?.Invoke(true);
         if (lyricMessage.Length > 0) lyrics.SetLyrics(displayedLyrics, lyricMessage);
         UpdateDesktopLyricButtons();
         UpdateLyricOverlay();

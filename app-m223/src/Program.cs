@@ -143,8 +143,10 @@ public sealed class App : Application
         bool closing = false;
         bool closed = false;
         bool exitRequested = false;
+        bool opened = false;
         var shell = window.R2Model!;
         var view = window.R2View!;
+        var shortcuts = new DesktopGlobalShortcuts(root.Player, view, shell.Player);
         using var icon = AssetLoader.Open(new Uri("avares://HuayuanMusic.P17.Nightflight/Assets/app.ico"));
         var trayMenu = new NativeMenu();
         NativeMenuItem AddTray(string label, Action action)
@@ -179,9 +181,12 @@ public sealed class App : Application
 
         window.Opened += (_, _) =>
         {
+            if (opened) return;
+            opened = true;
             root.SystemMediaSessionService.Initialize(window, root.Player);
             if (root.SystemMediaSessionService is KugouAvaloniaPlayer.Services.SystemMediaSession.SystemMediaSessionService media)
                 Program.Log("DESKTOP_SMTC", new { active = media.HasTransportControls });
+            shortcuts.Initialize(window, SettingsManager.Settings.GlobalShortcuts);
             initialization = InitializeAsync();
             if(outputFailed)shell.Player.Notify("无法播放，请检查音频输出设备");
             window.R2View?.RestoreDesktopLyrics();
@@ -201,6 +206,7 @@ public sealed class App : Application
                 return;
             }
             closing = true;
+            shortcuts.Dispose();
             window.IsEnabled = false;
             try
             {
@@ -229,6 +235,7 @@ public sealed class App : Application
         };
         desktop.Exit += (_, _) =>
         {
+            shortcuts.Dispose();
             activationRegistration?.Unregister(null);
             shell.Player.Updated -= UpdateTray;
             tray.Dispose();
