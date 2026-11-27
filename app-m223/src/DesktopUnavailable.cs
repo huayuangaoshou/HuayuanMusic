@@ -60,6 +60,7 @@ internal sealed partial class CorePlaybackAdapter
     }
     private void TrackRecovered(SongItem song)
     {
+        ApplyDesktopResumePosition(song);
         if(unavailable.Remove(AvailabilityKey(song)))DesktopUnavailableChanged?.Invoke("");
         // R12-1：成功播放（恢复）时熔断归零。
         autoSkipStreak=0;

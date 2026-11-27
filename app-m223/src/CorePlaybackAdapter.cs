@@ -56,7 +56,17 @@ internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
  public Task ToggleAsync(int selected)=>State.CurrentId==0?(root.Player.PlaybackQueue.Count>0?QueueEntryAsync("play",root.Player.PlaybackQueue[0].QueueEntryId):PlayAsync(selected)):Run("Toggle",async()=>{if(root.Coordinator.Player.IsStopped){await commands.PlayAsync(root.Player.CurrentPlayingSong??Song(State.CurrentId));if(!root.Player.IsPlayingAudio)throw new InvalidOperationException("音频未开始，请检查受控音源或设备");await root.ViewModel.History.LoadAsync();RefreshRecords();}else await root.Player.ToggleDesktopTransportAsync();});
  public Task PreviousAsync()=>Run("Previous",()=>commands.PlayPreviousAsync());public Task NextAsync()=>Run("Next",()=>commands.PlayNextAsync());
  public Task StopAsync()=>Run("Stop",()=>{commands.Stop();return Task.CompletedTask;});
- public Task SeekAsync(double seconds)=>Run("Seek",()=>{SeekSubmissions++;var target=Math.Clamp(seconds,0,Math.Max(0,root.Player.TotalDurationSeconds));root.Player.CurrentPositionSeconds=target;if(Math.Abs(root.Coordinator.Player.GetPosition().TotalSeconds-target)>.025)root.Coordinator.Player.SetPosition(TimeSpan.FromSeconds(target));return Task.CompletedTask;});
+ public Task SeekAsync(double seconds)=>Run("Seek",()=>{
+  SeekSubmissions++;
+  var player=root.Coordinator.Player;
+  var target=Math.Clamp(seconds,0,Math.Max(0,root.Player.TotalDurationSeconds));
+  root.Player.CurrentPositionSeconds=target;
+  if(Program.Desktop && player.IsStopped && root.Player.CurrentPlayingSong is { } selected)
+   desktopResume=(selected.QueueEntryId,target);
+  else if(Math.Abs(player.GetPosition().TotalSeconds-target)>.025)
+   player.SetPosition(TimeSpan.FromSeconds(target));
+  return Task.CompletedTask;
+ });
  public Task SeekLyricAsync(int index)=>Run("SeekLyric",()=>{if(index<0||index>=root.Player.LyricLines.Count)throw new ArgumentOutOfRangeException(nameof(index));root.Player.SeekToLyricLineCommand.Execute(TimeSpan.FromMilliseconds(root.Player.LyricLines[index].StartTime));return Task.CompletedTask;});
  public Task VolumeAsync(double value)=>Run("Volume",async()=>{VolumeSubmissions++;var target=(float)Math.Clamp(value,0,1);if(target==0&&root.Player.MusicVolume>0){await RememberPreMuteAsync();root.Player.ToggleMute(true);}else root.Player.MusicVolume=target;});
  public Task MuteAsync()=>Run("Mute",async()=>{if(Program.Desktop&&root.Player.MusicVolume<=0){root.Player.MusicVolume=Math.Clamp(R2.DesktopPreferences.Behavior.PreMuteVolume,0.01f,1);return;}await RememberPreMuteAsync();root.Player.ToggleMute();if(root.Player.MusicVolume<=0&&State.Volume==0)root.Player.MusicVolume=.35f;});
