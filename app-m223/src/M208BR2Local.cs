@@ -42,6 +42,7 @@ public sealed partial class PreviewWindow {
   EnableDesktopBackdrop();
   Content = R2View;
   WindowFrameMeter.Attach(this, "main");
+  UiThreadStallWatch.Attach(this);
   Title = "HuayuanMusic";
   MinWidth = 1000; MinHeight = 700; Width = 1280; Height = 840;
   R2View.InstallResizeHandles(this);
