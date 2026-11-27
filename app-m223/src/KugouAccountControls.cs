@@ -41,7 +41,6 @@ public sealed partial class PreviewWindow {
   kugouVipState=T(kugouVipSummary,12,true);
   kugouStatus=T("默认不登录、不领取、不播放。",12,true);kugouResults=V();kugouOfficialPlaylists=V();
   kugouQrImage=new Image{Width=220,Height=220,IsVisible=false};
-  var claimConfirmation=new CheckBox{Content="我确认本次手动领取；活动资格与本应用适用规则已经核验"};
   var keyword=new TextBox{PlaceholderText="搜索酷狗歌曲（需获准连接及登录）",Width=280};
   kugouPageCache=V(NH("KUGOU","酷狗概念版","登录后同步官方歌单，使用本体播放器播放。"),
    H(NB("连接酷狗",()=>KugouAction(async()=>{if(!await ApproveM205ConnectionAsync())return;await a.ConnectDirectKugouAsync();kugouAccountState.Text=a.Kugou.LoggedIn?"已恢复保存的登录；权益需主动查询"+M206AccountLabel():"连接已准备；请扫码登录";})),
@@ -54,8 +53,7 @@ public sealed partial class PreviewWindow {
    H(NB("查询权益",()=>KugouAction(async()=>{DemandSdk(a);var e=await a.Kugou.RefreshEntitlementAsync();kugouVipState.Text=kugouVipSummary=$"ENTITLEMENT_ACTIVE={e.Active} · {e.Product} · {e.Until}";})),
     NB("查询领取状态",()=>KugouAction(async()=>{DemandSdk(a);var h=await a.Kugou.ReadClaimHistoryAsync();if(h.ServerTime<=0)throw new InvalidDataException("服务端日期不可用");var day=DateOnly.FromDateTime(DateTimeOffset.FromUnixTimeSeconds(h.ServerTime).ToOffset(TimeSpan.FromHours(8)).DateTime);bool received=h.Items.Any(x=>x.Day==day.ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture)&&x.IsReceived==1);KugouFeedback($"服务端日期 {day:yyyy-MM-dd} · 领取记录：{(received?"已领取":"未记录领取，不代表活动资格或权益生效")}；本次仅查询");})),
     NB("退出账号",()=>{KugouLifecycle(async()=>{RevokeKugouConsent();await a.Kugou.LogoutAsync();RevokeKugouHttpSession();ClearKugouQr();kugouAccountState.Text="已退出当前账号并撤销音源许可；Windows 保存登录仍保留";kugouVipState.Text="权益：未查询";});})),
-   kugouVipState,claimConfirmation,
-   NB("手动领取免费福利",()=>KugouAction(async()=>{DemandSdk(a);if(!KugouAvaloniaPlayer.Services.Startup.OfflineGuiApplication.SelfTest)throw new UnauthorizedAccessException("M2-05 不允许真实领取 VIP；权益状态须单独查询");if(claimConfirmation.IsChecked!=true)throw new UnauthorizedAccessException("请明确确认本次领取");claimConfirmation.IsChecked=false;var r=await a.Kugou.ClaimTodayAsync(true);KugouFeedback($"CLAIM={r.State}；ENTITLEMENT_ACTIVE={r.Entitlement.Active}；不代表歌曲已授权");})),
+   kugouVipState,
    T("首次连接集中告知并记住选择；隐私与权限可在设置中管理。",12,true),
    H(keyword,NB("搜索",()=>KugouAction(async()=>{DemandSdk(a);var found=await a.Kugou.SearchAsync(keyword.Text??"");kugouResults.Children.Clear();foreach(var song in found.Tracks){var track=song;kugouResults.Children.Add(V(T(track.Title+" · "+track.Artist,14),H(
     NB("授权并加入队列",()=>KugouAction(async()=>{DemandSdk(a);int id=await a.AdmitKugouAsync(track,"standard");await a.QueueAsync("append",id);KugouFeedback("已加入播放队列");})),
@@ -75,8 +73,7 @@ public sealed partial class PreviewWindow {
    kugouOfficialPlaylists,
    new Expander{Header="开发者诊断（合成演练）",IsExpanded=false,Content=fixture});
   if(!KugouAvaloniaPlayer.Services.Startup.OfflineGuiApplication.SelfTest){
-   claimConfirmation.IsVisible=false;
-   foreach(var button in kugouPageCache.GetLogicalDescendants().OfType<Button>())if(button.Content is string label&&(label is "高级连接配置" or "离线二维码演练" or "查询领取状态" or "手动领取免费福利"||label.StartsWith("导入我之前")))button.IsVisible=false;
+   foreach(var button in kugouPageCache.GetLogicalDescendants().OfType<Button>())if(button.Content is string label&&(label is "高级连接配置" or "离线二维码演练" or "查询领取状态"||label.StartsWith("导入我之前")))button.IsVisible=false;
   }
   return kugouPageCache;
  }
