@@ -7,7 +7,7 @@ using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Rendering.Composition;
-using Avalonia.Rendering.Composition.Animations;
+using Avalonia.Threading;
 using Avalonia.VisualTree;
 
 namespace HuayuanPreview.R2;
@@ -21,7 +21,8 @@ public sealed class MarqueeText : TemplatedControl
     private readonly Glyphs glyphs;
     private FormattedText? formatted;
     private double overflow, phase, maskWidth;
-    private long started;
+    private readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromMilliseconds(32) };
+    private long lastTick;
     private CompositionVisual? animated;
 
     public MarqueeText()
@@ -29,7 +30,13 @@ public sealed class MarqueeText : TemplatedControl
         ClipToBounds = true;
         glyphs = new Glyphs(this) { IsHitTestVisible = false };
         Template = new FuncControlTemplate<MarqueeText>((_, _) => glyphs);
+        clock.Tick += (_, _) => Advance();
         SizeChanged += (_, _) => UpdateOverflow();
+        EffectiveViewportChanged += (_, _) =>
+        {
+            if (!IsEffectivelyVisible) Pause();
+            else if (!IsPointerOver && overflow > 1) Start();
+        };
     }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
@@ -137,42 +144,35 @@ public sealed class MarqueeText : TemplatedControl
     {
         if (animated != null || overflow <= 1 || !IsEffectivelyVisible ||
             ElementComposition.GetElementVisual(glyphs) is not { } visual) return;
-        var period = Period;
-        var travel = overflow / Speed;
-        var animation = visual.Compositor.CreateVector3DKeyFrameAnimation();
-        animation.IterationBehavior = AnimationIterationBehavior.Forever;
-        animation.Duration = TimeSpan.FromSeconds(period);
-        animation.InsertKeyFrame(0, TranslationAt(phase));
-        var corners = new[] { 0d, Hold, Hold + travel, 2 * Hold + travel }
-            .Select(point => (Point: point, Relative: (point - phase + period) % period))
-            .OrderBy(corner => corner.Relative);
-        var previous = 0d;
-        foreach (var (point, relative) in corners)
-        {
-            if (relative <= .00001 || relative >= period - .00001) continue;
-            animation.InsertKeyFrame((float)(relative / period), TranslationAt(point), new PlaybackAnimationPacing(relative - previous));
-            previous = relative;
-        }
-        animation.InsertKeyFrame(1, TranslationAt(phase), new PlaybackAnimationPacing(period - previous));
-        visual.StartAnimation(nameof(CompositionVisual.Translation), animation);
         animated = visual;
-        started = Stopwatch.GetTimestamp();
+        lastTick = Stopwatch.GetTimestamp();
+        clock.Start();
+    }
+
+    private void Advance()
+    {
+        if (!IsEffectivelyVisible || IsPointerOver || animated is null)
+        {
+            Pause();
+            return;
+        }
+        var now = Stopwatch.GetTimestamp();
+        phase = (phase + Stopwatch.GetElapsedTime(lastTick, now).TotalSeconds) % Period;
+        lastTick = now;
+        var translation = TranslationAt(phase);
+        if (animated.Translation != translation) animated.Translation = translation;
     }
 
     private void Pause()
     {
-        if (animated == null) return;
-        phase = (phase + Stopwatch.GetElapsedTime(started).TotalSeconds) % Period;
-        animated.StopAnimation(nameof(CompositionVisual.Translation));
-        animated.Translation = TranslationAt(phase);
+        clock.Stop();
         animated = null;
     }
 
     private void Reset()
     {
-        animated?.StopAnimation(nameof(CompositionVisual.Translation));
+        Pause();
         if (ElementComposition.GetElementVisual(glyphs) is { } visual) visual.Translation = default;
-        animated = null;
         phase = 0;
     }
 
