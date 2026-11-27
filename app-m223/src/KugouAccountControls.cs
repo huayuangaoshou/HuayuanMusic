@@ -15,6 +15,7 @@ internal sealed partial class CorePlaybackAdapter {
   if(KugouAvaloniaPlayer.Services.Startup.OfflineGuiApplication.SelfTest)throw new UnauthorizedAccessException("离线测试不允许真实网关");
   var factory=DirectKugouConnection??throw new UnauthorizedAccessException("成熟 SDK 未配置");
   var next=factory();try{EnableKugou();await Kugou.ConnectSdkAsync(next);}catch{next.Dispose();throw;}
+  if(Kugou.LoggedIn)ConceptVipAutoClaim.ScheduleAfterLoginAsync(this);
  }
  internal async Task ConnectApprovedKugouAsync(){
   if(Kugou.SdkConnected)return;
@@ -91,7 +92,7 @@ public sealed partial class PreviewWindow {
     if(qr.ImageBytes==null)throw new InvalidDataException("服务端未提供已验证的PNG二维码；未伪造授权码");
     using var pixels=new MemoryStream(qr.ImageBytes);kugouQrBitmap=new Bitmap(pixels);kugouQrImage!.Source=kugouQrBitmap;kugouQrImage.IsVisible=true;kugouAccountState!.Text="等待扫码；请仅确认你主动发起的授权";
     for(int poll=0;poll<30;poll++){ct.ThrowIfCancellationRequested();var state=await a.Kugou.PollQrAsync(ct);ct.ThrowIfCancellationRequested();
-     if(state==QrLoginStatus.Success){success=true;if(KugouRiskSettings.Matches(KugouRiskSettings.Read())&&KugouRiskSettings.Read()!.SaveLogin&&a.Kugou.IsDirectSdk)a.Kugou.SaveDirectLogin();kugouAccountState.Text="登录成功；权益未查询，不自动领取或播放"+M206AccountLabel();break;}
+     if(state==QrLoginStatus.Success){success=true;if(KugouRiskSettings.Matches(KugouRiskSettings.Read())&&KugouRiskSettings.Read()!.SaveLogin&&a.Kugou.IsDirectSdk)a.Kugou.SaveDirectLogin();ConceptVipAutoClaim.ScheduleAfterLoginAsync(a);kugouAccountState.Text="登录成功；每日首次连接自动尝试领取当日 VIP"+M206AccountLabel();break;}
      if(state==QrLoginStatus.Expired)throw new TimeoutException("二维码已过期");
      kugouAccountState.Text=state==QrLoginStatus.WaitingForConfirm?"已扫码，等待用户确认":"等待扫码";await Task.Delay(2100,ct);
     }

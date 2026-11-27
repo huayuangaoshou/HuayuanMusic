@@ -34,6 +34,8 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
     readonly Func<string, Task<bool>> confirmPlainHttp;
     readonly Func<Task<bool>>? approveOnlineAudio;
     readonly SemaphoreSlim gate=new(1,1);
+    readonly Dictionary<(string UserId,DateOnly Day),ClaimState> conceptClaimTries=new();
+    const string ConceptClaimSourceId="90139"; // 听歌领 VIP 活动，与 core VipEntitlementService 同款
     readonly Dictionary<string,CatalogTrack> catalog=new(StringComparer.OrdinalIgnoreCase);
     readonly Dictionary<(string Hash,string Quality),Uri> pending=new();
     readonly ConcurrentDictionary<Uri,DirectGrant> grants=new();
@@ -499,7 +501,8 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
         return Task.FromResult(0);
     },ct);
 
-    public Task<Entitlement> EntitlementAsync(CancellationToken ct)=>Serial(async()=>{
+    public Task<Entitlement> EntitlementAsync(CancellationToken ct)=>Serial(()=>EntitlementCore(ct),ct);
+    async Task<Entitlement> EntitlementCore(CancellationToken ct){
         DemandLogin();
         var data=await user.GetVipInfoAsync().WaitAsync(ct);
         if(data?.Status!=1)throw new InvalidDataException("酷狗 VIP 状态查询未成功");
@@ -508,7 +511,7 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
         var best=data.BusiVipList.FirstOrDefault(v=>v.IsVip==1);
         DateTimeOffset? until=DateTimeOffset.TryParse(best?.EndTime,out var t)?t:null;
         return new Entitlement(active,best?.ProductType??"unknown",until,"Live read-only account entitlement");
-    },ct);
+    }
     // Read-only history on the SAME SDK account/session used by playlists and audio.
     // This never calls the separate ConceptGateway, and cannot mutate membership.
     public Task<VipReceiveHistoryResponse> ReadClaimHistoryAsync(CancellationToken ct)=>Serial(async()=>{
@@ -531,12 +534,49 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
         return new ConceptVipClaimPreview(status,
             ConceptVipHistory.Assess(status,reviewed),prior?.Outcome);
     },ct);
-    public Task<DailyOffer> OfferAsync(CancellationToken ct)=>
-        throw new NotSupportedException("兼容接入不承诺领取活动");
-    public Task<bool> ClaimAsync(CancellationToken ct)=>
-        throw new NotSupportedException("兼容接入禁止自动领取");
-    public Task<ClaimReceipt> ClaimTodayAsync(bool explicitUserClick,CancellationToken ct)=>
-        throw new NotSupportedException("兼容接入只读；领取须另行核实活动规则及资格");
+    // 对齐借鉴项目 core VipEntitlementService 的登录自动领取行为（用户本人账号、每日一次）。
+    // 防重：服务端 VipRecord 当日已领为权威判据；Unknown 当日绝不二次 POST。
+    public Task<DailyOffer> OfferAsync(CancellationToken ct)=>Serial(async()=>{
+        DemandLogin();
+        var history=await user.GetVipRecordAsync().WaitAsync(ct)
+            ??throw new InvalidDataException("概念版领取记录为空");
+        var status=ConceptVipHistory.Validate(history,DateTimeOffset.UtcNow);
+        return new DailyOffer(status.ServerDay,status.ReceivedToday,true,true,false);
+    },ct);
+    public async Task<bool> ClaimAsync(CancellationToken ct){
+        var r=await ClaimTodayAsync(true,ct);
+        return r.State==ClaimState.ClaimSuccess;
+    }
+    public Task<ClaimReceipt> ClaimTodayAsync(bool explicitUserClick,CancellationToken ct)=>Serial(async()=>{
+        DemandLogin();
+        var history=await user.GetVipRecordAsync().WaitAsync(ct)
+            ??throw new InvalidDataException("概念版领取记录为空");
+        var status=ConceptVipHistory.Validate(history,DateTimeOffset.UtcNow);
+        var day=status.ServerDay;
+        var userId=session.Session.UserId;
+        var ent=await EntitlementCore(ct);
+        if(status.ReceivedToday)return new ClaimReceipt(ClaimState.AlreadyReceived,ent);
+        var key=(userId,day);
+        if(conceptClaimTries.TryGetValue(key,out var prior)&&prior==ClaimState.OutcomeUnknown)
+            return new ClaimReceipt(ClaimState.OutcomeUnknown,ent);
+        if(!explicitUserClick)throw new UnauthorizedAccessException("自动领取需用户明确授权（扫码登录须知已披露）");
+        conceptClaimTries[key]=ClaimState.OutcomeUnknown;
+        ClaimState state;
+        try{
+            var r=await user.ReceiveOneDayVipAsync(ConceptClaimSourceId,day).WaitAsync(ct);
+            var after=await user.GetVipRecordAsync().WaitAsync(ct);
+            var confirmed=after!=null&&after.Items.Any(x=>
+                x.Day==day.ToString("yyyy-MM-dd",System.Globalization.CultureInfo.InvariantCulture)&&x.IsReceived==1);
+            state=confirmed||r?.AdVipNum>0?ClaimState.ClaimSuccess:ClaimState.Rejected;
+        }catch(Exception e)when(e is OperationCanceledException or TimeoutException
+            or HttpRequestException or InvalidOperationException
+            or InvalidDataException or UnauthorizedAccessException){
+            return new ClaimReceipt(ClaimState.OutcomeUnknown,ent); // 结果未知：当日不再重试
+        }
+        conceptClaimTries[key]=state;
+        var ent2=await EntitlementCore(ct);
+        return new ClaimReceipt(state,ent2);
+    },ct);
 
     public Task<SearchPage> SearchAsync(string keyword,int page,int size,CancellationToken ct)=>Serial(async()=>{
         DemandLogin();
@@ -994,13 +1034,17 @@ public sealed partial class DirectSdkGateway : IRealSdkGateway
             if(conceptHistory &&
                (session.Session.UserId=="0"||string.IsNullOrWhiteSpace(session.Session.Token)))
                 throw new UnauthorizedAccessException("只读领取记录需要当前登录账号");
+            bool conceptClaim=uri.Host=="gateway.kugou.com"&&
+                uri.AbsolutePath=="/youth/v1/recharge/receive_vip_listen_song"&&
+                req.Method==HttpMethod.Post&&
+                (uri.Query.Contains("source_id=90139",StringComparison.Ordinal));
             bool original=req.Method==HttpMethod.Get&&
                 (uri.Host=="login-user.kugou.com"&&
                    uri.AbsolutePath is "/v2/qrcode" or "/v2/get_userinfo_qrcode"||
                  uri.Host=="gateway.kugou.com"&&
                    uri.AbsolutePath is "/v3/search/song" or "/v5/url"||
                  uri.Host=="kugouvip.kugou.com"&&uri.AbsolutePath=="/v1/get_union_vip");
-            if(!index&&!playlistSongs&&!original&&!conceptHistory)
+            if(!index&&!playlistSongs&&!original&&!conceptHistory&&!conceptClaim)
                 throw new UnauthorizedAccessException("请求不在酷狗扫码、搜索、VIP、单曲音源、只读领取记录或只读歌单接口内");
             if(index)
             {

@@ -131,6 +131,8 @@ internal sealed partial class P2AWorkspace
             await RefreshAsync();
             await LoadDesktopProfileAsync(login.Token);
             await LoadDesktopFavoritesAsync(login.Token);
+            if (core.Kugou.LoggedIn)
+                ConceptVipAutoClaim.ScheduleAfterLoginAsync(core);
         }
     }
 
