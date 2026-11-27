@@ -47,7 +47,7 @@ internal sealed class DesktopLyricWindow : Window
     private static readonly Geometry LockIcon = Geometry.Parse("M8,11 L8,8 A4,4 0 0 1 16,8 L16,11 M5.5,11 L18.5,11 L18.5,19 L5.5,19 Z");
     private static readonly Geometry UnlockIcon = Geometry.Parse("M8,11 L8,8 A4,4 0 0 1 16,8 L16,6.5 M5.5,11 L18.5,11 L18.5,19 L5.5,19 Z");
     private readonly DesktopLyricMousePassthroughService passthrough = new();
-    private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
+    private readonly DispatcherTimer renderClock = new(DispatcherPriority.Render) { Interval = TimeSpan.FromMilliseconds(33) };
     private static readonly TimeSpan HideToolsDelay = TimeSpan.FromMilliseconds(200);
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
     private readonly DispatcherTimer nativeInputClock = new() { Interval = TimeSpan.FromMilliseconds(16) };
