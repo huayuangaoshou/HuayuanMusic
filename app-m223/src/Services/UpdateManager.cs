@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -29,6 +30,9 @@ public static class UpdateManager
     private static readonly HttpClient DownloadClient = CreateClient(Timeout.InfiniteTimeSpan);
     private static readonly TimeSpan FirstByteTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan DirectSpeedSample = TimeSpan.FromSeconds(15);
+    // Adjust this independently of the first-byte and idle timeouts.
+    private const int MinimumDirectBytesPerSecond = 200 * 1024;
 
     // Third-party download mirrors. Replace a domain here when it stops serving release assets.
     private static readonly string[] DownloadMirrors = ["https://ghfast.top/", "https://gh-proxy.com/", "https://ghproxy.net/"];
@@ -137,15 +141,21 @@ public static class UpdateManager
     }
 
     public enum DownloadStage { Direct, Mirror, Verifying }
+    public enum DownloadRoute { Automatic, Direct, GhFast, GhProxyCom, GhProxyNet }
 
     public readonly record struct DownloadProgress(DownloadStage Stage, double? Fraction = null);
 
     public static Task<string> DownloadInstallerAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress,
-        CancellationToken cancellation = default) =>
-        DownloadInstallerAsync(release, progress, DownloadClient, FirstByteTimeout, StallTimeout, cancellation);
+        CancellationToken cancellation = default, DownloadRoute route = DownloadRoute.Automatic) =>
+        DownloadInstallerAsync(release, progress, DownloadClient, FirstByteTimeout, StallTimeout, cancellation, route);
 
-    internal static string? GetManualDownloadUrl(ReleaseInfo release) =>
-        IsOfficialInstallerUrl(release.SetupUrl) ? DownloadMirrors[0] + release.SetupUrl : null;
+    internal static string? GetManualDownloadUrl(ReleaseInfo release, DownloadRoute route) =>
+        IsOfficialInstallerUrl(release.SetupUrl)
+            ? GetSourceUrl(release.SetupUrl!, route == DownloadRoute.Automatic ? DownloadRoute.GhFast : route)
+            : null;
+
+    private static string GetSourceUrl(string url, DownloadRoute route) =>
+        route == DownloadRoute.Direct ? url : DownloadMirrors[(int)route - (int)DownloadRoute.GhFast] + url;
 
     private static bool IsOfficialInstallerUrl(string? value) =>
         Uri.TryCreate(value, UriKind.Absolute, out var url) &&
@@ -167,7 +177,8 @@ public static class UpdateManager
     }
 
     internal static async Task<string> DownloadInstallerAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress,
-        HttpClient client, TimeSpan firstByteTimeout, TimeSpan stallTimeout, CancellationToken cancellation)
+        HttpClient client, TimeSpan firstByteTimeout, TimeSpan stallTimeout, CancellationToken cancellation,
+        DownloadRoute route)
     {
         cancellation.ThrowIfCancellationRequested();
         var expected = ReadDigest(release.SetupDigest);
@@ -177,17 +188,20 @@ public static class UpdateManager
             throw new InvalidDataException("Missing trusted installer URL or SHA-256.");
         }
 
-        string[] sources = [release.SetupUrl!, .. DownloadMirrors.Select(prefix => prefix + release.SetupUrl)];
+        DownloadRoute[] routes = route == DownloadRoute.Automatic
+            ? [DownloadRoute.Direct, DownloadRoute.GhFast, DownloadRoute.GhProxyCom, DownloadRoute.GhProxyNet]
+            : [route];
         string target = Path.Combine(Path.GetTempPath(), $"HuayuanMusic-Setup-{Guid.NewGuid():N}.exe");
         string partial = target + ".download";
-        for (var i = 0; i < sources.Length; i++)
+        for (var i = 0; i < routes.Length; i++)
         {
             cancellation.ThrowIfCancellationRequested();
-            var source = new Uri(sources[i]);
-            var stage = i == 0 ? DownloadStage.Direct : DownloadStage.Mirror;
+            var source = new Uri(GetSourceUrl(release.SetupUrl!, routes[i]));
+            var stage = routes[i] == DownloadRoute.Direct ? DownloadStage.Direct : DownloadStage.Mirror;
             var failure = "download_failed";
             bool receiving = false;
             bool verified = false;
+            long slowBytesPerSecond = -1;
             Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "attempt" });
             progress?.Report(new(stage));
             try
@@ -202,16 +216,46 @@ public static class UpdateManager
                     var total = release.SetupSize ?? response.Content.Headers.ContentLength;
                     var buffer = new byte[81920];
                     long received = 0;
-                    while (await input.ReadAsync(buffer, deadline.Token).ConfigureAwait(false) is > 0 and var read)
+                    using var stopSpeedSample = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
+                    Task? speedSample = null;
+                    try
                     {
-                        receiving = true;
-                        received += read;
-                        if (release.SetupSize is > 0 && received > release.SetupSize.Value)
-                            throw new InvalidDataException("Installer exceeds the release asset size.");
-                        await output.WriteAsync(buffer.AsMemory(0, read), cancellation).ConfigureAwait(false);
-                        deadline.CancelAfter(stallTimeout);
-                        if (total is > 0)
-                            progress?.Report(new(stage, Math.Clamp((double)received / total.Value, 0, 1)));
+                        while (await input.ReadAsync(buffer, deadline.Token).ConfigureAwait(false) is > 0 and var read)
+                        {
+                            receiving = true;
+                            Interlocked.Add(ref received, read);
+                            deadline.CancelAfter(stallTimeout);
+                            if (route == DownloadRoute.Automatic && stage == DownloadStage.Direct)
+                                speedSample ??= MeasureDirectSpeedAsync();
+                            if (release.SetupSize is > 0 && received > release.SetupSize.Value)
+                                throw new InvalidDataException("Installer exceeds the release asset size.");
+                            await output.WriteAsync(buffer.AsMemory(0, read), deadline.Token).ConfigureAwait(false);
+                            if (total is > 0)
+                                progress?.Report(new(stage, Math.Clamp((double)received / total.Value, 0, 1)));
+                        }
+                    }
+                    finally
+                    {
+                        stopSpeedSample.Cancel();
+                        if (speedSample != null)
+                            await speedSample.ConfigureAwait(false);
+                    }
+                    deadline.Token.ThrowIfCancellationRequested();
+
+                    async Task MeasureDirectSpeedAsync()
+                    {
+                        var start = Stopwatch.GetTimestamp();
+                        try { await Task.Delay(DirectSpeedSample, stopSpeedSample.Token).ConfigureAwait(false); }
+                        catch (OperationCanceledException) when (stopSpeedSample.IsCancellationRequested) { return; }
+                        if (stopSpeedSample.IsCancellationRequested) return;
+                        var rate = (long)(Interlocked.Read(ref received) / Stopwatch.GetElapsedTime(start).TotalSeconds);
+                        if (rate >= MinimumDirectBytesPerSecond)
+                        {
+                            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_ok", bytesPerSecond = rate });
+                            return;
+                        }
+                        slowBytesPerSecond = rate;
+                        deadline.Cancel();
                     }
                 }
 
@@ -244,9 +288,12 @@ public static class UpdateManager
             }
 
             cancellation.ThrowIfCancellationRequested();
-            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = failure });
-            if (i + 1 < sources.Length)
-                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "switch", next = new Uri(sources[i + 1]).Host });
+            if (slowBytesPerSecond >= 0)
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_switch", bytesPerSecond = slowBytesPerSecond });
+            else
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = failure });
+            if (i + 1 < routes.Length)
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "switch", next = new Uri(GetSourceUrl(release.SetupUrl!, routes[i + 1])).Host });
         }
 
         throw new IOException("No download source delivered a verified installer.");
