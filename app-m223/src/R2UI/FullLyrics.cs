@@ -95,35 +95,54 @@ public partial class R2ShellView
             if (lyricTrack != null || lyricMessage.Length == 0)
                 SetLyrics([], "播放一首歌曲后查看歌词");
             lyricRequest?.Cancel();
+            otherLyricRequest?.Cancel();
+            activeLyricOverride = null;
             lyricTrack = null;
             return;
         }
-        if (row.Track.Key == lyricTrack && (row.IsProviderTrack || ReferenceEquals(previousLocalLyrics, player.State.Lyrics))) return;
+        if (row.Track.Key == lyricTrack && (activeLyricOverride == lyricTrack ||
+            row.IsProviderTrack || ReferenceEquals(previousLocalLyrics, player.State.Lyrics))) return;
+        if (row.Track.Key != lyricTrack)
+        {
+            activeLyricOverride = null;
+            otherLyricRequest?.Cancel();
+        }
         lyricTrack = row.Track.Key;
         lyricRequest?.Cancel();
-        if (row.IsProviderTrack)
-        {
-            SetLyrics([], "正在加载歌词…");
-            _ = LoadOnlineLyricAsync(row.Track.Key);
-        }
-        else
-        {
-            previousLocalLyrics = player.State.Lyrics;
-            SetLyrics(previousLocalLyrics.Select(line => new LyricLine
-            {
-                Text = line.Text, Start = TimeSpan.FromMilliseconds(line.StartMilliseconds), Translation = line.Translation
-            }).ToArray(), "未找到本地歌词");
-        }
+        previousLocalLyrics = row.IsProviderTrack ? null : player.State.Lyrics;
+        SetLyrics([], "正在加载歌词…");
+        _ = LoadTrackLyricsAsync(row, previousLocalLyrics);
     }
 
-    private async Task LoadOnlineLyricAsync(string key)
+    private async Task LoadTrackLyricsAsync(TrackRow track, CoreLyric[]? local)
     {
         if (model == null) return;
+        var key = track.Track.Key;
         using var request = new CancellationTokenSource();
         lyricRequest = request;
-        var id = key[(key.LastIndexOf(':') + 1)..];
         try
         {
+            LyricLine[] saved = [];
+            try { saved = await Task.Run(() => LyricOverride.Read(key)?.Parse() ?? [], request.Token); }
+            catch (Exception error) when (error is not OperationCanceledException)
+            { Program.Log("R23_LYRIC_OVERRIDE_READ_FAILED", new { type = error.GetType().Name }); }
+            if ((!lyricOpen && desktopLyrics == null) || lyricTrack != key || request.IsCancellationRequested) return;
+            if (saved.Length > 0)
+            {
+                activeLyricOverride = key;
+                SetLyrics(saved, "");
+                Program.Log("R23_LYRIC_OVERRIDE_RESTORED", new { lines = saved.Length });
+                return;
+            }
+            if (!track.IsProviderTrack)
+            {
+                SetLyrics((local ?? []).Select(line => new LyricLine
+                {
+                    Text = line.Text, Start = TimeSpan.FromMilliseconds(line.StartMilliseconds), Translation = line.Translation
+                }).ToArray(), "未找到本地歌词");
+                return;
+            }
+            var id = key[(key.LastIndexOf(':') + 1)..];
             var result = await model.Concept.DesktopCall((gateway, ct) => gateway.ReadDesktopLyricAsync(id, ct), request.Token);
             var lines = result == null ? [] : await Task.Run(() => LyricsService.ParseDesktopRenderLines(result.Text, result.Format), request.Token);
             if ((!lyricOpen && desktopLyrics == null) || lyricTrack != key || request.IsCancellationRequested) return;
@@ -174,8 +193,10 @@ public partial class R2ShellView
     {
         if (lyricOpen || desktopLyrics != null) return;
         lyricRequest?.Cancel();
+        otherLyricRequest?.Cancel();
         lyricRequest = null;
         lyricTrack = null;
+        activeLyricOverride = null;
         previousLocalLyrics = null;
         displayedLyrics = [];
         lyricMessage = "";

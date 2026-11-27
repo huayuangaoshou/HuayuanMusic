@@ -33,15 +33,25 @@ public partial class R2ShellView
     private void InstallLyricsMenu()
     {
         TranslationToggle.Classes.Set("selected", showTranslation);
-        FullLyricView.ContextMenu = new ContextMenu
+        var searchVersions = MenuItemFor("搜索其他歌词版本", SearchOtherLyricsAsync);
+        var importLrc = MenuItemFor("导入本地 LRC", ImportLocalLyricsAsync);
+        var menu = new ContextMenu
         {
             Items =
             {
                 MenuItemFor("复制当前歌词", () => CopyTextAsync(FullLyricView, LyricText(FullLyricView.ActiveLine))),
                 MenuItemFor("复制全部歌词", () => CopyTextAsync(FullLyricView,
-                    string.Join(Environment.NewLine, displayedLyrics.Select(LyricText))))
+                    string.Join(Environment.NewLine, displayedLyrics.Select(LyricText)))),
+                searchVersions, importLrc
             }
         };
+        menu.Opening += (_, _) =>
+        {
+            importLrc.IsEnabled = model?.Player.DisplayedPlayingSong != null;
+            searchVersions.IsEnabled = importLrc.IsEnabled && model?.KugouEnabled == true;
+        };
+        LyricsPane.Background = Brushes.Transparent;
+        LyricsPane.ContextMenu = menu;
     }
 
     private static string LyricText(AvaloniaLyrics.LyricLine? line) =>
