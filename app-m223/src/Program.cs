@@ -261,13 +261,11 @@ public sealed class App : Application
                 await adapter.InitializeAsync();
                 if (!closing) await folderWatch.SetEnabledAsync(DesktopPreferences.Behavior.WatchMusicFolders);
                 Program.Log("DESKTOP_R2_READY", new { singleCore = true, tracks = adapter.State.Tracks.Length });
+                if (closing) return;
+                await adapter.RestoreDesktopQueueAsync(shell.Concept);
+                adapter.StartDesktopQueueTracking();
                 if (!closing && shell.KugouEnabled)
-                    await window.R2Model!.Concept.RestoreDesktopConnectionAsync();
-                if (!closing)
-                {
-                    await adapter.RestoreDesktopQueueAsync(shell.Concept);
-                    adapter.StartDesktopQueueTracking();
-                }
+                    await adapter.RestoreDesktopConnectionAndCatalogAsync(shell.Concept);
             }
             catch (Exception error)
             {

@@ -52,6 +52,8 @@ internal sealed partial class P2AWorkspace
         desktopDisconnectButton!.IsVisible = Connected && !transitioning;
     }
 
+    internal void NotifyRestoredDesktopCatalog() => Changed?.Invoke();
+
     internal Task RestoreDesktopConnectionAsync() => Pending = ConnectDesktopAsync(false);
 
     internal Task StartDesktopQrAsync() => Pending = ConnectDesktopAsync(true);

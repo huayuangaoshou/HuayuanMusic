@@ -11,15 +11,19 @@ internal sealed partial class CorePlaybackAdapter {
  readonly Dictionary<int,string> providerArtworkAccounts=new();
  internal string ProviderArtworkAccount(int id)=>providerArtworkAccounts.GetValueOrDefault(id,"none");
  readonly Dictionary<int,string> providerTrackKeys=new();
+ readonly Dictionary<int,CatalogTrack> providerMetadata=new();
  readonly List<string> providerSources=new();int providerId=1_000_000;
  internal void InitializeKugou(){if(!Program.Desktop||R2.DesktopPreferences.Behavior.Kugou!=R2.DesktopDlcState.Removed)MountKugou();}
  private void MountKugou(){TrustedModuleDescriptor.Current.Validate(1);Providers.Mount(Kugou);Kugou.Revoked+=ProviderRevoked;kugouMounted=true;}
  void ProviderRevoked(){
   // Called by UI-thread lifecycle operations. Local playback is never stopped by provider disable.
+  // The initial connect revokes the empty previous session before attaching the saved account.
+  // Cached rows have no active stream permission until that same account restores its catalog.
+  if(restoringDesktopConnection && deferredDesktopIds.Count>0 && providerTrackKeys.Keys.All(deferredDesktopIds.Contains))return;
   if(P2AWorkspace.M223Normal){
    root.Player.RemoveControlledProviderEntries();
    foreach(var id in providerTrackKeys.Keys){items.Remove(id);providerArtworkAccounts.Remove(id);}
-   providerTrackKeys.Clear();RebuildTrackSnapshot();collectionDirty=true;
+   providerTrackKeys.Clear();providerMetadata.Clear();deferredDesktopIds.Clear();RebuildTrackSnapshot();collectionDirty=true;
   }
   else if(ProviderStreamRegistry.IsProvider(root.Player.CurrentPlayingSong?.LocalFilePath)){root.Coordinator.InvalidatePendingLoads();commands.Stop();}
   foreach(var source in providerSources)ProviderStreamRegistry.Remove(source);providerSources.Clear();
@@ -31,7 +35,7 @@ internal sealed partial class CorePlaybackAdapter {
   foreach(var stale in items.Where(x=>x.Value.LocalSourceType=="ProviderStream"&&
     !retained.Contains(x.Value.LocalFilePath)).ToArray())
   {
-   items.Remove(stale.Key);providerArtworkAccounts.Remove(stale.Key);providerTrackKeys.Remove(stale.Key);
+   items.Remove(stale.Key);providerArtworkAccounts.Remove(stale.Key);providerTrackKeys.Remove(stale.Key);providerMetadata.Remove(stale.Key);deferredDesktopIds.Remove(stale.Key);
    if(Kugou.IsDirectSdk&&stale.Value.LocalFilePath is { } orphan &&
       providerSources.Remove(orphan))ProviderStreamRegistry.Remove(orphan);
   }
@@ -51,6 +55,28 @@ internal sealed partial class CorePlaybackAdapter {
    var alias=Kugou.Account;
    bool SessionCurrent()=>Kugou.Enabled&&Kugou.IsDirectSdk&&Kugou.LoggedIn&&
        Kugou.Generation==epoch&&Kugou.Account==alias;
+   return AdmitLazyDesktopSong(track,quality,SessionCurrent,ct,publish,Kugou.DirectAccountCacheKey);
+  }
+  var grant=await Kugou.ResolveAsync(track.Id,quality,ct);string lyric;
+  try{lyric=await Kugou.LyricsAsync(track.Id,ct);}catch{Kugou.ReleaseGrant(grant);throw;}
+  if(Kugou.SdkConnected){
+   string sdkHandle;
+   try{sdkHandle=ProviderStreamRegistry.Register(()=>{try{Kugou.DemandGrant(grant);return true;}catch(InvalidOperationException){return false;}catch(UnauthorizedAccessException){return false;}},async cancel=>{var opened=await Kugou.OpenSdkAudioAsync(grant,cancel);return new ProviderStreamRegistry.Input(opened.Stream,opened.Length,opened);},lyric);}catch{Kugou.ReleaseGrant(grant);throw;}
+   return AdmitProviderSong(track,sdkHandle,false);
+  }
+  // Fixture stream is read ONLY from an already SHA-admitted mathematical WAV, not arbitrary files/URLs.
+  var media=Path.Combine(OfflineStartupProfile.Current.Media,"scan","a.wav");
+  OfflineStartupProfile.Current.DemandMedia(media);
+  string handle=ProviderStreamRegistry.Register(()=>{try{Kugou.DemandGrant(grant);return true;}catch(InvalidOperationException){return false;}catch(UnauthorizedAccessException){return false;}},async cancel=>{
+   Kugou.DemandGrant(grant);OfflineStartupProfile.Current.DemandMedia(media);
+   using var handler=new FixtureAudioHandler(media);using var client=new HttpClient(handler);
+   var response=await client.GetAsync(Kugou.DemandGrant(grant).Address,HttpCompletionOption.ResponseHeadersRead,cancel);
+   try{response.EnsureSuccessStatusCode();var stream=await response.Content.ReadAsStreamAsync(cancel);return new ProviderStreamRegistry.Input(stream,response.Content.Headers.ContentLength??0,response);}catch{response.Dispose();throw;}
+  },lyric);
+  return AdmitProviderSong(track,handle,true);
+ }
+ int AdmitLazyDesktopSong(CatalogTrack track,string quality,Func<bool> SessionCurrent,CancellationToken ct,bool publish,string? account)
+ {
    string lazyHandle=ProviderStreamRegistry.Register(
     SessionCurrent,
     async loadCancellation=>{
@@ -107,32 +133,16 @@ internal sealed partial class CorePlaybackAdapter {
       throw;
      }
     },!Program.Desktop&&P2AWorkspace.M223Normal?"[00:00.10]合成第一句\n[00:01.00]合成第二句":"",allowPreparation:false,desktopCatalog:Program.Desktop);
-   try{return AdmitProviderSong(track,lazyHandle,false,publish);}
+   try{return AdmitProviderSong(track,lazyHandle,false,publish,account);}
    catch{ProviderStreamRegistry.Remove(lazyHandle);throw;}
-  }
-  var grant=await Kugou.ResolveAsync(track.Id,quality,ct);string lyric;
-  try{lyric=await Kugou.LyricsAsync(track.Id,ct);}catch{Kugou.ReleaseGrant(grant);throw;}
-  if(Kugou.SdkConnected){
-   string sdkHandle;
-   try{sdkHandle=ProviderStreamRegistry.Register(()=>{try{Kugou.DemandGrant(grant);return true;}catch(InvalidOperationException){return false;}catch(UnauthorizedAccessException){return false;}},async cancel=>{var opened=await Kugou.OpenSdkAudioAsync(grant,cancel);return new ProviderStreamRegistry.Input(opened.Stream,opened.Length,opened);},lyric);}catch{Kugou.ReleaseGrant(grant);throw;}
-   return AdmitProviderSong(track,sdkHandle,false);
-  }
-  // Fixture stream is read ONLY from an already SHA-admitted mathematical WAV, not arbitrary files/URLs.
-  var media=Path.Combine(OfflineStartupProfile.Current.Media,"scan","a.wav");
-  OfflineStartupProfile.Current.DemandMedia(media);
-  string handle=ProviderStreamRegistry.Register(()=>{try{Kugou.DemandGrant(grant);return true;}catch(InvalidOperationException){return false;}catch(UnauthorizedAccessException){return false;}},async cancel=>{
-   Kugou.DemandGrant(grant);OfflineStartupProfile.Current.DemandMedia(media);
-   using var handler=new FixtureAudioHandler(media);using var client=new HttpClient(handler);
-   var response=await client.GetAsync(Kugou.DemandGrant(grant).Address,HttpCompletionOption.ResponseHeadersRead,cancel);
-   try{response.EnsureSuccessStatusCode();var stream=await response.Content.ReadAsStreamAsync(cancel);return new ProviderStreamRegistry.Input(stream,response.Content.Headers.ContentLength??0,response);}catch{response.Dispose();throw;}
-  },lyric);
-  return AdmitProviderSong(track,handle,true);
  }
- int AdmitProviderSong(CatalogTrack track,string handle,bool fixture,bool publish=true){
+ int AdmitProviderSong(CatalogTrack track,string handle,bool fixture,bool publish=true,string? account=null){
   providerSources.Add(handle);int id=++providerId;
   var song=new SongItem{Cover=HuayuanMusic.Provider.Contracts.ArtworkUrl.Normalize(track.Cover),Name=track.Title+(fixture?"（Mock合成音）":""),Singer=track.Artist,AlbumName=track.Album,DurationSeconds=track.Seconds,Hash="",LocalFilePath=handle,LocalSourceType="ProviderStream",LocalTrackId=0};
-  if(P2AWorkspace.M223Normal)providerTrackKeys[id]=$"kugou-concept:{Kugou.DirectAccountCacheKey}:{track.Id}";
-  providerArtworkAccounts[id]=Kugou.DirectAccountCacheKey??Kugou.Account??"none";items.Add(id,song);
+  account??=Kugou.DirectAccountCacheKey;
+  if(P2AWorkspace.M223Normal)providerTrackKeys[id]=$"kugou-concept:{account}:{track.Id}";
+  providerMetadata[id]=track;
+  providerArtworkAccounts[id]=account??Kugou.Account??"none";items.Add(id,song);
   if(publish){RebuildTrackSnapshot();collectionDirty=true;Publish();}
   return id;
  }

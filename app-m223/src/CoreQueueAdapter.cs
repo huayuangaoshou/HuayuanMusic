@@ -26,7 +26,7 @@ internal sealed partial class CorePlaybackAdapter {
  });
  public Task QueueEntryAsync(string op,Guid entryId,Guid target=default)=>Run("QueueEntry:"+op,async()=>{
   var rows=root.Player.PlaybackQueue;var entry=rows.SingleOrDefault(x=>x.QueueEntryId==entryId)??throw new InvalidOperationException("条目已变化，请重试");if(op is "play" or "next")Song(Id(entry));
-  int from=rows.IndexOf(entry);switch(op){case "play":await root.Player.PlayControlledQueueEntryAsync(entry);if(!root.Player.IsPlayingAudio)throw new IOException("播放失败");await root.ViewModel.History.LoadAsync();RefreshRecords();break;
+  int from=rows.IndexOf(entry);switch(op){case "play":if(DesktopQueueEntryIsPending(entry))throw new InvalidOperationException("在线曲目暂不可用");await root.Player.PlayControlledQueueEntryAsync(entry);if(!root.Player.IsPlayingAudio)throw new IOException("播放失败");await root.ViewModel.History.LoadAsync();RefreshRecords();break;
    case "next":if(Program.Desktop)root.Player.PrioritizeControlledQueueEntry(entry);else commands.AddToNext(entry);break;case "remove":await root.Player.RemoveFromQueueCommand.ExecuteAsync(entry);break;case "up":case "down":root.Player.MoveControlledQueue(from,Math.Clamp(from+(op=="up"?-1:1),0,rows.Count-1));break;
    case "before":var at=rows.ToList().FindIndex(x=>x.QueueEntryId==target);if(at<0)throw new InvalidOperationException("目标条目已变化");root.Player.MoveControlledQueue(from,at);break;default:throw new ArgumentException("Invalid entry operation");}
   if(PersistQueue)root.Player.FlushControlledQueue();

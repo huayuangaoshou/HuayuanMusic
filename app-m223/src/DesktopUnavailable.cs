@@ -94,7 +94,7 @@ internal sealed partial class CorePlaybackAdapter
                 for(int i=1;i<=queue.Count;i++)
                 {
                     var candidate=queue[(idx+i)%queue.Count];
-                    if(!unavailable.ContainsKey(AvailabilityKey(candidate)))
+                    if(!DesktopQueueEntryIsPending(candidate)&&!unavailable.ContainsKey(AvailabilityKey(candidate)))
                     {
                         next=candidate;
                         break;
@@ -121,7 +121,7 @@ internal sealed partial class CorePlaybackAdapter
         root.Player.UseDesktopUnavailableHandling=true;
         root.Player.DesktopSourceUnavailable+=TrackUnavailable;
         root.Player.DesktopPlaybackStarted+=TrackRecovered;
-        root.Player.DesktopCanPlayAutomatically=song=>!unavailable.ContainsKey(AvailabilityKey(song));
+        root.Player.DesktopCanPlayAutomatically=song=>!DesktopQueueEntryIsPending(song)&&!unavailable.ContainsKey(AvailabilityKey(song));
         StartWatchdog();
     }
     // R12-1 B：连接假死看门狗。每 5s 检查；Playing==true 且 CurrentId 不变且 Position 纹丝不动，

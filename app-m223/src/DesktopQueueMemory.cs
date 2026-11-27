@@ -23,11 +23,18 @@ internal sealed partial class CorePlaybackAdapter
     private double lastSavedPosition;
     private long lastQueueWriteTimestamp;
     private (Guid Entry, double Position)? desktopResume;
+    private readonly HashSet<int> deferredDesktopIds = [];
+    private Func<bool>? restoredSession;
+    private string? restoredAccount;
+    private bool restoringDesktopConnection;
     internal bool DesktopQueueTracking { get; set; }
 
     internal async Task RestoreDesktopQueueAsync(P2AWorkspace concept)
     {
         if (!DesktopPreferences.Behavior.RestoreQueue || !File.Exists(DesktopQueuePath)) return;
+        var elapsed = Stopwatch.StartNew();
+        var initialSelection = root.Player.CurrentPlayingSong;
+        var initialQueue = root.Player.PlaybackQueue.ToArray();
         var saved = await Task.Run(() =>
         {
             try
@@ -41,12 +48,11 @@ internal sealed partial class CorePlaybackAdapter
         if (saved?.Entries == null || saved.Original == null || saved.Entries.Length > PlaybackQueueManager.MaxQueueSize ||
             !Enum.IsDefined(saved.Mode) || saved.Entries.Any(entry => entry.Entry == Guid.Empty) ||
             saved.Entries.Select(entry => entry.Entry).Distinct().Count() != saved.Entries.Length) return;
-        bool online = concept.Connected && saved.Account != null && concept.AccountKey == saved.Account;
-        if (online)
-        {
-            var catalog = saved.Entries.Select(entry => entry.Online).OfType<CatalogTrack>().ToArray();
-            await concept.DesktopCall(async (gateway, ct) => { await gateway.RestoreDesktopCatalogAsync(catalog, ct); return true; }, CancellationToken.None);
-        }
+        if (disposed != 0 || !root.Coordinator.Player.IsStopped ||
+            !ReferenceEquals(initialSelection, root.Player.CurrentPlayingSong) ||
+            !initialQueue.SequenceEqual(root.Player.PlaybackQueue)) return;
+        restoredAccount = DesktopPreferences.Behavior.Kugou == DesktopDlcState.Enabled &&
+            (!concept.Connected || concept.AccountKey == saved.Account) ? saved.Account : null;
         var entries = new Dictionary<Guid, SongItem>();
         var admitted = new Dictionary<string,int>(StringComparer.OrdinalIgnoreCase);
         foreach (var entry in saved.Entries)
@@ -54,12 +60,20 @@ internal sealed partial class CorePlaybackAdapter
             int id = entry.LocalTrack;
             if (entry.Online is { } track)
             {
-                if (!online || track.Id.Length != 32 || Kugou.CatalogTrackForPlaylist(track.Id) == null) continue;
+                if (string.IsNullOrEmpty(restoredAccount) || track.Id is not { Length: 32 } ||
+                    !track.Id.All(Uri.IsHexDigit) || string.IsNullOrWhiteSpace(track.Title)) continue;
                 if (!admitted.TryGetValue(track.Id, out id))
-                    admitted[track.Id] = id = await concept.M223AdmitAsync($"kugou-concept:{saved.Account}:{track.Id}", publish:false);
+                {
+                    id = AdmitLazyDesktopSong(track, "standard", () => restoredSession?.Invoke() == true &&
+                        Kugou.CatalogTrackForPlaylist(track.Id) != null, CancellationToken.None,
+                        publish: false, account: restoredAccount);
+                    admitted.Add(track.Id, id);
+                    deferredDesktopIds.Add(id);
+                }
             }
-            if (!items.ContainsKey(id)) continue;
-            var song = Song(id).NewQueueEntry();
+            if (!items.TryGetValue(id, out var item) ||
+                (entry.Online == null && item.LocalSourceType != "LocalFile")) continue;
+            var song = item.NewQueueEntry();
             song.QueueEntryId = entry.Entry;
             entries.Add(entry.Entry, song);
         }
@@ -76,9 +90,53 @@ internal sealed partial class CorePlaybackAdapter
         Program.Log("DESKTOP_QUEUE_RESTORED", new
         {
             count = visible.Length, online = admitted.Count, playing = State.Playing,
-            position = State.Position, wasPlaying = saved.WasPlaying
+            position = State.Position, wasPlaying = saved.WasPlaying, elapsedMs = elapsed.Elapsed.TotalMilliseconds
         });
     }
+
+    internal async Task RestoreDesktopConnectionAndCatalogAsync(P2AWorkspace concept)
+    {
+        restoringDesktopConnection = true;
+        try { await concept.RestoreDesktopConnectionAsync(); }
+        finally { restoringDesktopConnection = false; }
+        if (disposed != 0 || deferredDesktopIds.Count == 0 || !concept.Connected ||
+            concept.AccountKey != restoredAccount) return;
+
+        var generation = Kugou.Generation;
+        var provider = Kugou;
+        bool SessionCurrent() => ReferenceEquals(provider, Kugou) && provider.Generation == generation &&
+            provider.Enabled && provider.LoggedIn && provider.DirectAccountCacheKey == restoredAccount;
+        var catalog = deferredDesktopIds.Select(id => providerMetadata[id]).ToArray();
+        var completion = CompleteAsync();
+        if (await Task.WhenAny(completion, Task.Delay(TimeSpan.FromSeconds(3))) != completion)
+            Program.Log("DESKTOP_QUEUE_CATALOG_DEFERRED", new { type = "Timeout" });
+
+        async Task CompleteAsync()
+        {
+            try
+            {
+                await concept.DesktopCall(async (gateway, ct) =>
+                {
+                    await gateway.RestoreDesktopCatalogAsync(catalog, ct);
+                    return true;
+                }, CancellationToken.None);
+                if (disposed != 0 || !SessionCurrent() || deferredDesktopIds.Count == 0) return;
+                restoredSession = SessionCurrent;
+                deferredDesktopIds.Clear();
+                concept.NotifyRestoredDesktopCatalog();
+                Publish();
+                Program.Log("DESKTOP_QUEUE_CATALOG_READY", new { count = catalog.Length });
+            }
+            catch (Exception error)
+            {
+                Program.Log("DESKTOP_QUEUE_CATALOG_DEFERRED", new { type = error.GetType().Name });
+            }
+        }
+    }
+
+    private bool DesktopQueueEntryIsPending(SongItem song) =>
+        deferredDesktopIds.Count > 0 && ProviderStreamRegistry.IsProvider(song.LocalFilePath) &&
+        deferredDesktopIds.Contains(Id(song));
 
     internal void StartDesktopQueueTracking()
     {
@@ -136,14 +194,16 @@ internal sealed partial class CorePlaybackAdapter
 
     internal Task SaveDesktopQueueAsync()
     {
-        var account = Kugou.DirectAccountCacheKey;
-        CatalogTrack? OnlineMetadata(int id) => providerTrackKeys.TryGetValue(id,out var key)
-            ? Kugou.CatalogTrackForPlaylist(key[(key.LastIndexOf(':')+1)..]) : null;
+        var account = Kugou.DirectAccountCacheKey ?? restoredAccount;
+        CatalogTrack? OnlineMetadata(int id) => providerTrackKeys.TryGetValue(id, out var key) &&
+            key.StartsWith($"kugou-concept:{account}:", StringComparison.Ordinal)
+                ? providerMetadata.GetValueOrDefault(id) : null;
         var player = root.Coordinator.Player;
         double position = player.IsStopped ? State.Position : player.GetPosition().TotalSeconds;
         if (State.CurrentEntryId == Guid.Empty || !double.IsFinite(position) || position < 0) position = 0;
         var snapshot = new SavedQueue(account, State.CurrentEntryId, (PlayMode)State.Mode,
-            State.QueueEntries.Select(entry => new SavedEntry(entry.EntryId, entry.TrackId, OnlineMetadata(entry.TrackId))).ToArray(),
+            State.QueueEntries.Select(entry => new SavedEntry(entry.EntryId, entry.TrackId, OnlineMetadata(entry.TrackId)))
+                .Where(entry => entry.Online != null || !providerTrackKeys.ContainsKey(entry.LocalTrack)).ToArray(),
             root.Player.OriginalControlledQueue.Select(song => song.QueueEntryId).ToArray(), position, player.IsPlaying);
         return queueWrite = PersistAsync(queueWrite,snapshot);
     }
