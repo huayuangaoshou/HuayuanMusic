@@ -87,6 +87,9 @@
           <r2:TrackArtwork.Effect><BlurEffect Radius="76"/></r2:TrackArtwork.Effect>
         </r2:TrackArtwork>
         <Border Background="{DynamicResource FullLyricVeil}"/>
+        <r2:SpectrumCanvas Name="FullSpectrum" Wide="True" IsVisible="False" IsHitTestVisible="False"
+                           VerticalAlignment="Bottom" Pink="{DynamicResource R24SpectrumPink}"
+                           Blue="{DynamicResource R24SpectrumBlue}"/>
         <Grid RowDefinitions="56,*" Margin="24,8,24,24">
           <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto,Auto" ColumnSpacing="5">
             <Button Classes="glass-pill" Width="40" Height="40" Padding="0" Click="HideLyricOverlay" AutomationProperties.Name="收起正在播放">
@@ -254,7 +257,7 @@
         <r2:GlassOptics Radius="{x:Static tok:DesignTokens.RadiusM}" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False" CacheShader="True"/>
         <Border Padding="20,8,20,8">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
-            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
               <Button Padding="0" CornerRadius="7" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
                 <r2:TrackArtwork DisplaySize="40" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Button>
@@ -262,7 +265,10 @@
                 <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
                 <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="12"/>
               </StackPanel>
-              <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
+              <r2:SpectrumCanvas Grid.Column="2" Name="DockSpectrum" Width="140" Height="26" Opacity=".55"
+                                 IsVisible="False" IsHitTestVisible="False" VerticalAlignment="Center"
+                                 BarBrush="{DynamicResource R2Ink}"/>
+              <StackPanel Grid.Column="3" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
                           DataContext="{Binding Player.DisplayedPlayingSong}" IsVisible="{Binding Player.HasCurrentSong}">
                 <r2:HeartButton/>
                 <r2:SongDownloadButton/>

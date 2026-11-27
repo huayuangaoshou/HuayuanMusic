@@ -47,6 +47,8 @@
           <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#E6EEF8" Offset="0"/><GradientStop Color="#F2FFFFFF" Offset="0.38"/><GradientStop Color="#7792BFFF" Offset="0.84"/><GradientStop Color="#55F096C4" Offset="1"/>
           </LinearGradientBrush>
+          <Color x:Key="R24SpectrumPink">#FF8AB8</Color>
+          <Color x:Key="R24SpectrumBlue">#6CB8FF</Color>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
             <GradientStop Color="#4DFF8AB8" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>
@@ -107,6 +109,8 @@
           <LinearGradientBrush x:Key="GlassRim" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#ABC4E0FF" Offset="0"/><GradientStop Color="#6BA5C8FF" Offset="0.35"/><GradientStop Color="#686C95D6" Offset="0.82"/><GradientStop Color="#54DB91C8" Offset="1"/>
           </LinearGradientBrush>
+          <Color x:Key="R24SpectrumPink">#D06498</Color>
+          <Color x:Key="R24SpectrumBlue">#648CDC</Color>
           <RadialGradientBrush x:Key="GlassPinkGlow" Center="20%,8%" GradientOrigin="20%,8%" RadiusX="62%" RadiusY="72%">
             <GradientStop Color="#4DD06498" Offset="0"/><GradientStop Color="Transparent" Offset="1"/>
           </RadialGradientBrush>

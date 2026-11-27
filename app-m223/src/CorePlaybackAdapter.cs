@@ -28,6 +28,8 @@ public interface INightflightPlayback:IDisposable {
 // The ONLY UI-to-production adapter. Arrays are display snapshots, never a second queue/database.
 internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
  readonly OfflineWindowRoot root;readonly IPlaybackCommands commands;readonly Dictionary<int,SongItem> items=new();
+ internal KugouAvaloniaPlayer.Models.VisualizerBandState[] DesktopSpectrumBands => root.Player.NowPlayingVisualizerBars;
+ internal void SetDesktopSpectrumEnabled(bool enabled) => root.Player.SetNowPlayingVisualizerEnabled(enabled);
  internal double TrialDecodedRms=>root.Coordinator.Player.GetActiveAnalysisSnapshot().Rms;
  internal int SeekSubmissions,VolumeSubmissions;CoreTrack[] trackSnapshot=[];CoreLyric[] lyricSnapshot=[];CoreQueueEntry[] queueEntrySnapshot=[];int[] queueSnapshot=[];bool queueDirty=true,lyricsDirty=true;int posted,disposed;long revision;int[] favorites=[],history=[];CoreList[] lists=[];string error="";
  public PlaybackSnapshot State{get;private set;}=new();public event Action<PlaybackSnapshot>? Changed;

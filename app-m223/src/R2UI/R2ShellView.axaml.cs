@@ -29,6 +29,10 @@ public partial class R2ShellView : UserControl
     public R2ShellView()
     {
         InitializeComponent();
+        SizeChanged += (_, _) => UpdateSpectrum();
+        LyricsPane.PropertyChanged += SpectrumSurfaceChanged;
+        LyricsOverlay.PropertyChanged += SpectrumSurfaceChanged;
+        MainDock.PropertyChanged += SpectrumSurfaceChanged;
         InitializeOnlineSearch();
         if (!DesignTokens.ShaderDegrade)
         {
@@ -71,6 +75,7 @@ public partial class R2ShellView : UserControl
     {
         if (model != null)
         {
+            model.Adapter.SetDesktopSpectrumEnabled(false);
             model.PropertyChanged -= WorkspaceChanged;
             model.Player.Updated -= UpdateVolume;
             model.Player.ProgressUpdated -= UpdateProgress;
@@ -79,6 +84,10 @@ public partial class R2ShellView : UserControl
             model.Concept.Changed -= OnlineActionsChanged;
         }
         model = DataContext as ShellModel;
+        var spectrum = model?.Adapter.DesktopSpectrumBands;
+        DockSpectrum.SetSource(spectrum);
+        FullSpectrum.SetSource(spectrum);
+        model?.Adapter.SetDesktopSpectrumEnabled(!DesignTokens.ShaderDegrade);
         if (model == null)
             return;
         model.PropertyChanged += WorkspaceChanged;
@@ -181,8 +190,26 @@ public partial class R2ShellView : UserControl
         });
     }
 
+    private void SpectrumSurfaceChanged(object? sender, AvaloniaPropertyChangedEventArgs change)
+    {
+        if (change.Property == IsVisibleProperty) UpdateSpectrum();
+    }
+
+    private void UpdateSpectrum()
+    {
+        var state = model?.Player.State;
+        var inPlayback = state is { Playing: true } or { Paused: true };
+        var moving = state?.Playing == true;
+        FullSpectrum.Height = Math.Min(220, Bounds.Height * .18);
+        FullSpectrum.IsVisible = inPlayback && LyricsOverlay.IsVisible && LyricsPane.IsVisible;
+        DockSpectrum.IsVisible = inPlayback && MainDock.IsVisible && Bounds.Width >= 1200;
+        FullSpectrum.SetPlaying(moving);
+        DockSpectrum.SetPlaying(moving);
+    }
+
     private void UpdateVolume()
     {
+        UpdateSpectrum();
         var state=model?.Player.State;
         VolumeSlider.Sync(state?.Volume ?? 0);
         FullVolume.Sync(state?.Volume ?? 0);
