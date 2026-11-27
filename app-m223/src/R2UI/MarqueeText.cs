@@ -22,6 +22,7 @@ public sealed class MarqueeText : TemplatedControl
     private FormattedText? formatted;
     private double overflow, phase, maskWidth;
     private readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromMilliseconds(32) };
+    private bool overflowCheckPosted;
     private long lastTick;
     private CompositionVisual? animated;
 
@@ -31,11 +32,11 @@ public sealed class MarqueeText : TemplatedControl
         glyphs = new Glyphs(this) { IsHitTestVisible = false };
         Template = new FuncControlTemplate<MarqueeText>((_, _) => glyphs);
         clock.Tick += (_, _) => Advance();
-        SizeChanged += (_, _) => UpdateOverflow();
+        SizeChanged += (_, _) => ScheduleOverflowCheck();
         EffectiveViewportChanged += (_, _) =>
         {
             if (!IsEffectivelyVisible) Pause();
-            else if (!IsPointerOver && overflow > 1) Start();
+            else ScheduleOverflowCheck();
         };
     }
 
@@ -50,11 +51,11 @@ public sealed class MarqueeText : TemplatedControl
             Reset();
             glyphs.InvalidateVisual();
             InvalidateMeasure();
-            if (this.IsAttachedToVisualTree()) UpdateOverflow();
+            ScheduleOverflowCheck();
         }
         else if (change.Property == IsVisibleProperty && this.IsAttachedToVisualTree())
         {
-            if (IsEffectivelyVisible && !IsPointerOver) Start();
+            if (IsEffectivelyVisible) ScheduleOverflowCheck();
             else Pause();
         }
     }
@@ -62,7 +63,7 @@ public sealed class MarqueeText : TemplatedControl
     protected override void OnApplyTemplate(TemplateAppliedEventArgs e)
     {
         base.OnApplyTemplate(e);
-        UpdateOverflow();
+        ScheduleOverflowCheck();
     }
 
     protected override void OnPointerEntered(PointerEventArgs e)
@@ -74,7 +75,7 @@ public sealed class MarqueeText : TemplatedControl
     protected override void OnPointerExited(PointerEventArgs e)
     {
         base.OnPointerExited(e);
-        Start();
+        ScheduleOverflowCheck();
     }
 
     protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
@@ -97,6 +98,7 @@ public sealed class MarqueeText : TemplatedControl
     protected override Size ArrangeOverride(Size finalSize)
     {
         glyphs.Arrange(new Rect(0, 0, Math.Max(finalSize.Width, Layout().WidthIncludingTrailingWhitespace), finalSize.Height));
+        ScheduleOverflowCheck();
         return finalSize;
     }
 
@@ -106,14 +108,26 @@ public sealed class MarqueeText : TemplatedControl
         if (overflow > 1) context.DrawRectangle(Brushes.Transparent, null, new Rect(Bounds.Size));
     }
 
+    private void ScheduleOverflowCheck()
+    {
+        if (overflowCheckPosted || !this.IsAttachedToVisualTree()) return;
+        overflowCheckPosted = true;
+        Dispatcher.UIThread.Post(() =>
+        {
+            overflowCheckPosted = false;
+            if (this.IsAttachedToVisualTree() && IsArrangeValid) UpdateOverflow();
+        }, DispatcherPriority.Render);
+    }
+
     private void UpdateOverflow()
     {
         var next = Bounds.Width > 0 ? Math.Max(0, Layout().WidthIncludingTrailingWhitespace - Bounds.Width) : 0;
-        if (Math.Abs(next - overflow) > .5 || next <= 1 && overflow > 1)
+        if (next != overflow)
         {
             Reset();
+            var hitTestChanged = (next > 1) != (overflow > 1);
             overflow = next;
-            InvalidateVisual();
+            if (hitTestChanged) InvalidateVisual();
         }
         if (overflow <= 1)
         {
@@ -142,16 +156,23 @@ public sealed class MarqueeText : TemplatedControl
 
     private void Start()
     {
-        if (animated != null || overflow <= 1 || !IsEffectivelyVisible ||
-            ElementComposition.GetElementVisual(glyphs) is not { } visual) return;
+        if (Bounds.Width <= 0 || !IsArrangeValid || !IsEffectivelyVisible || IsPointerOver) return;
+        var w = Layout().WidthIncludingTrailingWhitespace;
+        if (w <= Bounds.Width + 1)
+        {
+            Reset();
+            return;
+        }
+        if (animated != null || ElementComposition.GetElementVisual(glyphs) is not { } visual) return;
         animated = visual;
+        Program.Log("R23_MARQUEE_START", new { text = Text, textW = w, boundsW = Bounds.Width, overflow });
         lastTick = Stopwatch.GetTimestamp();
         clock.Start();
     }
 
     private void Advance()
     {
-        if (!IsEffectivelyVisible || IsPointerOver || animated is null)
+        if (!IsArrangeValid || !IsEffectivelyVisible || IsPointerOver || animated is null)
         {
             Pause();
             return;
