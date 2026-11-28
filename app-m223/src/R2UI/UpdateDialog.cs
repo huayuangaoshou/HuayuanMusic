@@ -190,11 +190,8 @@ public partial class R2ShellView
                 progress.Value = value.Fraction ?? 0;
                 status.Text = value.Stage switch
                 {
-                    UpdateManager.DownloadStage.Mirror => route == UpdateManager.DownloadRoute.Automatic
-                        ? "已切换到镜像，正在下载安装包…"
-                        : "正在通过所选镜像下载安装包…",
                     UpdateManager.DownloadStage.Verifying => "正在校验文件完整性…",
-                    _ => "正在下载安装包…"
+                    _ => value.Source is { } source ? $"正在通过 {source} 下载安装包…" : "正在下载安装包…"
                 };
             });
             try

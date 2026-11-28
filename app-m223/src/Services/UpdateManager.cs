@@ -30,6 +30,7 @@ public static class UpdateManager
     private static readonly HttpClient DownloadClient = CreateClient(Timeout.InfiniteTimeSpan);
     private static readonly TimeSpan FirstByteTimeout = TimeSpan.FromSeconds(15);
     private static readonly TimeSpan StallTimeout = TimeSpan.FromSeconds(30);
+    private static readonly TimeSpan AutomaticNoProgressTimeout = TimeSpan.FromSeconds(6);
     private static readonly TimeSpan DirectSpeedSample = TimeSpan.FromSeconds(15);
     // Adjust this independently of the first-byte and idle timeouts.
     private const int MinimumDirectBytesPerSecond = 200 * 1024;
@@ -143,7 +144,7 @@ public static class UpdateManager
     public enum DownloadStage { Direct, Mirror, Verifying }
     public enum DownloadRoute { Automatic, Direct, GhFast, GhProxyCom, GhProxyNet }
 
-    public readonly record struct DownloadProgress(DownloadStage Stage, double? Fraction = null);
+    public readonly record struct DownloadProgress(DownloadStage Stage, double? Fraction = null, string? Source = null);
 
     public static Task<string> DownloadInstallerAsync(ReleaseInfo release, IProgress<DownloadProgress>? progress,
         CancellationToken cancellation = default, DownloadRoute route = DownloadRoute.Automatic) =>
@@ -151,7 +152,7 @@ public static class UpdateManager
 
     internal static string? GetManualDownloadUrl(ReleaseInfo release, DownloadRoute route) =>
         IsOfficialInstallerUrl(release.SetupUrl)
-            ? GetSourceUrl(release.SetupUrl!, route == DownloadRoute.Automatic ? DownloadRoute.GhFast : route)
+            ? GetSourceUrl(release.SetupUrl!, route == DownloadRoute.Automatic ? DownloadRoute.GhProxyCom : route)
             : null;
 
     private static string GetSourceUrl(string url, DownloadRoute route) =>
@@ -188,9 +189,12 @@ public static class UpdateManager
             throw new InvalidDataException("Missing trusted installer URL or SHA-256.");
         }
 
-        DownloadRoute[] routes = route == DownloadRoute.Automatic
-            ? [DownloadRoute.Direct, DownloadRoute.GhFast, DownloadRoute.GhProxyCom, DownloadRoute.GhProxyNet]
+        var automatic = route == DownloadRoute.Automatic;
+        DownloadRoute[] routes = automatic
+            ? [DownloadRoute.Direct, DownloadRoute.GhProxyCom, DownloadRoute.GhFast]
             : [route];
+        var initialLimit = automatic && AutomaticNoProgressTimeout < firstByteTimeout ? AutomaticNoProgressTimeout : firstByteTimeout;
+        var progressLimit = automatic && AutomaticNoProgressTimeout < stallTimeout ? AutomaticNoProgressTimeout : stallTimeout;
         string target = Path.Combine(Path.GetTempPath(), $"HuayuanMusic-Setup-{Guid.NewGuid():N}.exe");
         string partial = target + ".download";
         for (var i = 0; i < routes.Length; i++)
@@ -199,15 +203,16 @@ public static class UpdateManager
             var source = new Uri(GetSourceUrl(release.SetupUrl!, routes[i]));
             var stage = routes[i] == DownloadRoute.Direct ? DownloadStage.Direct : DownloadStage.Mirror;
             var failure = "download_failed";
-            bool receiving = false;
             bool verified = false;
+            long received = 0;
             long slowBytesPerSecond = -1;
-            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "attempt" });
-            progress?.Report(new(stage));
+            var started = Stopwatch.GetTimestamp();
+            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "attempt", switchCount = i });
+            progress?.Report(new(stage, Source: source.Host));
             try
             {
                 using var deadline = CancellationTokenSource.CreateLinkedTokenSource(cancellation);
-                deadline.CancelAfter(firstByteTimeout);
+                deadline.CancelAfter(initialLimit);
                 using var response = await client.GetAsync(source, HttpCompletionOption.ResponseHeadersRead, deadline.Token).ConfigureAwait(false);
                 response.EnsureSuccessStatusCode();
                 await using (var input = await response.Content.ReadAsStreamAsync(deadline.Token).ConfigureAwait(false))
@@ -215,23 +220,27 @@ public static class UpdateManager
                 {
                     var total = release.SetupSize ?? response.Content.Headers.ContentLength;
                     var buffer = new byte[81920];
-                    long received = 0;
+                    long lastProgressReport = 0;
                     using var stopSpeedSample = CancellationTokenSource.CreateLinkedTokenSource(deadline.Token);
                     Task? speedSample = null;
                     try
                     {
                         while (await input.ReadAsync(buffer, deadline.Token).ConfigureAwait(false) is > 0 and var read)
                         {
-                            receiving = true;
                             Interlocked.Add(ref received, read);
-                            deadline.CancelAfter(stallTimeout);
-                            if (route == DownloadRoute.Automatic && stage == DownloadStage.Direct)
-                                speedSample ??= MeasureDirectSpeedAsync();
+                            deadline.CancelAfter(progressLimit);
+                            if (automatic && stage == DownloadStage.Direct)
+                                speedSample ??= MeasureDirectSpeedAsync(received);
                             if (release.SetupSize is > 0 && received > release.SetupSize.Value)
                                 throw new InvalidDataException("Installer exceeds the release asset size.");
                             await output.WriteAsync(buffer.AsMemory(0, read), deadline.Token).ConfigureAwait(false);
-                            if (total is > 0)
-                                progress?.Report(new(stage, Math.Clamp((double)received / total.Value, 0, 1)));
+                            var now = Stopwatch.GetTimestamp();
+                            if (total is > 0 && (lastProgressReport == 0 ||
+                                Stopwatch.GetElapsedTime(lastProgressReport, now) >= TimeSpan.FromMilliseconds(100)))
+                            {
+                                lastProgressReport = now;
+                                progress?.Report(new(stage, Math.Clamp((double)received / total.Value, 0, 1), source.Host));
+                            }
                         }
                     }
                     finally
@@ -242,16 +251,16 @@ public static class UpdateManager
                     }
                     deadline.Token.ThrowIfCancellationRequested();
 
-                    async Task MeasureDirectSpeedAsync()
+                    async Task MeasureDirectSpeedAsync(long initialBytes)
                     {
                         var start = Stopwatch.GetTimestamp();
                         try { await Task.Delay(DirectSpeedSample, stopSpeedSample.Token).ConfigureAwait(false); }
                         catch (OperationCanceledException) when (stopSpeedSample.IsCancellationRequested) { return; }
                         if (stopSpeedSample.IsCancellationRequested) return;
-                        var rate = (long)(Interlocked.Read(ref received) / Stopwatch.GetElapsedTime(start).TotalSeconds);
+                        var rate = (long)((Interlocked.Read(ref received) - initialBytes) / Stopwatch.GetElapsedTime(start).TotalSeconds);
                         if (rate >= MinimumDirectBytesPerSecond)
                         {
-                            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_ok", bytesPerSecond = rate });
+                            Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_ok", bytesPerSecond = rate, switchCount = i });
                             return;
                         }
                         slowBytesPerSecond = rate;
@@ -259,7 +268,7 @@ public static class UpdateManager
                     }
                 }
 
-                progress?.Report(new(DownloadStage.Verifying, 1));
+                progress?.Report(new(DownloadStage.Verifying, 1, source.Host));
                 byte[] actual;
                 await using (var file = File.OpenRead(partial))
                     actual = await SHA256.HashDataAsync(file, cancellation).ConfigureAwait(false);
@@ -268,7 +277,8 @@ public static class UpdateManager
                     cancellation.ThrowIfCancellationRequested();
                     File.Move(partial, target);
                     verified = true;
-                    Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "verified" });
+                    Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "verified", bytes = received,
+                        elapsedMs = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds, switchCount = i });
                     return target;
                 }
 
@@ -276,7 +286,7 @@ public static class UpdateManager
             }
             catch (OperationCanceledException) when (!cancellation.IsCancellationRequested)
             {
-                failure = receiving ? "stall_timeout" : "first_byte_timeout";
+                failure = automatic ? "zero_progress_timeout" : received > 0 ? "stall_timeout" : "first_byte_timeout";
             }
             catch (Exception error) when (error is HttpRequestException or IOException or InvalidDataException)
             {
@@ -288,12 +298,15 @@ public static class UpdateManager
             }
 
             cancellation.ThrowIfCancellationRequested();
+            var elapsedMs = (long)Stopwatch.GetElapsedTime(started).TotalMilliseconds;
             if (slowBytesPerSecond >= 0)
-                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_switch", bytesPerSecond = slowBytesPerSecond });
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "speed_switch", bytesPerSecond = slowBytesPerSecond,
+                    bytes = received, elapsedMs, switchCount = i });
             else
-                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = failure });
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = failure, bytes = received, elapsedMs, switchCount = i });
             if (i + 1 < routes.Length)
-                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "switch", next = new Uri(GetSourceUrl(release.SetupUrl!, routes[i + 1])).Host });
+                Program.Log("UPDATE_SOURCE", new { source = source.Host, result = "switch",
+                    next = new Uri(GetSourceUrl(release.SetupUrl!, routes[i + 1])).Host, switchCount = i + 1 });
         }
 
         throw new IOException("No download source delivered a verified installer.");

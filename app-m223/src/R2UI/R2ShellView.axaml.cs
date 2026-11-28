@@ -202,7 +202,7 @@ public partial class R2ShellView : UserControl
         var moving = state?.Playing == true;
         FullSpectrum.Height = Math.Min(220, Bounds.Height * .18);
         FullSpectrum.IsVisible = inPlayback && LyricsOverlay.IsVisible && LyricsPane.IsVisible;
-        DockSpectrum.IsVisible = inPlayback && MainDock.IsVisible && Bounds.Width >= 1200;
+        DockSpectrum.IsVisible = inPlayback && MainDock.IsVisible;
         FullSpectrum.SetPlaying(moving);
         DockSpectrum.SetPlaying(moving);
     }

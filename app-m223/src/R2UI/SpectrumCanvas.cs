@@ -21,7 +21,7 @@ public sealed class SpectrumCanvas : Control
     private const int OpacityLevels = 7;
     private readonly DispatcherTimer clock = new() { Interval = TimeSpan.FromMilliseconds(32) };
     private VisualizerBandState[]? source;
-    private ImmutableSolidColorBrush[]? palette;
+    private IImmutableBrush[]? palette;
     private Window? owner;
     private bool playing;
 
@@ -29,6 +29,7 @@ public sealed class SpectrumCanvas : Control
     public Color Pink { get => GetValue(PinkProperty); set => SetValue(PinkProperty, value); }
     public Color Blue { get => GetValue(BlueProperty); set => SetValue(BlueProperty, value); }
     public bool Wide { get; set; }
+    public bool FadeFromTop { get; set; }
 
     static SpectrumCanvas() => AffectsRender<SpectrumCanvas>(BarBrushProperty, BoundsProperty);
 
@@ -106,7 +107,7 @@ public sealed class SpectrumCanvas : Control
         var count = Math.Min(Math.Max(1, (int)(Bounds.Width / 2)), Wide ? FullBandCount : 48);
         var step = Bounds.Width / count;
         var brush = BarBrush;
-        var colors = Wide ? palette ??= CreatePalette(Pink, Blue) : null;
+        var colors = Wide ? palette ??= CreatePalette(Pink, Blue, FadeFromTop) : null;
         if (brush == null && colors == null) return;
 
         var animated = playing && !DesignTokens.ShaderDegrade;
@@ -123,20 +124,32 @@ public sealed class SpectrumCanvas : Control
             var height = 2 + level * (Bounds.Height - 2);
             var fill = colors == null ? brush : colors[i * FullBandCount / count * OpacityLevels +
                 (int)Math.Round(level * (OpacityLevels - 1))];
-            context.DrawRectangle(fill, null, new Rect((i + .19) * step, Bounds.Height - height, step * .62, height));
+            context.DrawRectangle(fill, null,
+                new Rect((i + .19) * step, FadeFromTop ? 0 : Bounds.Height - height, step * .62, height));
         }
     }
 
-    private static ImmutableSolidColorBrush[] CreatePalette(Color pink, Color blue)
+    private static IImmutableBrush[] CreatePalette(Color pink, Color blue, bool fadeFromTop)
     {
-        var colors = new ImmutableSolidColorBrush[FullBandCount * OpacityLevels];
+        var colors = new IImmutableBrush[FullBandCount * OpacityLevels];
         for (var i = 0; i < FullBandCount; i++)
         {
             var mix = i / (double)(FullBandCount - 1);
             byte Blend(byte a, byte b) => (byte)Math.Round(a + (b - a) * mix);
             var hue = Color.FromRgb(Blend(pink.R, blue.R), Blend(pink.G, blue.G), Blend(pink.B, blue.B));
             for (var level = 0; level < OpacityLevels; level++)
-                colors[i * OpacityLevels + level] = new ImmutableSolidColorBrush(hue, .10 + .01 * level);
+            {
+                var opacity = .10 + .01 * level;
+                colors[i * OpacityLevels + level] = fadeFromTop
+                    ? new LinearGradientBrush
+                    {
+                        StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
+                        EndPoint = new RelativePoint(0, 1, RelativeUnit.Relative),
+                        Opacity = opacity * DesignTokens.DockSpectrumOpacity,
+                        GradientStops = [new(hue, 0), new(Color.FromArgb(0, hue.R, hue.G, hue.B), 1)]
+                    }.ToImmutable()
+                    : new ImmutableSolidColorBrush(hue, opacity);
+            }
         }
         return colors;
     }

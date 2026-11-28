@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml.MarkupExtensions;
 using Avalonia.Media;
+using Avalonia.Platform;
 using Avalonia.Threading;
 using Avalonia.Styling;
 using Avalonia.VisualTree;
@@ -52,8 +53,10 @@ internal sealed class DesktopLyricWindow : Window
     private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
     private bool raisedTimerResolution;
     private static readonly TimeSpan HideToolsDelay = TimeSpan.FromMilliseconds(200);
+    // Layered Windows windows need a nonzero alpha pixel to receive input in otherwise clear areas.
+    private static readonly IBrush DragSurface = new SolidColorBrush(Color.FromArgb(1, 0, 0, 0));
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
-    private readonly DispatcherTimer nativeInputClock = new() { Interval = TimeSpan.FromMilliseconds(16) };
+    private readonly DispatcherTimer hideTools = new() { Interval = HideToolsDelay };
     private IReadOnlyList<LyricLine> lyrics = [];
     private string empty = "播放一首歌曲后显示歌词";
     private double anchorPosition;
@@ -61,8 +64,7 @@ internal sealed class DesktopLyricWindow : Window
     private bool running;
     private double fontSize;
     private bool placed;
-    private long? outsideToolbarSince;
-    private IPointer? toolbarDrag;
+    private IPointer? dragPointer;
     private PixelPoint dragStart;
     private PixelPoint dragOrigin;
     private bool toolbarClosed;
@@ -172,10 +174,8 @@ internal sealed class DesktopLyricWindow : Window
             const uint popupStyle = 0x80000000;
             Win32Properties.AddWindowStylesCallback(this, (style, extendedStyle) => (style | popupStyle, extendedStyle));
         }
-        tools.AddHandler(PointerPressedEvent, DragFromToolbar, RoutingStrategies.Bubble);
-        tools.PointerMoved += MoveFromToolbar;
-        tools.PointerReleased += (_, args) => { if (toolbarDrag == args.Pointer) EndToolbarDrag(); };
-        tools.PointerCaptureLost += (_, _) => toolbarDrag = null;
+        BindInteraction(layout);
+        BindInteraction(tools);
         WindowFrameMeter.Attach(this, "desktop_lyric");
         WindowFrameMeter.Attach(toolbarWindow, "toolbar");
         toolbarWindow.Resized += (_, _) => PositionToolbar();
@@ -192,10 +192,8 @@ internal sealed class DesktopLyricWindow : Window
             Place(preferences.X is int x && preferences.Y is int y ? new PixelPoint(x, y) : null);
             placed = true;
             new DesktopLyricWindowChromeService().HideFromWindowSwitcher(this);
-            passthrough.Apply(this, DesktopLyricHitTestLayout.Transparent);
-            if (preferences.Locked) SetLocked(true);
-            if (OperatingSystem.IsWindows())
-                nativeInputClock.Start();
+            if (preferences.Locked && passthrough.IsSupported) SetLocked(true);
+            else ApplyWindowInteraction();
             UpdateFallbackClock();
             Program.Log("R27_LYRIC_RENDERER", new { composition = current.UsesComposition });
             Dispatcher.UIThread.Post(() =>
@@ -233,13 +231,19 @@ internal sealed class DesktopLyricWindow : Window
         var renderCensus = new TimerCensus("lyricRender", renderClock);
         renderClock.Tick += (_, _) => { using var timing = renderCensus.Measure(); RenderLyrics(); };
         saveDelay.Tick += (_, _) => { saveDelay.Stop(); PreferencesChanged?.Invoke(Capture(true)); };
-        nativeInputClock.Tick += (_, _) => UpdateToolbarHover();
+        hideTools.Tick += (_, _) =>
+        {
+            hideTools.Stop();
+            if (!Locked && dragPointer == null && !layout.IsPointerOver && !tools.IsPointerOver)
+                ShowTools(false);
+        };
         Closed += (_, _) =>
         {
             StopFallbackClock();
             StopLineTransition();
             saveDelay.Stop();
-            nativeInputClock.Stop();
+            hideTools.Stop();
+            EndDrag();
             if (!toolbarClosed) toolbarWindow.Close();
             current.SetLine(null);
             translation.SetLine(null);
@@ -257,42 +261,50 @@ internal sealed class DesktopLyricWindow : Window
 
     private static DesktopLyricLine CreateLine(IBrush foreground) => new(foreground);
 
-    private static bool ContainsScreenPoint(Control control, PixelPoint point) =>
-        control.IsVisible && control.IsAttachedToVisualTree() &&
-        new Rect(control.Bounds.Size).Contains(control.PointToClient(point));
-
-    private void UpdateToolbarHover()
+    private void BindInteraction(Control surface)
     {
-        if (!IsVisible || !GetCursorPos(out var screenPoint)) return;
-        if ((GetAsyncKeyState(1) & 0x8000) != 0 || (GetAsyncKeyState(2) & 0x8000) != 0)
+        surface.PointerEntered += (_, _) =>
         {
-            outsideToolbarSince = null;
-            return;
-        }
-        var point = new PixelPoint(screenPoint.X, screenPoint.Y);
-        // The label stack includes the gaps between its visible lines.
-        if (ContainsScreenPoint(labels, point) || (toolbarWindow.IsVisible && ContainsScreenPoint(tools, point)))
-        {
-            outsideToolbarSince = null;
+            hideTools.Stop();
             ShowTools(true);
-        }
-        else if (toolbarWindow.IsVisible)
+        };
+        surface.PointerExited += (_, _) => ScheduleToolbarHide();
+        surface.AddHandler(PointerPressedEvent, StartDrag, RoutingStrategies.Bubble, handledEventsToo: false);
+        surface.PointerMoved += MoveDrag;
+        surface.PointerReleased += (_, args) =>
         {
-            outsideToolbarSince ??= Stopwatch.GetTimestamp();
-            if (Stopwatch.GetElapsedTime(outsideToolbarSince.Value) >= HideToolsDelay)
-                ShowTools(false);
-        }
+            if (dragPointer == args.Pointer) EndDrag();
+        };
+        surface.PointerCaptureLost += (_, _) =>
+        {
+            dragPointer = null;
+            ScheduleToolbarHide();
+        };
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    private struct CursorPoint { public int X; public int Y; }
+    private void ScheduleToolbarHide()
+    {
+        if (!IsVisible || Locked || dragPointer != null || !toolbarWindow.IsVisible) return;
+        hideTools.Stop();
+        hideTools.Start();
+    }
 
-    [DllImport("user32.dll")]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GetCursorPos(out CursorPoint point);
-
-    [DllImport("user32.dll")]
-    private static extern short GetAsyncKeyState(int key);
+    private void ApplyWindowInteraction()
+    {
+        layout.Background = Locked ? null : DragSurface;
+        if (passthrough.IsSupported)
+            passthrough.Apply(this, Locked ? DesktopLyricHitTestLayout.Transparent : DesktopLyricHitTestLayout.FullWindow);
+        // A click-through window cannot receive a hover event; leave its independent unlock button available.
+        if (Locked)
+        {
+            hideTools.Stop();
+            ShowTools(true);
+        }
+        else
+        {
+            ScheduleToolbarHide();
+        }
+    }
 
     [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
     private static extern uint BeginTimerPeriod(uint milliseconds);
@@ -354,8 +366,9 @@ internal sealed class DesktopLyricWindow : Window
     {
         if (!passthrough.IsSupported || locked == Locked) return;
         Locked = locked;
-        if (locked) EndToolbarDrag();
+        if (locked) EndDrag();
         ApplyLockMode();
+        ApplyWindowInteraction();
         ScheduleSave();
         LockChanged?.Invoke();
         Program.Log("R2_DESKTOP_LYRIC_LOCK", new { locked });
@@ -400,8 +413,18 @@ internal sealed class DesktopLyricWindow : Window
         var position = requested is { } saved && area.Contains(saved)
             ? saved
             : new PixelPoint(area.X + (area.Width - width) / 2, area.Bottom - height - 70);
-        Position = new PixelPoint(Math.Clamp(position.X, area.X, Math.Max(area.X, area.Right - width)),
+        MoveWithinScreen(position, screen);
+    }
+
+    private void MoveWithinScreen(PixelPoint position, Screen? screen)
+    {
+        if (screen == null) return;
+        var area = screen.WorkingArea;
+        var width = ToPixels(Width, screen.Scaling);
+        var height = ToPixels(Height, screen.Scaling);
+        var clamped = new PixelPoint(Math.Clamp(position.X, area.X, Math.Max(area.X, area.Right - width)),
             Math.Clamp(position.Y, area.Y, Math.Max(area.Y, area.Bottom - height)));
+        if (Position != clamped) Position = clamped;
     }
 
     private void ShowTools(bool shown)
@@ -438,35 +461,38 @@ internal sealed class DesktopLyricWindow : Window
         if (toolbarWindow.Position != target) toolbarWindow.Position = target;
     }
 
-    private void DragFromToolbar(object? sender, PointerPressedEventArgs args)
+    private void StartDrag(object? sender, PointerPressedEventArgs args)
     {
-        if (Locked || !args.GetCurrentPoint(tools).Properties.IsLeftButtonPressed ||
+        if (sender is not Control surface || Locked || !args.GetCurrentPoint(surface).Properties.IsLeftButtonPressed ||
             args.Source is Visual source && (source is Button || source.FindAncestorOfType<Button>() != null)) return;
-        dragStart = tools.PointToScreen(args.GetPosition(tools));
+        dragStart = surface.PointToScreen(args.GetPosition(surface));
         dragOrigin = Position;
-        toolbarDrag = args.Pointer;
-        toolbarDrag.Capture(tools);
+        dragPointer = args.Pointer;
+        hideTools.Stop();
+        args.Pointer.Capture(surface);
         args.Handled = true;
     }
 
-    private void MoveFromToolbar(object? sender, PointerEventArgs args)
+    private void MoveDrag(object? sender, PointerEventArgs args)
     {
-        if (args.Pointer != toolbarDrag) return;
-        if (Locked || !args.GetCurrentPoint(tools).Properties.IsLeftButtonPressed)
+        if (sender is not Control surface || args.Pointer != dragPointer) return;
+        if (Locked || !args.GetCurrentPoint(surface).Properties.IsLeftButtonPressed)
         {
-            EndToolbarDrag();
+            EndDrag();
             return;
         }
-        var point = tools.PointToScreen(args.GetPosition(tools));
-        Position = dragOrigin + (point - dragStart);
+        var point = surface.PointToScreen(args.GetPosition(surface));
+        MoveWithinScreen(dragOrigin + (point - dragStart),
+            Screens.ScreenFromPoint(point) ?? Screens.ScreenFromWindow(this) ?? Screens.Primary);
         args.Handled = true;
     }
 
-    private void EndToolbarDrag()
+    private void EndDrag()
     {
-        var pointer = toolbarDrag;
-        toolbarDrag = null;
+        var pointer = dragPointer;
+        dragPointer = null;
         pointer?.Capture(null);
+        ScheduleToolbarHide();
     }
 
     private void AdjustFont(double difference)
@@ -507,8 +533,8 @@ internal sealed class DesktopLyricWindow : Window
         if (placed)
         {
             var scale = RenderScaling;
-            Position = new PixelPoint(position.X + ToPixels(oldWidth / 2, scale) - ToPixels(width / 2, scale),
-                position.Y);
+            MoveWithinScreen(new PixelPoint(position.X + ToPixels(oldWidth / 2, scale) - ToPixels(width / 2, scale),
+                position.Y), Screens.ScreenFromWindow(this) ?? Screens.Primary);
         }
     }
 

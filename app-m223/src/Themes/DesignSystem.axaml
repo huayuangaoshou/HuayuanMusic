@@ -64,7 +64,7 @@
           <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.LightStripe}"/>
           <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.AccentSoft}"/>
           <SolidColorBrush x:Key="R2RowBase" Color="{x:Static tok:DesignTokens.LightRowBase}"/>
-          <SolidColorBrush x:Key="R2RowHover" Color="{x:Static tok:DesignTokens.AccentSoftHover}"/>
+          <SolidColorBrush x:Key="R2RowSelected" Color="{x:Static tok:DesignTokens.LightLine}" Opacity="{x:Static tok:DesignTokens.SongSelectionOpacity}"/>
           <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.LightAccentInk}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#00000000" Offset="0"/><GradientStop Color="#00000000" Offset="0.55"/><GradientStop Color="#00000000" Offset="1"/>
@@ -126,7 +126,7 @@
           <SolidColorBrush x:Key="R2Stripe" Color="{x:Static tok:DesignTokens.DarkStripe}"/>
           <SolidColorBrush x:Key="R2Tint" Color="{x:Static tok:DesignTokens.DarkTint}"/>
           <SolidColorBrush x:Key="R2RowBase" Color="{x:Static tok:DesignTokens.DarkRowBase}"/>
-          <SolidColorBrush x:Key="R2RowHover" Color="{x:Static tok:DesignTokens.AccentSoftHover}"/>
+          <SolidColorBrush x:Key="R2RowSelected" Color="{x:Static tok:DesignTokens.DarkLine}" Opacity="{x:Static tok:DesignTokens.SongSelectionOpacity}"/>
           <SolidColorBrush x:Key="R2RedInk" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
           <LinearGradientBrush x:Key="R2LyricVeil" StartPoint="0%,0%" EndPoint="100%,100%">
             <GradientStop Color="#72080D18" Offset="0"/><GradientStop Color="#A0080D18" Offset="0.55"/><GradientStop Color="#D90A101C" Offset="1"/>
@@ -364,7 +364,21 @@
   <Style Selector="Button.heart:pointerover Path"><Setter Property="Stroke" Value="{DynamicResource R2Pink}"/><Setter Property="RenderTransform" Value="scale(1.1)"/></Style>
   <Style Selector="Button.heart.liked Path"><Setter Property="Fill" Value="{DynamicResource R2HeartFill}"/><Setter Property="Stroke" Value="#FF4D7D"/></Style>
   <Style Selector="Button.heart:pressed Path"><Setter Property="RenderTransform" Value="scale(0.98)"/></Style>
-  <Style Selector="Border.song-current"><Setter Property="Background" Value="{DynamicResource R2Tint}"/></Style>
+  <Style Selector="Border.song-row">
+    <Setter Property="Background" Value="Transparent"/>
+    <Setter Property="BorderBrush" Value="Transparent"/><Setter Property="BorderThickness" Value="3,0,0,0"/>
+    <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter>
+  </Style>
+  <Style Selector="ListBoxItem:pointerover:not(:selected) Border.song-row:not(.song-current)">
+    <Setter Property="Background"><SolidColorBrush Color="{x:Static tok:DesignTokens.AccentStrong}" Opacity="{x:Static tok:DesignTokens.SongHoverOpacity}"/></Setter>
+  </Style>
+  <Style Selector="ListBoxItem:selected Border.song-row:not(.song-current)">
+    <Setter Property="Background" Value="{DynamicResource R2RowSelected}"/>
+  </Style>
+  <Style Selector="Border.song-current">
+    <Setter Property="Background"><SolidColorBrush Color="{x:Static tok:DesignTokens.AccentStrong}" Opacity="{x:Static tok:DesignTokens.SongPlayingOpacity}"/></Setter>
+    <Setter Property="BorderBrush"><SolidColorBrush Color="{x:Static tok:DesignTokens.AccentStrong}"/></Setter>
+  </Style>
   <Style Selector="Border.unavailable TextBlock"><Setter Property="Foreground" Value="{DynamicResource R2Muted}"/></Style>
   <Style Selector="Border.unavailable r2|TrackArtwork"><Setter Property="Opacity" Value="0.55"/></Style>
   <Style Selector="Path.empty-heart"><Setter Property="Data" Value="{DynamicResource R2Heart}"/><Setter Property="Stroke" Value="{DynamicResource R2Muted}"/><Setter Property="StrokeThickness" Value="1.8"/></Style>
@@ -387,13 +401,21 @@
   </Style>
   <Style Selector="ListBox"><Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/></Style>
   <Style Selector="ListBoxItem"><Setter Property="Padding" Value="0"/><Setter Property="CornerRadius" Value="7"/><Setter Property="HorizontalContentAlignment" Value="Stretch"/></Style>
-  <Style Selector="ListBox.songs > ListBoxItem"><Setter Property="Background" Value="{DynamicResource R2RowBase}"/></Style>
+  <Style Selector="ListBox.songs, ListBox.song-surface"><Setter Property="Background" Value="{DynamicResource R2RowBase}"/></Style>
   <Style Selector="ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
     <Setter Property="Transitions"><Transitions><BrushTransition Property="Background" Duration="{x:Static tok:DesignTokens.MotionEffectsFastDuration}" Easing="{x:Static tok:DesignTokens.MotionEffectsFastEasing}"/></Transitions></Setter>
   </Style>
-  <Style Selector="ListBox.songs > ListBoxItem:pointerover"><Setter Property="Background" Value="{DynamicResource R2RowHover}"/></Style>
   <Style Selector="ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Hover}"/></Style>
   <Style Selector="ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter"><Setter Property="Background" Value="{DynamicResource R2Tint}"/><Setter Property="BorderBrush" Value="{DynamicResource R2Accent}"/></Style>
+  <Style Selector="ListBox.songs ListBoxItem, ListBox.song-surface ListBoxItem">
+    <Setter Property="Background" Value="Transparent"/><Setter Property="CornerRadius" Value="0"/>
+  </Style>
+  <Style Selector="ListBox.songs ListBoxItem /template/ ContentPresenter#PART_ContentPresenter, ListBox.song-surface ListBoxItem /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderThickness" Value="0"/><Setter Property="CornerRadius" Value="0"/>
+  </Style>
+  <Style Selector="ListBox.songs ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.songs ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter, ListBox.song-surface ListBoxItem:pointerover /template/ ContentPresenter#PART_ContentPresenter, ListBox.song-surface ListBoxItem:selected /template/ ContentPresenter#PART_ContentPresenter">
+    <Setter Property="Background" Value="Transparent"/><Setter Property="BorderBrush" Value="Transparent"/>
+  </Style>
   <Style Selector="Border.playlist-tile">
     <Setter Property="RenderTransform" Value="translateY(0px)"/>
     <Setter Property="BoxShadow" Value="0 8 16 0 #140F172A"/>

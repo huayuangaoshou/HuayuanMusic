@@ -43,10 +43,13 @@ public static class DesignTokens
     public static readonly Color DarkStripe = Color.Parse("#211E28");
     public static readonly Color DarkTint   = Color.Parse("#3A2A36");
 
-    // ── 歌单行底（非当前行统一半透明底，压平氛围光晕透出差异）──
+    // ── 歌单表面与行状态 ──
     public static readonly Color LightRowBase = Color.Parse("#FFFFFFFF");
     public static readonly Color DarkRowBase  = Color.Parse("#FF282530");
-    public static readonly Color AccentSoftHover = Color.Parse("#14FBDDEB"); // AccentSoft 8%
+    public const double SongHoverOpacity = .05;
+    public const double SongPlayingOpacity = .09;
+    public const double SongSelectionOpacity = .65;
+    public const double DockSpectrumOpacity = .55;
 
     // ── 状态色（浅色 / 深色）────────────────────────────────
     public static readonly Color LightError   = Color.Parse("#9B2745");

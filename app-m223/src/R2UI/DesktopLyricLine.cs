@@ -4,13 +4,12 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.TextFormatting;
-using Avalonia.Rendering;
 using AvaloniaLyrics;
 
 namespace HuayuanPreview.R2;
 
 // The two brushes share one shaped line and one viewport position.
-internal sealed partial class DesktopLyricLine : Control, ICustomHitTest
+internal sealed partial class DesktopLyricLine : Control
 {
     // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
     private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
@@ -24,7 +23,6 @@ internal sealed partial class DesktopLyricLine : Control, ICustomHitTest
     private IReadOnlyList<LyricWord> words = [];
     private TextLayout? normal;
     private TextLayout? sung;
-    private Geometry? glyphOutline;
     private Rect inkBounds;
     private LinearGradientBrush? edgeMask;
     private double edgeMaskWidth;
@@ -46,10 +44,6 @@ internal sealed partial class DesktopLyricLine : Control, ICustomHitTest
     internal double TextWidth => normal?.Width ?? 0;
     internal Size InkSize => new(Math.Min(inkBounds.Width, ViewportLimit), inkBounds.Height);
     private Point TextOrigin => new(HorizontalOffset - inkBounds.X, -inkBounds.Y);
-    bool ICustomHitTest.HitTest(Point point) => HitsInk(point);
-    internal bool HitsInk(Point point) =>
-        new Rect(Bounds.Size).Contains(point) && glyphOutline?.FillContains(point - (Vector)TextOrigin) == true;
-
     private double LineProgress => duration > 0 ? Math.Clamp((position - start) / duration, 0, 1) : 0;
     internal double HorizontalOffset => GetHorizontalOffset(inkBounds, Bounds.Width, LineProgress, SungWidth);
 
@@ -117,16 +111,14 @@ internal sealed partial class DesktopLyricLine : Control, ICustomHitTest
         normal?.Dispose();
         sung?.Dispose();
         normal = sung = null;
-        glyphOutline = null;
         inkBounds = default;
         timings = [];
         if (HasText && family != null)
         {
             var typeface = new Typeface(family, weight: FontWeight.Bold);
             normal = new TextLayout(text, typeface, fontSize, foreground, textWrapping: TextWrapping.NoWrap);
-            glyphOutline = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
-                typeface, fontSize, foreground).BuildGeometry(default);
-            inkBounds = glyphOutline?.Bounds ?? default;
+            inkBounds = new FormattedText(text, CultureInfo.CurrentCulture, FlowDirection.LeftToRight,
+                typeface, fontSize, foreground).BuildGeometry(default)?.Bounds ?? default;
             sung = duration > 0
                 ? new TextLayout(text, typeface, fontSize, SungBrush, textWrapping: TextWrapping.NoWrap) : null;
             var spans = new List<(double, double, double, double)>();

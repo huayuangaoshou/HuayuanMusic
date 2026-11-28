@@ -1,6 +1,6 @@
 <UserControl xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="HuayuanPreview.R2.SongRowView" xmlns:vm="using:HuayuanPreview.R2" xmlns:tok="using:HuayuanPreview" x:DataType="vm:TrackRow" x:CompileBindings="True" Height="{x:Static tok:DesignTokens.SongRowHeight}">
-  <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}" CornerRadius="7">
+  <Border Classes="song-row" Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}">
   <Grid ColumnDefinitions="33,46,3*,1.25*,1.20*,68,56" ColumnSpacing="7" Margin="7,0">
     <Border Width="18" Height="18" CornerRadius="7" HorizontalAlignment="Center" VerticalAlignment="Center"
             IsVisible="{Binding IsBatchMode}" BorderThickness="1.5"

@@ -218,13 +218,13 @@
               <Button Grid.Column="2" Foreground="{DynamicResource R2Ink}" Content="清空" Command="{Binding Player.ClearQueueCommand}" VerticalAlignment="Center"/>
               <Button Grid.Column="3" AutomationProperties.Name="收起播放队列" Click="ToggleQueue" VerticalAlignment="Center"><PathIcon Width="14" Height="14" Data="{DynamicResource GlassClose}"/></Button>
             </Grid>
-            <ListBox Grid.Row="1" Name="DrawerItems">
+            <ListBox Grid.Row="1" Name="DrawerItems" Classes="song-surface">
               <ListBox.Styles>
                 <Style Selector="ListBoxItem"><Setter Property="Height" Value="{x:Static tok:DesignTokens.QueueRowHeight}"/></Style>
               </ListBox.Styles>
               <ListBox.ItemTemplate>
                 <DataTemplate>
-                  <Border Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" CornerRadius="7" ToolTip.Tip="{Binding UnavailableReason}">
+                  <Border Classes="song-row" Classes.song-current="{Binding IsCurrent}" Classes.unavailable="{Binding IsUnavailable}" ToolTip.Tip="{Binding UnavailableReason}">
                     <Grid ColumnDefinitions="24,36,*,45,28" ColumnSpacing="5" Margin="2,4" Height="45">
                       <TextBlock Text="{Binding Number}" FontFeatures="tnum" Classes="muted" VerticalAlignment="Center" HorizontalAlignment="Center" IsVisible="{Binding !IsCurrent}"/>
                       <r2:PlaybackWave Fill="{DynamicResource R2RedInk}" IsPlaying="{Binding IsPlaying}" IsVisible="{Binding IsCurrent}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
@@ -255,9 +255,13 @@
     <Border Name="MainDock" Grid.Row="0" Grid.ColumnSpan="2" ZIndex="2" VerticalAlignment="Bottom" Classes="glass dock" BorderThickness="0" Margin="12,0,12,12">
       <Grid>
         <r2:GlassOptics Radius="{x:Static tok:DesignTokens.RadiusM}" Frost="{x:Static tok:DesignTokens.FrostRegular}" Saturation="{x:Static tok:DesignTokens.SaturationChrome}" IsHitTestVisible="False" CacheShader="True"/>
+        <Border CornerRadius="{x:Static tok:DesignTokens.NoticeRadius}" ClipToBounds="True" IsHitTestVisible="False">
+          <r2:SpectrumCanvas Name="DockSpectrum" Wide="True" FadeFromTop="True" IsVisible="False"
+                             Pink="{DynamicResource R24SpectrumPink}" Blue="{DynamicResource R24SpectrumBlue}"/>
+        </Border>
         <Border Padding="20,8,20,8">
           <Grid Name="DockColumns" ColumnDefinitions="1*,1.5*,1*" ColumnSpacing="20">
-            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
+            <Grid Name="DockTrack" ColumnDefinitions="40,*,Auto" ColumnSpacing="12" ClipToBounds="True" HorizontalAlignment="Left" VerticalAlignment="Center">
               <Button Padding="0" CornerRadius="7" ToolTip.Tip="打开歌词页" AutomationProperties.Name="打开歌词页" Click="ShowLyrics">
                 <r2:TrackArtwork DisplaySize="40" DataContext="{Binding Player.DisplayedPlayingSong}"/>
               </Button>
@@ -265,10 +269,7 @@
                 <r2:MarqueeText Text="{Binding Player.NowPlayingTitle}" Foreground="{DynamicResource R2Ink}" FontWeight="SemiBold" AutomationProperties.Name="{Binding Player.NowPlayingTitle}"/>
                 <r2:MarqueeText Text="{Binding Player.DisplayedPlayingSong.Singer}" Foreground="{DynamicResource R2Muted}" FontSize="12"/>
               </StackPanel>
-              <r2:SpectrumCanvas Grid.Column="2" Name="DockSpectrum" Width="140" Height="26" Opacity=".55"
-                                 IsVisible="False" IsHitTestVisible="False" VerticalAlignment="Center"
-                                 BarBrush="{DynamicResource R2Ink}"/>
-              <StackPanel Grid.Column="3" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
+              <StackPanel Grid.Column="2" Name="DockTrackActions" Orientation="Horizontal" Spacing="12" VerticalAlignment="Center"
                           DataContext="{Binding Player.DisplayedPlayingSong}" IsVisible="{Binding Player.HasCurrentSong}">
                 <r2:HeartButton/>
                 <r2:SongDownloadButton/>
