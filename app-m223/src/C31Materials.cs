@@ -101,7 +101,7 @@ public sealed partial class PreviewWindow
   var hc=new HC{Size=(uint)Marshal.SizeOf<HC>()};if(SpiContrast(0x0042,hc.Size,ref hc,0))c31SystemContrast=(hc.Flags&1)!=0;
  }
  readonly DispatcherTimer c31AccessibilityWatch=new(){Interval=TimeSpan.FromSeconds(2)};
- void WatchAccessibility(){c31AccessibilityWatch.Tick+=(_,_)=>{var old=(c31SystemReduced,c31SystemContrast);ReadSystemMotion();if(old!=(c31SystemReduced,c31SystemContrast)){Render();Notify("已遵循系统辅助功能设置");}};c31AccessibilityWatch.Start();}
+ void WatchAccessibility(){var census=new R2.TimerCensus("accessibilityWatch",c31AccessibilityWatch);c31AccessibilityWatch.Tick+=(_,_)=>{using var timing=census.Measure();var old=(c31SystemReduced,c31SystemContrast);ReadSystemMotion();if(old!=(c31SystemReduced,c31SystemContrast)){Render();Notify("已遵循系统辅助功能设置");}};c31AccessibilityWatch.Start();}
 
  CheckBox Option(string label,bool value,Action<bool> change){
   var b=new CheckBox{Content=label,IsChecked=value,Foreground=R("Text")};AutomationProperties.SetName(b,label);

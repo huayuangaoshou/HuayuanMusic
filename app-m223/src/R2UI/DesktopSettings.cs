@@ -167,7 +167,13 @@ public partial class R2ShellView
             return Task.CompletedTask;
         });
         var refresh = new DispatcherTimer { Interval=TimeSpan.FromSeconds(6) };
-        refresh.Tick += async (_,_) => await RefreshCacheAsync(false);
+        var cacheCensus = new TimerCensus("settingsCacheRefresh", refresh);
+        refresh.Tick += async (_,_) =>
+        {
+            Task work;
+            using (cacheCensus.Measure()) work = RefreshCacheAsync(false);
+            await work;
+        };
         body.AttachedToVisualTree += (_,_) => refresh.Start();
         body.DetachedFromVisualTree += (_,_) => refresh.Stop();
         return new ScrollViewer { Content=body, HorizontalScrollBarVisibility=Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled };

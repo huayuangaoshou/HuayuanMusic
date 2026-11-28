@@ -9,6 +9,7 @@ internal static class UiThreadStallWatch
     internal static void Attach(Window window)
     {
         var clock = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(1) };
+        var census = new TimerCensus("stallWatch", clock);
         long intervalTicks = Stopwatch.Frequency;
         long nextDue = 0;
 
@@ -20,6 +21,7 @@ internal static class UiThreadStallWatch
         window.Closed += (_, _) => clock.Stop();
         clock.Tick += (_, _) =>
         {
+            using var timing = census.Measure();
             // Measure from the scheduled tick, including time the dispatcher took to reach Tick itself.
             var due = nextDue;
             nextDue = Stopwatch.GetTimestamp() + intervalTicks;

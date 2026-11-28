@@ -53,8 +53,10 @@ public partial class R2ShellView : UserControl
             if(model?.Workspace.Local==true) model.Workspace.ApplyFilter(CurrentFilter.Text ?? "");
         };
         drawerDelay.Tick += (_, _) => { drawerDelay.Stop(); if (!queueOpen) { DrawerLayer.IsVisible = false; QueueDrawerSurface.Classes.Remove("glass-enter"); } };
+        var toastCensus = new TimerCensus("toastDismiss", toastDelay);
         toastDelay.Tick += (_, _) =>
         {
+            using var timing = toastCensus.Measure();
             toastDelay.Stop();
             SetToastTransition(DesignTokens.MotionEffectsDefault);
             ToastPlate.Opacity = 0;

@@ -130,7 +130,8 @@ internal sealed partial class CorePlaybackAdapter
     {
         if(watchdog!=null)return;
         watchdog=new DispatcherTimer{Interval=TimeSpan.FromSeconds(5)};
-        watchdog.Tick+=(_,_)=>WatchdogTick();
+        var census = new R2.TimerCensus("playbackWatchdog", watchdog);
+        watchdog.Tick+=(_,_)=>{using var timing=census.Measure();WatchdogTick();};
         watchdog.Start();
     }
     private void ResetWatchdog()

@@ -226,7 +226,8 @@ internal sealed class DesktopLyricWindow : Window
         PositionChanged += (_, _) => { PositionToolbar(); ScheduleSave(); };
         SizeChanged += (_, _) => PositionToolbar();
         labels.SizeChanged += (_, _) => PositionToolbar();
-        renderClock.Tick += (_, _) => RenderLyrics();
+        var renderCensus = new TimerCensus("lyricRender", renderClock);
+        renderClock.Tick += (_, _) => { using var timing = renderCensus.Measure(); RenderLyrics(); };
         saveDelay.Tick += (_, _) => { saveDelay.Stop(); PreferencesChanged?.Invoke(Capture(true)); };
         nativeInputClock.Tick += (_, _) => UpdateToolbarHover();
         Closed += (_, _) =>

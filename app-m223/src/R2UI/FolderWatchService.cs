@@ -14,6 +14,7 @@ internal sealed class FolderWatchService(ShellModel shell)
     private bool enabled;
     private bool disposed;
     private bool rescanPending;
+    private TimerCensus? debounceCensus;
 
     internal async Task SetEnabledAsync(bool value)
     {
@@ -86,6 +87,7 @@ internal sealed class FolderWatchService(ShellModel shell)
 
     private void OnDebounce(object? sender, EventArgs args)
     {
+        using var timing = (debounceCensus ??= new TimerCensus("folderWatchDebounce", debounce)).Measure();
         debounce.Stop();
         if (!enabled || disposed || watchers.Count == 0) return;
         if (!scan.IsCompleted) rescanPending = true;

@@ -25,7 +25,15 @@ internal sealed class WindowFrameMeter
     private bool running;
     private bool closed;
 
-    static WindowFrameMeter() => reportClock.Tick += (_, _) => Report();
+    static WindowFrameMeter()
+    {
+        var census = new TimerCensus("frameMeter", reportClock);
+        reportClock.Tick += (_, _) =>
+        {
+            using (census.Measure()) Report();
+            TimerCensus.Report();
+        };
+    }
 
     private WindowFrameMeter(Window window, string name)
     {
