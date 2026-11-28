@@ -8,10 +8,11 @@ internal sealed record DesktopLyricOptions(bool Visible = false, bool Locked = f
     internal const double DefaultFontSize = 25;
 }
 internal enum DesktopDlcState { Enabled, Disabled, Removed }
+internal enum DesktopLyricBackground { Solid, Transparent }
 internal sealed record DesktopOptions(bool TrayOnClose = true, bool RestoreQueue = true, bool Dark = false,
     bool MicroFade = true, bool Translation = true, DesktopDlcState Kugou = DesktopDlcState.Enabled,
     float PreMuteVolume = 0.8f, string? DownloadFolder = null, string[]? PreviousDownloadFolders = null,
-    bool WatchMusicFolders = true);
+    bool WatchMusicFolders = true, DesktopLyricBackground LyricBackground = DesktopLyricBackground.Solid);
 
 internal static class DesktopPreferences
 {

@@ -109,7 +109,15 @@ public partial class R2ShellView
             var options = desktopLyrics?.Capture(true) ?? DesktopPreferences.DesktopLyrics;
             QueueLyricPreferences(options with { Serif = serif });
         };
-        Section("歌词设置", Row("桌面歌词字体", lyricFont));
+        var lyricBackground = Options(["透明", "实底"], behavior.LyricBackground == DesktopLyricBackground.Transparent ? 0 : 1);
+        lyricBackground.SelectionChanged += async (_, _) =>
+        {
+            if (lyricBackground.SelectedIndex < 0) return;
+            var selected = lyricBackground.SelectedIndex == 0 ? DesktopLyricBackground.Transparent : DesktopLyricBackground.Solid;
+            await PersistPreferenceAsync(current => current with { LyricBackground = selected }, "desktop_lyric_background");
+            desktopLyrics?.SetBackgroundMode(DesktopPreferences.Behavior.LyricBackground);
+        };
+        Section("歌词设置", Row("桌面歌词字体", lyricFont), Row("底色模式", lyricBackground));
         var downloadPath = new TextBlock { Text = DesktopPreferences.DownloadFolder,
             Classes = { "muted" }, TextWrapping = TextWrapping.Wrap };
         var changeDownloadPath = new Button { Content = "更改下载位置", Classes = { "glass-pill" } };

@@ -40,6 +40,8 @@ internal sealed class DesktopLyricWindow : Window
     private readonly Window toolbarWindow;
     private readonly StackPanel toolButtons;
     private readonly StackPanel labels;
+    private readonly Grid layout = new() { Background = null };
+    private readonly Border backgroundPlate = new() { Classes = { "desktop-lyric-plate" }, IsHitTestVisible = false };
     private readonly PathShape playIcon;
     private readonly Window reference;
     private static readonly Geometry PlayIcon = Geometry.Parse("M8,5 L19,12 L8,19 Z");
@@ -160,9 +162,9 @@ internal sealed class DesktopLyricWindow : Window
             WindowStartupLocation = WindowStartupLocation.Manual, SizeToContent = SizeToContent.WidthAndHeight,
             TransparencyLevelHint = [WindowTransparencyLevel.Transparent], Background = null
         };
-        var layout = new Grid { Background = null };
         layout.Children.Add(labels);
         Content = layout;
+        SetBackgroundMode(DesktopPreferences.Behavior.LyricBackground);
         if (OperatingSystem.IsWindows())
         {
             // A borderless popup avoids the Win32 minimum size of an overlapped window.
@@ -241,6 +243,14 @@ internal sealed class DesktopLyricWindow : Window
             translation.SetLine(null);
             next.SetLine(null);
         };
+    }
+
+    internal void SetBackgroundMode(DesktopLyricBackground mode)
+    {
+        if (mode == DesktopLyricBackground.Transparent)
+            layout.Children.Remove(backgroundPlate);
+        else if (!layout.Children.Contains(backgroundPlate))
+            layout.Children.Insert(0, backgroundPlate);
     }
 
     private static DesktopLyricLine CreateLine(IBrush foreground) => new(foreground);

@@ -20,6 +20,7 @@
       <SolidColorBrush x:Key="R2AccentHover" Color="{x:Static tok:DesignTokens.AccentMid}"/>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="DesktopLyricPlate" Color="#201C29"/>
           <x:Double x:Key="FullLyricArtworkOpacity">.43</x:Double>
           <x:Boolean x:Key="GlassClearNeedsDim">True</x:Boolean>
           <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
@@ -80,6 +81,7 @@
           </LinearGradientBrush>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="DesktopLyricPlate" Color="#161D2C"/>
           <x:Double x:Key="FullLyricArtworkOpacity">.26</x:Double>
           <x:Boolean x:Key="GlassClearNeedsDim">False</x:Boolean>
           <SolidColorBrush x:Key="UpdateActionFill" Color="{x:Static tok:DesignTokens.AccentStrong}"/>
@@ -138,6 +140,10 @@
       </ResourceDictionary.ThemeDictionaries>
     </ResourceDictionary>
   </Styles.Resources>
+  <Style Selector="Border.desktop-lyric-plate">
+    <Setter Property="CornerRadius" Value="999"/>
+    <Setter Property="Background" Value="{DynamicResource DesktopLyricPlate}"/>
+  </Style>
   <Style Selector="Border.glass">
     <Setter Property="Background" Value="{DynamicResource GlassSurface}"/>
     <Setter Property="BorderBrush" Value="{DynamicResource GlassRim}"/>
