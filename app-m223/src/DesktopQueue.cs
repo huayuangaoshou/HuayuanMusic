@@ -13,14 +13,32 @@ internal sealed partial class CorePlaybackAdapter
         string ExistingKey(KugouAvaloniaPlayer.ViewModels.SongItem song) =>
             song.LocalFilePath is { } path && providerBySource.TryGetValue(path, out var key) ? key : "local:" + song.LocalTrackId;
         var original = root.Player.OriginalControlledQueue;
-        var requestedKeys = rows.Select(row => row.CatalogIdentity).ToArray();
-        var existingKeys = original.Select(ExistingKey).ToArray();
-        if (existingKeys.Length == requestedKeys.Length &&
-            existingKeys.Order(StringComparer.Ordinal).SequenceEqual(requestedKeys.Order(StringComparer.Ordinal)))
+        int index = -1;
+        if (original.Count == rows.Length)
         {
-            var key = requestedKeys[start];
-            var occurrence = requestedKeys.Take(start).Count(item => item == key);
-            int index = Enumerable.Range(0, existingKeys.Length).Where(i => existingKeys[i] == key).ElementAt(occurrence);
+            var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+            var selectedKey = rows[start].CatalogIdentity;
+            var occurrence = 0;
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var key = rows[i].CatalogIdentity;
+                counts[key] = counts.GetValueOrDefault(key) + 1;
+                if (i < start && key == selectedKey) occurrence++;
+            }
+            for (int i = 0; i < original.Count; i++)
+            {
+                var key = ExistingKey(original[i]);
+                if (!counts.TryGetValue(key, out int remaining) || remaining == 0)
+                {
+                    index = -1;
+                    break;
+                }
+                counts[key] = remaining - 1;
+                if (key == selectedKey && occurrence-- == 0) index = i;
+            }
+        }
+        if (index >= 0)
+        {
             await root.Player.PlayControlledQueueEntryAsync(original[index]);
         }
         else
@@ -47,7 +65,6 @@ internal sealed partial class CorePlaybackAdapter
             {
                 PruneUnusedProviderTracks();
                 RebuildTrackSnapshot();
-                collectionDirty = true;
             }
         }
         if (!root.Player.IsPlayingAudio) throw new IOException("音频未开始");

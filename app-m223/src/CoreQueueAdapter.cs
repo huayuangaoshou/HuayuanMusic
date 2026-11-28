@@ -7,6 +7,27 @@ internal sealed partial class CorePlaybackAdapter {
  LocalMusicLibraryService Store=>(LocalMusicLibraryService)root.Library;
  bool PersistQueue=>Program.Desktop||Path.GetFileName(OfflineStartupProfile.Current.Root).StartsWith("p17-body-r3-entries-")||Path.GetFileName(OfflineStartupProfile.Current.Root).StartsWith("p17-body-r3-manual-")||Path.GetFileName(OfflineStartupProfile.Current.Root).StartsWith("p17-body-r3-suitequeue-");
  SongItem NextCatalogSong(int id){var song=Song(id).NewQueueEntry();song.QueueEntryId=Guid.Empty;return song;}
+ internal async Task<Guid> InsertNewDesktopNextAsync(int trackId,Guid current)
+ {
+  var id=Guid.Empty;
+  await Run("Queue:insert-next",()=>
+  {
+   var rows=root.Player.PlaybackQueue;
+   var count=rows.Count;
+   commands.AddToQueue([Song(trackId)]);
+   if(rows.Count!=count+1)throw new InvalidOperationException("队列追加回读不符");
+   var entry=rows[^1];
+   id=entry.QueueEntryId;
+   if(Id(entry)!=trackId)throw new InvalidOperationException("队列追加回读不符");
+   if(current!=Guid.Empty&&rows.Any(row=>row.QueueEntryId==current))
+    root.Player.PrioritizeControlledQueueEntry(entry);
+   else if(count>0)
+    root.Player.MoveControlledQueue(count,0);
+   if(PersistQueue)root.Player.FlushControlledQueue();
+   return Task.CompletedTask;
+  });
+  return id;
+ }
  SongItem QueueSong(int trackId){var matches=root.Player.PlaybackQueue.Where(x=>x.LocalTrackId==trackId).ToArray();if(matches.Length!=1)throw new InvalidOperationException("队列歌曲有多个条目或已移除，请选择条目");return matches[0];}
  internal void M216RestoreStoppedSelection(Guid entry){
   if(State.Playing||State.Paused)throw new InvalidOperationException("Stopped selection required");

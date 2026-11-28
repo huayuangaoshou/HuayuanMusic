@@ -29,9 +29,9 @@ public interface INightflightPlayback:IDisposable {
 internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
  readonly OfflineWindowRoot root;readonly IPlaybackCommands commands;readonly Dictionary<int,SongItem> items=new();
  internal double TrialDecodedRms=>root.Coordinator.Player.GetActiveAnalysisSnapshot().Rms;
- internal int SeekSubmissions,VolumeSubmissions;CoreTrack[] trackSnapshot=[];CoreLyric[] lyricSnapshot=[];CoreQueueEntry[] queueEntrySnapshot=[];int[] queueSnapshot=[];bool collectionDirty=true;int posted,disposed;long revision;int[] favorites=[],history=[];CoreList[] lists=[];string error="";
+ internal int SeekSubmissions,VolumeSubmissions;CoreTrack[] trackSnapshot=[];CoreLyric[] lyricSnapshot=[];CoreQueueEntry[] queueEntrySnapshot=[];int[] queueSnapshot=[];bool queueDirty=true,lyricsDirty=true;int posted,disposed;long revision;int[] favorites=[],history=[];CoreList[] lists=[];string error="";
  public PlaybackSnapshot State{get;private set;}=new();public event Action<PlaybackSnapshot>? Changed;
- internal CorePlaybackAdapter(OfflineWindowRoot root){this.root=root;commands=root.Player;root.Player.PersistControlledLocalSubset=P2AWorkspace.M223Normal;InitializeKugou();EnableDesktopUnavailableHandling();root.Player.PropertyChanged+=OnProperty;root.Player.PlaybackQueue.CollectionChanged+=OnCollection;root.Player.LyricLines.CollectionChanged+=OnCollection;LocalMusicRecordStore.FavoritesChanged+=OnFavorites;root.ViewModel.History.Songs.CollectionChanged+=OnHistory;}
+ internal CorePlaybackAdapter(OfflineWindowRoot root){this.root=root;commands=root.Player;root.Player.PersistControlledLocalSubset=P2AWorkspace.M223Normal;InitializeKugou();EnableDesktopUnavailableHandling();root.Player.PropertyChanged+=OnProperty;root.Player.PlaybackQueue.CollectionChanged+=OnQueueCollection;root.Player.LyricLines.CollectionChanged+=OnLyricCollection;LocalMusicRecordStore.FavoritesChanged+=OnFavorites;root.ViewModel.History.Songs.CollectionChanged+=OnHistory;}
  public async Task InitializeAsync(){await root.ViewModel.InitializeAsync();await ReloadAllAsync();RefreshRecords();if(PersistQueue){root.Player.ApplySavedPlaybackModePreference();if(!Program.Desktop||R2.DesktopPreferences.Behavior.RestoreQueue){await root.Player.RestoreCachedPlaybackQueueAsync();if(root.Player.ControlledQueueReadError!=null)error="队列恢复已拒绝："+root.Player.ControlledQueueReadError;}}Publish();}
  internal bool ChangeDesktopOutput(int id)
  {
@@ -41,16 +41,64 @@ internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
   try { SettingsManager.Save();return true; }
   catch(IOException){SettingsManager.Settings.AudioOutputDeviceId=previous;root.Player.SetOutputDevice(previous);return false;}
  }
- int Id(SongItem? s)=>s==null?0:items.FirstOrDefault(x=>string.Equals(x.Value.LocalFilePath,s.LocalFilePath,StringComparison.OrdinalIgnoreCase)).Key;
+ private Dictionary<string,int>? idsByPath;
+ private int nullPathId;
+
+ private void RebuildPathIndex()
+ {
+  var index=new Dictionary<string,int>(items.Count,StringComparer.OrdinalIgnoreCase);
+  nullPathId=0;
+  foreach(var (id,song) in items)
+  {
+   if(song.LocalFilePath is { } path) index.TryAdd(path,id);
+   else if(nullPathId==0) nullPathId=id;
+  }
+  idsByPath=index;
+ }
+
+ int Id(SongItem? song)
+ {
+  if(song==null) return 0;
+  if(idsByPath==null) RebuildPathIndex();
+  return song.LocalFilePath is { } path ? idsByPath!.GetValueOrDefault(path) : nullPathId;
+ }
+
  SongItem Song(int id){if(!items.TryGetValue(id,out var s))throw new InvalidOperationException("仅允许当前隔离测试曲目");if(s.LocalSourceType=="ProviderStream"){if(!ProviderStreamRegistry.Allows(s.LocalFilePath))throw new UnauthorizedAccessException("平台许可失效");return s;}if(s.LocalSourceType!="LocalFile"||s.LocalTrackId<=0||!string.IsNullOrEmpty(s.RemoteUrl))throw new IOException("曲目来源不属于受控本地媒体");if(OfflineStartupProfile.Active)OfflineStartupProfile.Current.DemandMedia(s.LocalFilePath!);return s;}
  internal async Task ReloadAllAsync(){var all=await Task.Run(()=>Store.GetAllLocalTracksAsync());var ephemeral=items.Where(x=>x.Value.LocalSourceType=="ProviderStream").ToArray();items.Clear();foreach(var t in all)items[checked((int)t.Id)]=LocalMusicLibraryViewModel.ToSongItem(t);foreach(var row in ephemeral)items.Add(row.Key,row.Value);RebuildTrackSnapshot();var loaded=new List<CoreList>();var custom=await ReadEditablePlaylistIdsAsync();foreach(var list in await root.Library.GetPlaylistsAsync()){var entries=await Store.GetPlaylistEntriesAsync(list.Id);loaded.Add(new(list.Name,entries.Select(t=>(int)t.Track.Id).ToArray(),list.Id,entries.Select(t=>t.EntryId).ToArray(),custom.Contains(list.Id)));}lists=loaded.ToArray();}
  public async Task ImportFilesAsync(string[] files,CancellationToken cancel){if(OfflineStartupProfile.Active&&!OfflineStartupProfile.Current.Import)throw new IOException("Import capability required");foreach(var chunk in files.Chunk(20)){cancel.ThrowIfCancellationRequested();await root.ViewModel.ImportSelectedAsync(chunk,cancel);}await ReloadAllAsync();RefreshRecords();Publish();}
  internal string ImportStatus=>root.ViewModel.Status;
  void RefreshRecords(){favorites=LocalMusicRecordStore.LoadFavorites().Select(Id).Where(i=>i>0).ToArray();history=LocalMusicRecordStore.LoadHistory().Select(Id).Where(i=>i>0).ToArray();}
  void OnHistory(object? sender,NotifyCollectionChangedEventArgs e){history=root.ViewModel.History.Songs.Select(Id).Where(x=>x>0).ToArray();Schedule();}
- void OnProperty(object? sender,PropertyChangedEventArgs e)=>Schedule();void OnCollection(object? s,NotifyCollectionChangedEventArgs e){collectionDirty=true;Schedule();}void OnFavorites(){RefreshRecords();Schedule();}
+ void OnProperty(object? sender,PropertyChangedEventArgs e)=>Schedule();void OnQueueCollection(object? s,NotifyCollectionChangedEventArgs e){queueDirty=true;Schedule();}void OnLyricCollection(object? s,NotifyCollectionChangedEventArgs e){lyricsDirty=true;Schedule();}void OnFavorites(){RefreshRecords();Schedule();}
  void Schedule(){if(disposed!=0||Interlocked.Exchange(ref posted,1)!=0)return;Dispatcher.UIThread.Post(()=>{Interlocked.Exchange(ref posted,0);if(disposed==0)Publish();});}
- void Publish(){var p=root.Player;if(collectionDirty){collectionDirty=false;lyricSnapshot=p.LyricLines.Select(x=>new CoreLyric(x.Content,x.StartTime,x.Translation)).ToArray();using var timing=new R2.ListEventMeter("queueSnapshotRebuild",p.PlaybackQueue.Count);queueEntrySnapshot=p.PlaybackQueue.Select(x=>new CoreQueueEntry(x.QueueEntryId,Id(x))).ToArray();queueSnapshot=p.PlaybackQueue.Select(Id).Where(x=>x>0).ToArray();}State=new(){QueueEntries=queueEntrySnapshot,CurrentEntryId=p.CurrentPlayingSong?.QueueEntryId??Guid.Empty,Tracks=trackSnapshot,Lyrics=lyricSnapshot,Queue=queueSnapshot,Mode=(int)root.Player.CurrentPlayMode,ImportStatus=root.ViewModel.Status,Importing=root.ViewModel.IsImporting,Favorites=favorites.ToArray(),History=history.ToArray(),Lists=lists,CurrentId=Id(p.CurrentPlayingSong),Position=p.CurrentPositionSeconds,Duration=p.TotalDurationSeconds,Volume=p.MusicVolume,Playing=p.IsPlayingAudio,Paused=root.Coordinator.Player.IsPaused,LyricIndex=p.CurrentLyricIndex,Error=error,Revision=++revision};Changed?.Invoke(State);}
+ void Publish()
+ {
+  var p=root.Player;
+  if(lyricsDirty)
+  {
+   lyricsDirty=false;
+   lyricSnapshot=p.LyricLines.Select(line=>new CoreLyric(line.Content,line.StartTime,line.Translation)).ToArray();
+  }
+  var current=p.CurrentPlayingSong;
+  int currentId=Id(current);
+  if(queueDirty)
+  {
+   queueDirty=false;
+   using var timing=new R2.ListEventMeter("queueSnapshotRebuild",p.PlaybackQueue.Count);
+   var entries=new CoreQueueEntry[p.PlaybackQueue.Count];
+   var mapped=new int[entries.Length];
+   int index=0, count=0;
+   foreach(var song in p.PlaybackQueue)
+   {
+    int id=ReferenceEquals(song,current)?currentId:Id(song);
+    entries[index++]=new CoreQueueEntry(song.QueueEntryId,id);
+    if(id>0) mapped[count++]=id;
+   }
+   if(count!=mapped.Length) Array.Resize(ref mapped,count);
+   queueEntrySnapshot=entries;
+   queueSnapshot=mapped;
+  }
+  State=new(){QueueEntries=queueEntrySnapshot,CurrentEntryId=current?.QueueEntryId??Guid.Empty,Tracks=trackSnapshot,Lyrics=lyricSnapshot,Queue=queueSnapshot,Mode=(int)root.Player.CurrentPlayMode,ImportStatus=root.ViewModel.Status,Importing=root.ViewModel.IsImporting,Favorites=favorites.ToArray(),History=history.ToArray(),Lists=lists,CurrentId=currentId,Position=p.CurrentPositionSeconds,Duration=p.TotalDurationSeconds,Volume=p.MusicVolume,Playing=p.IsPlayingAudio,Paused=root.Coordinator.Player.IsPaused,LyricIndex=p.CurrentLyricIndex,Error=error,Revision=++revision};Changed?.Invoke(State);}
  async Task Run(string name,Func<Task> action){if(disposed!=0)return;var watch=System.Diagnostics.Stopwatch.StartNew();try{error="";await action();if(name is "Play" or "Previous" or "Next" or "Favorite" or "ClearHistory")RefreshRecords();}catch(Exception e){error=e.GetType().Name+"："+e.Message;Program.Log("CORE_SAFE_ERROR",new{name,type=e.GetType().Name});}finally{Publish();watch.Stop();Program.Log("CORE_ACTION",new{name,ms=watch.Elapsed.TotalMilliseconds,State.CurrentId,State.Playing,State.Position,error=error.Length>0});}}
  public Task PlayAsync(int id)=>Run("Play",async()=>{PlaybackQueueManager.DemandCapacity(items.Values.ToArray());await commands.PlayAsync(Song(id),items.Values.ToArray());await root.ViewModel.History.LoadAsync();if(!root.Player.IsPlayingAudio)throw new InvalidOperationException("音频未开始，请检查受控音源或设备");});
  public Task ToggleAsync(int selected)=>State.CurrentId==0?(root.Player.PlaybackQueue.Count>0?QueueEntryAsync("play",root.Player.PlaybackQueue[0].QueueEntryId):PlayAsync(selected)):Run("Toggle",async()=>{if(root.Coordinator.Player.IsStopped){var current=root.Player.CurrentPlayingSong;
@@ -82,5 +130,5 @@ internal sealed partial class CorePlaybackAdapter:INightflightPlayback {
  public Task FavoriteAsync(int id)=>Run("Favorite",()=>{var song=Song(id);if(song.LocalSourceType=="ProviderStream")throw new InvalidOperationException("平台收藏尚未接入，不写入本地收藏");bool expected=!LocalMusicRecordStore.IsFavorite(song);LocalMusicRecordStore.ToggleFavorite(song);if(LocalMusicRecordStore.IsFavorite(song)!=expected)throw new IOException("收藏未保存，保留原状态");root.ViewModel.Favorites.Refresh();return Task.CompletedTask;});
  public Task ClearHistoryAsync()=>Run("ClearHistory",()=>root.ViewModel.History.ClearHistoryCommand.ExecuteAsync(null));
  public Task AddNextAsync(int id)=>Run("AddNext",()=>{commands.AddToNext(NextCatalogSong(id));return Task.CompletedTask;});
- public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;StopWatchdog();try{if(PersistQueue)root.Player.FlushControlledQueue();}catch(Exception e){Program.Result=2;Program.Log("QUEUE_CLOSE_WRITE_ERROR",new{type=e.GetType().Name,oldCacheRetained=true});}root.Player.PropertyChanged-=OnProperty;root.Player.PlaybackQueue.CollectionChanged-=OnCollection;root.Player.LyricLines.CollectionChanged-=OnCollection;LocalMusicRecordStore.FavoritesChanged-=OnFavorites;root.ViewModel.History.Songs.CollectionChanged-=OnHistory;Kugou.Revoked-=ProviderRevoked;ProviderRevoked();Kugou.Dispose();Providers.Dispose();commands.Stop();}
+ public void Dispose(){if(Interlocked.Exchange(ref disposed,1)!=0)return;StopWatchdog();try{if(PersistQueue)root.Player.FlushControlledQueue();}catch(Exception e){Program.Result=2;Program.Log("QUEUE_CLOSE_WRITE_ERROR",new{type=e.GetType().Name,oldCacheRetained=true});}root.Player.PropertyChanged-=OnProperty;root.Player.PlaybackQueue.CollectionChanged-=OnQueueCollection;root.Player.LyricLines.CollectionChanged-=OnLyricCollection;LocalMusicRecordStore.FavoritesChanged-=OnFavorites;root.ViewModel.History.Songs.CollectionChanged-=OnHistory;Kugou.Revoked-=ProviderRevoked;ProviderRevoked();Kugou.Dispose();Providers.Dispose();commands.Stop();}
 }

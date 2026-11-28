@@ -23,7 +23,7 @@ internal sealed partial class CorePlaybackAdapter {
   if(P2AWorkspace.M223Normal){
    root.Player.RemoveControlledProviderEntries();
    foreach(var id in providerTrackKeys.Keys){items.Remove(id);providerArtworkAccounts.Remove(id);}
-   providerTrackKeys.Clear();providerMetadata.Clear();deferredDesktopIds.Clear();RebuildTrackSnapshot();collectionDirty=true;
+   providerTrackKeys.Clear();providerMetadata.Clear();deferredDesktopIds.Clear();RebuildTrackSnapshot();
   }
   else if(ProviderStreamRegistry.IsProvider(root.Player.CurrentPlayingSong?.LocalFilePath)){root.Coordinator.InvalidatePendingLoads();commands.Stop();}
   foreach(var source in providerSources)ProviderStreamRegistry.Remove(source);providerSources.Clear();
@@ -35,7 +35,7 @@ internal sealed partial class CorePlaybackAdapter {
   foreach(var stale in items.Where(x=>x.Value.LocalSourceType=="ProviderStream"&&
     !retained.Contains(x.Value.LocalFilePath)).ToArray())
   {
-   items.Remove(stale.Key);providerArtworkAccounts.Remove(stale.Key);providerTrackKeys.Remove(stale.Key);providerMetadata.Remove(stale.Key);deferredDesktopIds.Remove(stale.Key);
+   items.Remove(stale.Key);idsByPath=null;providerArtworkAccounts.Remove(stale.Key);providerTrackKeys.Remove(stale.Key);providerMetadata.Remove(stale.Key);deferredDesktopIds.Remove(stale.Key);
    if(Kugou.IsDirectSdk&&stale.Value.LocalFilePath is { } orphan &&
       providerSources.Remove(orphan))ProviderStreamRegistry.Remove(orphan);
   }
@@ -142,11 +142,15 @@ internal sealed partial class CorePlaybackAdapter {
   account??=Kugou.DirectAccountCacheKey;
   if(P2AWorkspace.M223Normal)providerTrackKeys[id]=$"kugou-concept:{account}:{track.Id}";
   providerMetadata[id]=track;
-  providerArtworkAccounts[id]=account??Kugou.Account??"none";items.Add(id,song);
-  if(publish){RebuildTrackSnapshot();collectionDirty=true;Publish();}
+  providerArtworkAccounts[id]=account??Kugou.Account??"none";items.Add(id,song);idsByPath=null;
+  if(publish){RebuildTrackSnapshot();Publish();}
   return id;
  }
- void RebuildTrackSnapshot()=>trackSnapshot=items.Select(x=>new CoreTrack(x.Key,x.Value.LocalSourceType=="ProviderStream"?providerTrackKeys.GetValueOrDefault(x.Key,"kugou-concept:"+x.Key):LocalMusicRecordStore.Key(x.Value),x.Value.DisplayTitle,x.Value.Singer,x.Value.AlbumName,x.Value.DurationSeconds,x.Value.Cover)).ToArray();
+ void RebuildTrackSnapshot()
+ {
+  idsByPath=null;
+  trackSnapshot=items.Select(x=>new CoreTrack(x.Key,x.Value.LocalSourceType=="ProviderStream"?providerTrackKeys.GetValueOrDefault(x.Key,"kugou-concept:"+x.Key):LocalMusicRecordStore.Key(x.Value),x.Value.DisplayTitle,x.Value.Singer,x.Value.AlbumName,x.Value.DurationSeconds,x.Value.Cover)).ToArray();
+ }
  internal void EnableKugou(){if(!kugouMounted)MountKugou();Providers.Enable(KugouProvider.Identity);Kugou.Enable();}
  internal void RemoveKugou()
  {
@@ -161,7 +165,7 @@ internal sealed partial class CorePlaybackAdapter {
    coordinator.ProviderLoadTrace=(operation,origin,phase)=>Program.Log("M215_CORE_LOAD",new{operation,origin,phase});
  }
  internal int ProviderStreamCount=>providerSources.Count;
- internal async Task DisableKugouAsync(){await Kugou.DisableAsync();Providers.Disable(KugouProvider.Identity);collectionDirty=true;Publish();}
+ internal async Task DisableKugouAsync(){await Kugou.DisableAsync();Providers.Disable(KugouProvider.Identity);Publish();}
  sealed class PlaybackGrantAudioOwner:IDisposable
  {
   readonly HuayuanMusic.Kugou.Gateway.OpenedAudio audio;

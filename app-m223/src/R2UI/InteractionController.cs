@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Collections;
 using System.Diagnostics;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -15,6 +16,7 @@ namespace HuayuanPreview.R2;
 public sealed class InteractionController:ObservableObject {
  static readonly Dictionary<ListBox,InteractionController> attached=[];readonly ListBox list;readonly WorkspaceState owner;readonly CorePresentation player;readonly bool queue;
  TrackRow[] original=[];int sort;string field="";bool publishing;TrackRow? dragging,target;Point origin;bool moved;string[] snapshot=[];IPointer? pointer;DateTime ignoreDouble;
+ private AvaloniaList<TrackRow>? queueItems;
  readonly Border line=new(){Height=2,Background=Brushes.DodgerBlue,IsHitTestVisible=false,IsVisible=false,VerticalAlignment=VerticalAlignment.Top};
  public bool Editable=>!queue&&owner.Local&&owner.DetailPage!=null&&owner.Lists[owner.DetailPage]==list;public bool Dragging=>moved;public bool InsertionVisible=>line.IsVisible;public MenuFlyout? LastMenu {get;private set;}
  public string StatusText {get;private set;}="默认顺序 · 单击选择，双击播放";
@@ -121,7 +123,25 @@ public sealed class InteractionController:ObservableObject {
   using var timing=new ListEventMeter(queue?"queueItemsRefresh":"playlistItemsRefresh",rows.Length);
   var state=CaptureView();
   publishing=true;
-  try{list.ItemsSource=rows;}
+  try
+  {
+   if(queue&&queueItems!=null&&ReferenceEquals(list.ItemsSource,queueItems))
+   {
+    int start=0,endOld=queueItems.Count,endNew=rows.Length;
+    while(start<endOld&&start<endNew&&ReferenceEquals(queueItems[start],rows[start])) start++;
+    while(endOld>start&&endNew>start&&ReferenceEquals(queueItems[endOld-1],rows[endNew-1]))
+    {
+     endOld--;
+     endNew--;
+    }
+    if(endOld>start) queueItems.RemoveRange(start,endOld-start);
+    if(endNew>start) queueItems.InsertRange(start,new ArraySegment<TrackRow>(rows,start,endNew-start));
+   }
+   else
+   {
+    list.ItemsSource=queue?(queueItems=new AvaloniaList<TrackRow>(rows)):rows;
+   }
+  }
   finally{publishing=false;}
   RestoreView(state);
  }
@@ -132,8 +152,9 @@ public sealed class InteractionController:ObservableObject {
  {
   CancelFollow();
   list.SelectedItems?.Clear();
-  foreach(var row in list.Items.OfType<TrackRow>())
-   if(state.Selected.Contains(row.Identity))list.SelectedItems?.Add(row);
+  if(state.Selected.Count>0)
+   foreach(var row in list.Items.OfType<TrackRow>())
+    if(state.Selected.Contains(row.Identity))list.SelectedItems?.Add(row);
   var request=scrollRequest;
   pendingOffset=state.Offset;
   Dispatcher.UIThread.Post(()=>{

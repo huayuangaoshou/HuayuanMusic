@@ -83,7 +83,6 @@ internal sealed partial class CorePlaybackAdapter
         RebuildTrackSnapshot();
         desktopResume = null;
         root.Player.RestoreDesktopQueue(visible, original.Length == visible.Length ? original : visible, saved.Selected, saved.Mode);
-        collectionDirty = true;
         if (root.Player.CurrentPlayingSong?.QueueEntryId == saved.Selected &&
             double.IsFinite(saved.PositionSeconds) && saved.PositionSeconds > 0)
             await SeekAsync(saved.PositionSeconds);

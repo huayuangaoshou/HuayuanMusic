@@ -21,7 +21,8 @@ public sealed class TrackRow:ObservableObject {
  public bool IsLosslessFile => !IsProviderTrack && Track.Key.EndsWith(".flac", StringComparison.OrdinalIgnoreCase);
  public bool IsDownloaded => Program.Desktop && Owner.Host.IsDownloaded(this);
  public TrackRow Song=>this;public string Name=>Track.Title;public string Singer=>Track.Artist;public string AlbumName=>Track.Album;public string Duration=>Track.Duration<=0?"—":$"{(int)Track.Duration/60:00}:{(int)Track.Duration%60:00}";
- public int Number { get; internal set; }
+ private int number;
+ public int Number { get=>number; internal set=>SetProperty(ref number,value); }
  private bool isSelected;
  public bool IsSelected { get => isSelected; set => SetProperty(ref isSelected, value); }
  private bool isBatchMode;
@@ -87,7 +88,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
  public string QueueBadgeText=>DisplayPlaybackQueueCount.ToString(System.Globalization.CultureInfo.InvariantCulture);
  public string QueueCountTooltip=>$"播放队列 · {DisplayPlaybackQueueCount:N0} 首";
  public bool HasQueueTracks=>DisplayPlaybackQueueCount>0;
- public TrackRow? DisplayedPlayingSong=>DisplayPlaybackQueue.FirstOrDefault(r=>r.QueueId==state.CurrentEntryId);
+ public TrackRow? DisplayedPlayingSong=>queueViews.GetValueOrDefault(state.CurrentEntryId);
  public string ActiveLyric=>state.LyricIndex>=0&&state.LyricIndex<state.Lyrics.Length
   &&(state.Playing||state.Paused)?state.Lyrics[state.LyricIndex].Text:"";
  private double progressPosition;
@@ -173,16 +174,63 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   if(durationChanged)OnPropertyChanged(nameof(DurationText));
   if(transportChanged||lyricsChanged||next.LyricIndex!=previous.LyricIndex)OnPropertyChanged(nameof(ActiveLyric));
   if(host!=null&&(queueChanged||DisplayPlaybackQueue.Length!=next.QueueEntries.Length)){
-   using var timing=new ListEventMeter("queueRowsRebuild",next.QueueEntries.Length);
-   var ids=next.QueueEntries.Select(e=>e.EntryId).ToHashSet();foreach(var id in queueViews.Keys.Where(k=>!ids.Contains(k)).ToArray())queueViews.Remove(id);
-   var tracks=next.Tracks.ToDictionary(track=>track.Id);
-   DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();for(int i=0;i<DisplayPlaybackQueue.Length;i++){DisplayPlaybackQueue[i].Number=i+1;DisplayPlaybackQueue[i].Refresh();}OnPropertyChanged(nameof(DisplayPlaybackQueue));
+   UpdateQueueRows(host.LocalWorkspace,next);
   }
   SampleProgress(transportChanged||durationChanged||(!next.Playing&&next.Position!=previous.Position));
   if(next.Position!=previous.Position||transportChanged) LyricsClockUpdated?.Invoke();
   if(!uiChanged)return;
   OnPropertyChanged(nameof(TransportStatus));
-  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){foreach(var row in DisplayPlaybackQueue)row.Refresh();OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged){OnPropertyChanged(nameof(ModeLabel));OnPropertyChanged(nameof(ModeIcon));}if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+  OnPropertyChanged(nameof(State));if(transportChanged||queueChanged){RefreshTransportRows(previous.CurrentEntryId,next.CurrentEntryId);OnPropertyChanged(nameof(DisplayedPlayingSong));OnPropertyChanged(nameof(NowPlayingTitle));OnPropertyChanged(nameof(NowPlayingCredit));OnPropertyChanged(nameof(HasCurrentSong));}if(modeChanged){OnPropertyChanged(nameof(ModeLabel));OnPropertyChanged(nameof(ModeIcon));}if(queueChanged){OnPropertyChanged(nameof(DisplayPlaybackQueueCount));OnPropertyChanged(nameof(QueueBadgeText));OnPropertyChanged(nameof(QueueCountTooltip));OnPropertyChanged(nameof(HasQueueTracks));}OnPropertyChanged(nameof(IsPlayingAudio));OnPropertyChanged(nameof(PlaybackFeedback));OnPropertyChanged(nameof(HasPlaybackError));OnPropertyChanged(nameof(IsMuted));Updated?.Invoke();
+ }
+ private void UpdateQueueRows(WorkspaceState owner,PlaybackSnapshot next)
+ {
+  var old=DisplayPlaybackQueue;
+  var entries=next.QueueEntries;
+  int start=0,endOld=old.Length,endNew=entries.Length;
+  static bool Matches(TrackRow row,CoreQueueEntry entry)=>row.QueueId==entry.EntryId&&row.Track.Id==entry.TrackId;
+  while(start<endOld&&start<endNew&&Matches(old[start],entries[start])) start++;
+  if(start==endOld&&start==endNew) return;
+  using var timing=new ListEventMeter("queueRowsRebuild",entries.Length);
+  while(endOld>start&&endNew>start&&Matches(old[endOld-1],entries[endNew-1]))
+  {
+   endOld--;
+   endNew--;
+  }
+  var rows=new TrackRow[entries.Length];
+  Array.Copy(old,rows,start);
+  Array.Copy(old,endOld,rows,endNew,old.Length-endOld);
+  Dictionary<int,CoreTrack>? tracks=null;
+  for(int i=start;i<endNew;i++)
+  {
+   var entry=entries[i];
+   if(!queueViews.TryGetValue(entry.EntryId,out var row)||!Matches(row,entry))
+   {
+    tracks??=next.Tracks.ToDictionary(track=>track.Id);
+    row=new TrackRow(tracks[entry.TrackId],owner,entry.EntryId);
+   }
+   rows[i]=row;
+  }
+  for(int i=start;i<endOld;i++) queueViews.Remove(old[i].QueueId);
+  for(int i=start;i<endNew;i++) queueViews[rows[i].QueueId]=rows[i];
+  DisplayPlaybackQueue=rows;
+  int renumberEnd=endOld==endNew?endNew:rows.Length;
+  for(int i=start;i<renumberEnd;i++) rows[i].Number=i+1;
+  OnPropertyChanged(nameof(DisplayPlaybackQueue));
+ }
+ private void RefreshTransportRows(Guid oldEntry,Guid newEntry)
+ {
+  var affected=new HashSet<TrackRow>();
+  AddNeighbors(oldEntry);
+  AddNeighbors(newEntry);
+  foreach(var row in affected) row.Refresh();
+
+  void AddNeighbors(Guid entry)
+  {
+   if(!queueViews.TryGetValue(entry,out var row)) return;
+   int index=row.Number-1;
+   for(int i=Math.Max(0,index-1);i<Math.Min(DisplayPlaybackQueue.Length,index+2);i++)
+    affected.Add(DisplayPlaybackQueue[i]);
+  }
  }
  private void SampleProgress(bool force)
  {
@@ -271,6 +319,13 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   {
    var match=DisplayPlaybackQueue.FirstOrDefault(entry=>entry.QueueId!=current&&Matches(entry))
     ?? DisplayPlaybackQueue.FirstOrDefault(entry=>entry.QueueId==current&&Matches(entry));
+   if(match==null&&host!=null)
+   {
+    var trackId=row.Owner.Local?row.Track.Id:await host.Concept.M223AdmitAsync(row.Track.Key);
+    id=await host.Adapter.InsertNewDesktopNextAsync(trackId,current);
+    DemandResult();
+    return id;
+   }
    id=match?.QueueId??await Admit(row);
   }
   var entries=core.State.QueueEntries;
