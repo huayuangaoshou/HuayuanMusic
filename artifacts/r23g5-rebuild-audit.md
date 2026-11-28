@@ -30,5 +30,6 @@
 | `src/R2UI/LocalFolders.cs:48–52`，`core/ViewModels/PlayerViewModel.QueueEditing.cs:12–22` | 曲库移除按命中曲目过滤队列并逐个移除；平台撤销另检查原顺序中的平台项。批量操作可能多次触发集合通知。 | UI 生命周期或曲库命令 |
 | `src/DesktopQueueMemory.cs:172–192,218–251`，`src/Program.cs:224`，`src/R2UI/PluginManager.cs:46` | 每次发布比较与上次保存的完整队列。曲目、模式、播放状态变更可立即触发保存，播放位置单独变动按 30 秒节流。全量筛选和序列化前快照在 UI；写文件由 Task.Run 串联。退出与插件管理另有显式调用。 | UI 快照，后台写盘 |
 | `core/ViewModels/PlayerViewModel.Queue.cs:19–25,354,373–401`，`core/ViewModels/PlayerViewModel.QueueEditing.cs:70–73`，`src/CorePlaybackAdapter.cs:85` | Core 缓存另有约 250 ms 的取消合并机制，惯常从 UI 续体复制可见与原始队列，再在后台存盘。显式 Flush 则同步复制并保存，由队列编辑、退出等路径调用。 | UI 快照或显式同步 Flush，延迟保存的写入在后台 |
+| `core/Services/PlaybackQueueCacheService.cs:41–65,92–118` | Core 缓存读取时迁移旧条目、正则化两套顺序并验证同一条目身份（含逐项 Single，最坏 O(N²)）。保存时过滤可持久化条目并投影两套顺序。每次读写一次。 | 读取随异步恢复调用，保存随延迟后台写入或显式同步 Flush |
 
 静态清点只说明哪些路径具备全量成本。是否对应某次停摆以实机日志为准。
