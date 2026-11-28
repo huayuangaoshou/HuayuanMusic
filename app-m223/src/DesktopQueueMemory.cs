@@ -224,7 +224,9 @@ internal sealed partial class CorePlaybackAdapter
         var player = root.Coordinator.Player;
         double position = player.IsStopped ? State.Position : player.GetPosition().TotalSeconds;
         if (State.CurrentEntryId == Guid.Empty || !double.IsFinite(position) || position < 0) position = 0;
-        var snapshot = new SavedQueue(account, State.CurrentEntryId, (PlayMode)State.Mode,
+        SavedQueue snapshot;
+        using (new R2.ListEventMeter("queuePersistSnapshot", State.QueueEntries.Length))
+            snapshot = new SavedQueue(account, State.CurrentEntryId, (PlayMode)State.Mode,
             State.QueueEntries.Select(entry => new SavedEntry(entry.EntryId, entry.TrackId, OnlineMetadata(entry.TrackId)))
                 .Where(entry => entry.Online != null || !providerTrackKeys.ContainsKey(entry.LocalTrack)).ToArray(),
             root.Player.OriginalControlledQueue.Select(song => song.QueueEntryId).ToArray(), position, player.IsPlaying);
@@ -238,6 +240,7 @@ internal sealed partial class CorePlaybackAdapter
         {
             await Task.Run(() =>
             {
+                using var timing = new R2.ListEventMeter("queuePersistWrite", snapshot.Entries.Length);
                 Directory.CreateDirectory(Path.GetDirectoryName(DesktopQueuePath)!);
                 File.WriteAllText(DesktopQueuePath+".tmp",JsonSerializer.Serialize(snapshot));
                 File.Move(DesktopQueuePath+".tmp",DesktopQueuePath,true);

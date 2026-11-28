@@ -118,6 +118,7 @@ public sealed class InteractionController:ObservableObject {
  public void SetRows(TrackRow[] rows){if(original.SequenceEqual(rows))return;original=rows;Display(Sorted());}
  void Display(TrackRow[] rows)
  {
+  using var timing=new ListEventMeter(queue?"queueItemsRefresh":"playlistItemsRefresh",rows.Length);
   var state=CaptureView();
   publishing=true;
   try{list.ItemsSource=rows;}
@@ -168,6 +169,7 @@ public sealed class InteractionController:ObservableObject {
   var request=scrollRequest;
   Dispatcher.UIThread.Post(()=>{
    if(request!=scrollRequest||player.State.CurrentEntryId!=entry||!CanFollow()||Scroller is not { } scroll)return;
+   using var timing=new ListEventMeter(queue?"queueFollowLocate":"playlistFollowLocate",list.Items.Count);
    int index=Array.FindIndex(Items(),row=>row.IsCurrent);
    if(index<0||scroll.Viewport.Height<=0)return;
    var pitch=queue?DesignTokens.QueueRowHeight:DesignTokens.SongRowHeight;

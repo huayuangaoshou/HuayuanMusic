@@ -173,6 +173,7 @@ public sealed class CorePresentation:ObservableObject,IDisposable {
   if(durationChanged)OnPropertyChanged(nameof(DurationText));
   if(transportChanged||lyricsChanged||next.LyricIndex!=previous.LyricIndex)OnPropertyChanged(nameof(ActiveLyric));
   if(host!=null&&(queueChanged||DisplayPlaybackQueue.Length!=next.QueueEntries.Length)){
+   using var timing=new ListEventMeter("queueRowsRebuild",next.QueueEntries.Length);
    var ids=next.QueueEntries.Select(e=>e.EntryId).ToHashSet();foreach(var id in queueViews.Keys.Where(k=>!ids.Contains(k)).ToArray())queueViews.Remove(id);
    var tracks=next.Tracks.ToDictionary(track=>track.Id);
    DisplayPlaybackQueue=next.QueueEntries.Select(e=>{if(!queueViews.TryGetValue(e.EntryId,out var row)){row=new TrackRow(tracks[e.TrackId],host.LocalWorkspace,e.EntryId);queueViews.Add(e.EntryId,row);}return row;}).ToArray();for(int i=0;i<DisplayPlaybackQueue.Length;i++){DisplayPlaybackQueue[i].Number=i+1;DisplayPlaybackQueue[i].Refresh();}OnPropertyChanged(nameof(DisplayPlaybackQueue));
