@@ -23,13 +23,13 @@ internal sealed class DesktopLyricWindow : Window
 {
     internal const double ShadowGutter = 12;
 
-    private readonly DesktopLyricLine current = CreateLine(Brushes.White);
+    private readonly DesktopLyricLine current = new(Brushes.White) { AnimateInComposition = true };
     private readonly DesktopLyricLine outgoing = CreateLine(Brushes.White);
     private readonly Grid currentBand = new();
     private readonly TranslateTransform currentShift = new();
     private CancellationTokenSource? lineTransition;
 
-    private readonly DesktopLyricLine translation = CreateLine(new SolidColorBrush(DesignTokens.DarkSub));
+    private readonly DesktopLyricLine translation = new(new SolidColorBrush(DesignTokens.DarkSub)) { AnimateInComposition = true };
     private readonly DesktopLyricLine next = CreateLine(new SolidColorBrush(DesignTokens.DarkText));
     private readonly Button translationButton;
     private readonly Button? lockButton;
@@ -50,6 +50,7 @@ internal sealed class DesktopLyricWindow : Window
     private static readonly Geometry UnlockIcon = Geometry.Parse("M8,11 L8,8 A4,4 0 0 1 16,8 L16,6.5 M5.5,11 L18.5,11 L18.5,19 L5.5,19 Z");
     private readonly DesktopLyricMousePassthroughService passthrough = new();
     private readonly DispatcherTimer renderClock = new() { Interval = TimeSpan.FromMilliseconds(33) };
+    private bool raisedTimerResolution;
     private static readonly TimeSpan HideToolsDelay = TimeSpan.FromMilliseconds(200);
     private readonly DispatcherTimer saveDelay = new() { Interval = TimeSpan.FromMilliseconds(360) };
     private readonly DispatcherTimer nativeInputClock = new() { Interval = TimeSpan.FromMilliseconds(16) };
@@ -195,7 +196,8 @@ internal sealed class DesktopLyricWindow : Window
             if (preferences.Locked) SetLocked(true);
             if (OperatingSystem.IsWindows())
                 nativeInputClock.Start();
-            if (running) renderClock.Start();
+            UpdateFallbackClock();
+            Program.Log("R27_LYRIC_RENDERER", new { composition = current.UsesComposition });
             Dispatcher.UIThread.Post(() =>
             {
                 if (!IsVisible) return;
@@ -234,7 +236,7 @@ internal sealed class DesktopLyricWindow : Window
         nativeInputClock.Tick += (_, _) => UpdateToolbarHover();
         Closed += (_, _) =>
         {
-            renderClock.Stop();
+            StopFallbackClock();
             StopLineTransition();
             saveDelay.Stop();
             nativeInputClock.Stop();
@@ -292,17 +294,49 @@ internal sealed class DesktopLyricWindow : Window
     [DllImport("user32.dll")]
     private static extern short GetAsyncKeyState(int key);
 
+    [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
+    private static extern uint BeginTimerPeriod(uint milliseconds);
+
+    [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
+    private static extern uint EndTimerPeriod(uint milliseconds);
+
     internal DesktopLyricOptions Capture(bool visible) => new(visible, Locked, Position.X, Position.Y, fontSize, serif);
 
     internal void Sync(PlaybackSnapshot snapshot)
     {
         anchorPosition = snapshot.Position;
         anchorTimestamp = Stopwatch.GetTimestamp();
-        running = snapshot.Playing;
-        playIcon.Data = running ? PauseIcon : PlayIcon;
-        playIcon.StrokeThickness = running ? 2.2 : 1.8;
-        if (running) renderClock.Start(); else renderClock.Stop();
+        if (running != snapshot.Playing)
+        {
+            running = snapshot.Playing;
+            playIcon.Data = running ? PauseIcon : PlayIcon;
+            playIcon.StrokeThickness = running ? 2.2 : 1.8;
+            UpdateFallbackClock();
+        }
+        var clock = new DesktopLyricLine.PlaybackClock(anchorPosition, anchorTimestamp, running);
+        current.PublishClock(clock);
+        translation.PublishClock(clock);
         RenderLyrics();
+    }
+
+    private void UpdateFallbackClock()
+    {
+        if (!running || !IsVisible || current.UsesComposition)
+        {
+            StopFallbackClock();
+            return;
+        }
+        if (renderClock.IsEnabled) return;
+        if (OperatingSystem.IsWindows()) raisedTimerResolution = BeginTimerPeriod(1) == 0;
+        renderClock.Start();
+    }
+
+    private void StopFallbackClock()
+    {
+        renderClock.Stop();
+        if (!raisedTimerResolution) return;
+        EndTimerPeriod(1);
+        raisedTimerResolution = false;
     }
 
     internal void SetLyrics(IReadOnlyList<LyricLine> lines, string message)
@@ -587,7 +621,7 @@ internal sealed class DesktopLyricWindow : Window
             next.SetLine(following?.Text);
             ResizeToLyrics();
         }
-        current.SetPosition(position);
-        translation.SetPosition(position);
+        if (!current.UsesComposition) current.SetPosition(position);
+        if (!translation.UsesComposition) translation.SetPosition(position);
     }
 }

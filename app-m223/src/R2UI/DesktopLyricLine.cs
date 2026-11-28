@@ -10,7 +10,7 @@ using AvaloniaLyrics;
 namespace HuayuanPreview.R2;
 
 // The two brushes share one shaped line and one viewport position.
-internal sealed class DesktopLyricLine : Control, ICustomHitTest
+internal sealed partial class DesktopLyricLine : Control, ICustomHitTest
 {
     // R1: 清除艺术字——已唱文字由紫蓝渐变改为纯色 AccentStrong。
     private static readonly IBrush SungBrush = new SolidColorBrush(DesignTokens.AccentStrong);
@@ -51,36 +51,34 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
         new Rect(Bounds.Size).Contains(point) && glyphOutline?.FillContains(point - (Vector)TextOrigin) == true;
 
     private double LineProgress => duration > 0 ? Math.Clamp((position - start) / duration, 0, 1) : 0;
-    internal double HorizontalOffset
+    internal double HorizontalOffset => GetHorizontalOffset(inkBounds, Bounds.Width, LineProgress, SungWidth);
+
+    private static double GetHorizontalOffset(Rect ink, double width, double progress, double sungWidth)
     {
-        get
-        {
-            var progress = LineProgress;
-            if (inkBounds.Width <= Bounds.Width || progress <= .10) return 0;
-            var travel = inkBounds.Width - Bounds.Width + 24;
-            var timeline = travel * Math.Clamp((progress - .10) / .75, 0, 1);
-            // Catch up to fast-sung words before the highlight reaches the right edge.
-            var follow = (SungWidth - inkBounds.X - Bounds.Width * .44) * Math.Clamp((progress - .10) / .15, 0, 1);
-            return -Math.Clamp(Math.Max(timeline, follow), 0, travel);
-        }
+        if (ink.Width <= width || progress <= .10) return 0;
+        var travel = ink.Width - width + 24;
+        var timeline = travel * Math.Clamp((progress - .10) / .75, 0, 1);
+        // Catch up to fast-sung words before the highlight reaches the right edge.
+        var follow = (sungWidth - ink.X - width * .44) * Math.Clamp((progress - .10) / .15, 0, 1);
+        return -Math.Clamp(Math.Max(timeline, follow), 0, travel);
     }
 
-    internal double SungWidth
+    internal double SungWidth => GetSungWidth(timings, position, TextWidth * LineProgress);
+
+    private static double GetSungWidth((double Start, double End, double Left, double Right)[] spans,
+        double position, double sweep)
     {
-        get
+        if (spans.Length == 0) return sweep;
+        double sungWidth = 0;
+        foreach (var word in spans)
         {
-            if (timings.Length == 0) return TextWidth * LineProgress;
-            double sungWidth = 0;
-            foreach (var word in timings)
-            {
-                if (position < word.Start) break;
-                if (position < word.End)
-                    return Math.Max(sungWidth, word.Left + (word.Right - word.Left) *
-                        ((position - word.Start) / (word.End - word.Start)));
-                sungWidth = Math.Max(sungWidth, word.Right);
-            }
-            return sungWidth;
+            if (position < word.Start) break;
+            if (position < word.End)
+                return Math.Max(sungWidth, word.Left + (word.Right - word.Left) *
+                    ((position - word.Start) / (word.End - word.Start)));
+            sungWidth = Math.Max(sungWidth, word.Right);
         }
+        return sungWidth;
     }
 
     internal void SetFont(FontFamily fontFamily, double size)
@@ -97,7 +95,7 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
         var singleLine = (value ?? "").ReplaceLineEndings(" ").Trim();
         var newWords = wordTimings ?? [];
         bool shapeChanged = singleLine != text || (lineDuration > 0) != (duration > 0) ||
-            !ReferenceEquals(words, newWords);
+            !ReferenceEquals(words, newWords) || (UsesComposition && (start != lineStart || duration != lineDuration));
         text = singleLine;
         start = lineStart;
         duration = lineDuration;
@@ -148,14 +146,24 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
         }
         InvalidateMeasure();
         InvalidateVisual();
+        if (composedVisual == null) return;
+        publishedViewport = default;
+        if (normal == null) composedVisual.SendHandlerMessage(ClearFrame);
+        InvalidateArrange();
     }
 
     protected override Size MeasureOverride(Size availableSize) =>
         new(Math.Min(InkSize.Width, availableSize.Width), InkSize.Height);
 
+    protected override Size ArrangeOverride(Size finalSize)
+    {
+        PublishFrame(finalSize);
+        return base.ArrangeOverride(finalSize);
+    }
+
     public override void Render(DrawingContext context)
     {
-        if (normal == null) return;
+        if (normal == null || UsesComposition) return;
         var viewport = new Rect(Bounds.Size);
         if (viewport.Width <= 0 || viewport.Height <= 0) return;
         if (inkBounds.Width > viewport.Width)
@@ -173,9 +181,14 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     {
         if (edgeMask is not null && edgeMaskWidth == width) return edgeMask;
 
-        double fade = Math.Min(FadeBand / width, .5);
         edgeMaskWidth = width;
-        return edgeMask = new LinearGradientBrush
+        return edgeMask = CreateEdgeMask(width);
+    }
+
+    private static LinearGradientBrush CreateEdgeMask(double width)
+    {
+        double fade = Math.Min(FadeBand / width, .5);
+        return new LinearGradientBrush
         {
             StartPoint = new RelativePoint(0, 0, RelativeUnit.Relative),
             EndPoint = new RelativePoint(1, 0, RelativeUnit.Relative),
@@ -193,17 +206,22 @@ internal sealed class DesktopLyricLine : Control, ICustomHitTest
     {
         var shadowViewport = viewport.Inflate(DesktopLyricWindow.ShadowGutter);
         var origin = TextOrigin;
-        // 双层阴影：宽影保任意背景可读（BlurRadius 9 / Opacity 0.32），细影保锐度（BlurRadius 3 / Opacity 0.28）。
-        using (context.PushEffect(WideShadow, shadowViewport))
-            normal.Draw(context, origin);
-        using (context.PushEffect(SharpShadow, shadowViewport))
-            normal.Draw(context, origin);
-        normal.Draw(context, origin);
+        DrawNormal(context, shadowViewport, normal, origin);
         if (sung != null)
         {
             double right = Math.Clamp(origin.X + SungWidth, 0, viewport.Width);
             if (right <= 0) return;
             using (context.PushClip(new Rect(0, 0, right, viewport.Height))) sung.Draw(context, origin);
         }
+    }
+
+    private static void DrawNormal(DrawingContext context, Rect shadowViewport, TextLayout normal, Point origin)
+    {
+        // 双层阴影：宽影保任意背景可读（BlurRadius 9 / Opacity 0.32），细影保锐度（BlurRadius 3 / Opacity 0.28）。
+        using (context.PushEffect(WideShadow, shadowViewport))
+            normal.Draw(context, origin);
+        using (context.PushEffect(SharpShadow, shadowViewport))
+            normal.Draw(context, origin);
+        normal.Draw(context, origin);
     }
 }
